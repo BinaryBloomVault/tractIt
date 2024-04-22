@@ -27,6 +27,7 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     "Gudea-Bold": require("../assets/fonts/Gudea-Bold.ttf"),
     "Gudea-Regular": require("../assets/fonts/Gudea-Regular.ttf"),
+    "Cabin-Regular": require("../assets/fonts/Cabin-Regular.ttf"),
     ...FontAwesome.font,
   });
 

@@ -89,6 +89,8 @@ const receiptCard = () => {
             friends: "Friends",
           }}
           color="#F2E3A9"
+          font="Gudea-Regular"
+          size={20}
         />
       </View>
       <Card.Divider
@@ -102,7 +104,12 @@ const receiptCard = () => {
         renderItem={({ item }) => (
           <View>
             <View style={styles.header}>
-              <ItemRow item={item} color="#A9DFBF" />
+              <ItemRow
+                item={item}
+                color="#A9DFBF"
+                font="Cabin-Regular"
+                size={15}
+              />
             </View>
             <Card.Divider
               style={{ width: "100%", marginBottom: 0 }}
@@ -123,6 +130,8 @@ const receiptCard = () => {
             friends: "Friends",
           }}
           color="#00BEE5"
+          font="Gudea-Regular"
+          size={20}
         />
       </View>
     </Card>
