@@ -1,0 +1,54 @@
+import { View, Text, Platform } from "react-native";
+import React from "react";
+import { Button } from "@rneui/base";
+
+const tabRoundButton = () => {
+  return (
+    <View
+      style={{
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingHorizontal: 30,
+        position: "absolute",
+        bottom: 0,
+        width: "100%",
+      }}
+    >
+      <Button
+        title="Left Button"
+        buttonStyle={{
+          backgroundColor: "#FFFF",
+          borderRadius: 100,
+        }}
+        containerStyle={{
+          width: 100,
+          height: Platform.OS === "ios" ? 120 : 100,
+          shadowColor: "#171717",
+          shadowOffset: { width: -2, height: 4 },
+          shadowOpacity: 0.7,
+          shadowRadius: 5,
+          padding: 20,
+        }}
+      />
+      <Button
+        title="Right Button"
+        buttonStyle={{
+          backgroundColor: "#FFFF",
+          borderRadius: 100,
+        }}
+        containerStyle={{
+          width: 100,
+          height: Platform.OS === "ios" ? 120 : 100,
+          shadowColor: "#171717",
+          shadowOffset: { width: -2, height: 4 },
+          shadowOpacity: 0.7,
+          shadowRadius: 5,
+          padding: 20,
+        }}
+      />
+    </View>
+  );
+};
+
+export default tabRoundButton;
