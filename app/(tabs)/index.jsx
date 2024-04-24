@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Button } from "react-native";
 import React from "react";
-import Receipt from "../../components/receiptCard";
+import Receipt from "../../components/card/receiptCard";
 import TotalCard from "../../components/totalPayment";
 
 const index = () => {

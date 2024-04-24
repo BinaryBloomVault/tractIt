@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Platform } from "react-native";
 import { Card, Button } from "@rneui/themed";
-
+import TabButton from "./button/tabRoundButton";
 const TotalPayment = () => {
   return (
     <View style={styles.container}>
@@ -11,7 +11,15 @@ const TotalPayment = () => {
           <Text style={styles.total}>500</Text>
         </View>
       </Card>
-      <View style={styles.buttonWrapper}>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: 100,
+          width: "100%",
+          alignItems: "center",
+        }}
+      >
         <Button
           title="Add"
           titleStyle={{
@@ -34,6 +42,7 @@ const TotalPayment = () => {
           }}
         />
       </View>
+      <TabButton />
     </View>
   );
 };
@@ -63,9 +72,6 @@ const styles = StyleSheet.create({
     fontFamily: "Gudea-Regular",
   },
   total: { fontSize: 40, fontFamily: "Gudea-Bold" },
-  buttonWrapper: {
-    marginTop: 35,
-  },
 });
 
 export default TotalPayment;
