@@ -285,7 +285,7 @@ const receiptCard = () => {
       </View>
       <Card.Divider
         style={{ width: "100%", marginBottom: 0 }}
-        color="#0F240F"
+        color="#888"
         width={2}
         orientation="horizontal"
       />
@@ -299,12 +299,6 @@ const receiptCard = () => {
                 color="#A9DFBF"
                 font="Cabin-Regular"
                 size={15}
-              />
-              <Card.Divider
-                style={{ width: "100%", marginBottom: 0 }}
-                color="#0F240F"
-                width={2}
-                orientation="horizontal"
               />
             </View>
           )}
