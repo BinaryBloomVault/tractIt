@@ -8,9 +8,6 @@ const ItemRow = ({ item, color }) => {
       <View style={styles.items(color)}>
         <Text style={styles.itemText}>{item.items}</Text>
       </View>
-      <View style={[styles.items2, styles.priceSpaceBlock(color)]}>
-        <Text style={styles.itemText}>{item.quantity}</Text>
-      </View>
       <View style={[styles.price, styles.priceSpaceBlock(color)]}>
         <Text style={styles.itemText}>{item.price}</Text>
       </View>
