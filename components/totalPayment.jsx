@@ -6,10 +6,15 @@ import {
   Pressable,
   Dimensions,
   Modal,
+  TextInput,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
-import { Card } from "@rneui/themed";
+import { Input, Button, Card } from "@rneui/themed";
 import TabButton from "./button/tabRoundButton";
 import { Link } from "expo-router";
+import AddButton from "../components/button/addButton";
+import PaymentInfo from "../components/card/paymentInfo";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -35,27 +40,6 @@ const TotalPayment = () => {
   );
 };
 
-const PaymentInfo = () => {
-  return (
-    <Card containerStyle={styles.cardContainer}>
-      <View style={styles.font}>
-        <Text style={styles.text}>Your Total Payment</Text>
-        <Text style={styles.total}>500</Text>
-      </View>
-    </Card>
-  );
-};
-
-const AddButton = ({ onPress }) => {
-  return (
-    <View style={styles.addButtonContainer}>
-      <Pressable style={styles.addButton} onPress={onPress}>
-        <Text style={styles.addButtonTitle}>Add</Text>
-      </Pressable>
-    </View>
-  );
-};
-
 const TotalPaymentModal = ({ modalVisible, hideModal }) => {
   return (
     <Modal
@@ -63,23 +47,70 @@ const TotalPaymentModal = ({ modalVisible, hideModal }) => {
       transparent={true}
       visible={modalVisible}
       onRequestClose={hideModal}
+      keyboardShouldPersistTaps="handled"
+      statusBarTranslucent={true}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalView}>
-          <Pressable
-            style={[styles.button, styles.buttonCancel]}
-            onPress={hideModal}
-          >
-            <Text style={styles.textStyle}>Cancel</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, styles.buttonDone]}
-            onPress={hideModal}
-          >
-            <Text style={styles.textStyle}>Done</Text>
-          </Pressable>
+      <KeyboardAvoidingView
+        behavior={Platform.OS == "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <View style={styles.exitButton}>
+              <Pressable
+                style={[styles.button, styles.buttonCancel]}
+                onPress={hideModal}
+              >
+                <Text style={styles.textStyle}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.buttonDone]}
+                onPress={hideModal}
+              >
+                <Text style={styles.textStyle}>Done</Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.frameParent}>
+              <View style={styles.itemsParent}>
+                <Text style={styles.title}>Title</Text>
+                <TextInput
+                  style={styles.rectangleInput}
+                  selectTextOnFocus={true}
+                />
+              </View>
+              <View style={styles.itemsParent}>
+                <Text style={styles.title}>Items</Text>
+                <TextInput
+                  style={styles.rectangleInput}
+                  selectTextOnFocus={true}
+                />
+              </View>
+              <View style={styles.itemsParent}>
+                <Text style={styles.title}>Quantity</Text>
+                <TextInput
+                  style={styles.rectangleInput}
+                  selectTextOnFocus={true}
+                />
+              </View>
+              <View style={styles.itemsParent}>
+                <Text style={styles.title}>Price</Text>
+                <TextInput
+                  style={styles.rectangleInput}
+                  selectTextOnFocus={true}
+                />
+              </View>
+              <View style={styles.itemsParent}>
+                <Text style={styles.title}>Friends</Text>
+                <TextInput
+                  style={styles.rectangleInput}
+                  selectTextOnFocus={true}
+                />
+              </View>
+            </View>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -91,62 +122,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
-  cardContainer: {
-    position: "absolute",
-    top: 0,
-    borderRadius: 10,
-    width: 150,
-    height: 80,
-    shadowColor: "#171717",
-    shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-  },
-  font: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 13,
-    color: "#888",
-    fontFamily: "Gudea-Regular",
-  },
-  total: {
-    fontSize: 40,
-    fontFamily: "Gudea-Bold",
-  },
-  addButtonContainer: {
-    position: "absolute",
-    bottom: 115,
-    width: "100%",
-    alignItems: "center",
-  },
-  addButton: {
-    backgroundColor: "#00BEE5",
-    borderColor: "transparent",
-    borderRadius: 30,
-    shadowColor: "#171717",
-    shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.7,
-    shadowRadius: 5,
-    width: 120,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  addButtonTitle: {
-    fontWeight: "700",
-    fontSize: 25,
-    fontFamily: "Gudea-Bold",
-    color: "rgba(255, 255, 255, 1)",
-  },
   modalView: {
-    flexShrink: 0,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    columnGap: 190,
     backgroundColor: "white",
-    justifyContent: "center",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: "#000",
@@ -159,6 +136,13 @@ const styles = StyleSheet.create({
     elevation: 5,
     height: screenHeight / 2,
     width: screenWidth,
+  },
+  exitButton: {
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    columnGap: 190,
+    justifyContent: "center",
   },
   button: {
     borderRadius: 20,
@@ -186,6 +170,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
+  },
+  //--------------------------------------------------
+  frameParent: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    marginLeft: 24,
+    marginRight: 24,
+    marginTop: 16,
+  },
+  itemsParent: {
+    flexDirection: "row",
+    marginTop: 16,
+  },
+  title: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: "bold",
+    fontFamily: "Gudea-Bold",
+    textAlign: "center",
+    alignSelf: "center",
+    textAlign: "left",
+  },
+  rectangleInput: {
+    borderRadius: 5,
+    borderStyle: "solid",
+    borderColor: "#888",
+    borderWidth: 1,
+    width: 229,
+    height: 40,
   },
 });
 
