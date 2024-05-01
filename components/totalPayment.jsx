@@ -10,12 +10,10 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
-import { Input, Button, Card } from "@rneui/themed";
 import TabButton from "./button/tabRoundButton";
-import { Link } from "expo-router";
 import AddButton from "../components/button/addButton";
 import PaymentInfo from "../components/card/paymentInfo";
-
+import AddDataModal from "./card/addDataModal";
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
@@ -33,7 +31,7 @@ const TotalPayment = () => {
   return (
     <View style={styles.container}>
       <PaymentInfo />
-      <AddButton onPress={showModal} />
+      <AddButton onPress={showModal} title="Add" width={120} fontSize={25} />
       <TabButton />
       <TotalPaymentModal modalVisible={modalVisible} hideModal={hideModal} />
     </View>
@@ -70,44 +68,7 @@ const TotalPaymentModal = ({ modalVisible, hideModal }) => {
                 <Text style={styles.textStyle}>Done</Text>
               </Pressable>
             </View>
-
-            <View style={styles.frameParent}>
-              <View style={styles.itemsParent}>
-                <Text style={styles.title}>Title</Text>
-                <TextInput
-                  style={styles.rectangleInput}
-                  selectTextOnFocus={true}
-                />
-              </View>
-              <View style={styles.itemsParent}>
-                <Text style={styles.title}>Items</Text>
-                <TextInput
-                  style={styles.rectangleInput}
-                  selectTextOnFocus={true}
-                />
-              </View>
-              <View style={styles.itemsParent}>
-                <Text style={styles.title}>Quantity</Text>
-                <TextInput
-                  style={styles.rectangleInput}
-                  selectTextOnFocus={true}
-                />
-              </View>
-              <View style={styles.itemsParent}>
-                <Text style={styles.title}>Price</Text>
-                <TextInput
-                  style={styles.rectangleInput}
-                  selectTextOnFocus={true}
-                />
-              </View>
-              <View style={styles.itemsParent}>
-                <Text style={styles.title}>Friends</Text>
-                <TextInput
-                  style={styles.rectangleInput}
-                  selectTextOnFocus={true}
-                />
-              </View>
-            </View>
+            <AddDataModal />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -170,36 +131,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-  },
-  //--------------------------------------------------
-  frameParent: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    marginLeft: 24,
-    marginRight: 24,
-    marginTop: 16,
-  },
-  itemsParent: {
-    flexDirection: "row",
-    marginTop: 16,
-  },
-  title: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: "bold",
-    fontFamily: "Gudea-Bold",
-    textAlign: "center",
-    alignSelf: "center",
-    textAlign: "left",
-  },
-  rectangleInput: {
-    borderRadius: 5,
-    borderStyle: "solid",
-    borderColor: "#888",
-    borderWidth: 1,
-    width: 229,
-    height: 40,
   },
 });
 
