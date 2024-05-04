@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
 import React from "react";
 
-const addButton = ({ onPress, bottom, title, width, fontSize }) => {
+const screenWidth = Dimensions.get("window").width;
+
+const addButton = ({ onPress, bottom, title, width, fontSize, left }) => {
   return (
-    <View style={styles.addButtonContainer(bottom)}>
+    <View style={styles.addButtonContainer(bottom, left)}>
       <Pressable style={styles.addButton(width)} onPress={onPress}>
         <Text style={styles.addButtonTitle(fontSize)}>{title}</Text>
       </Pressable>
@@ -11,9 +13,11 @@ const addButton = ({ onPress, bottom, title, width, fontSize }) => {
   );
 };
 
+console.log(screenWidth);
 const styles = StyleSheet.create({
-  addButtonContainer: (bottom) => ({
+  addButtonContainer: (bottom, left) => ({
     bottom: bottom,
+    left: left,
     width: "100%",
     alignItems: "center",
   }),
@@ -23,7 +27,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     shadowColor: "#171717",
     shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.7,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
     width: width,
     height: 40,

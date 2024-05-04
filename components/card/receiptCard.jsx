@@ -329,13 +329,13 @@ const styles = StyleSheet.create({
   },
   container: {
     borderRadius: 10,
-    marginLeft: 8,
-    marginRight: 8,
+    marginLeft: 16,
+    marginRight: 16,
     marginTop: 10,
     padding: 0,
     shadowColor: "#171717",
     shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
   },
   flatListContainer: {

@@ -26,7 +26,7 @@ const tabRoundButton = () => {
           height: Platform.OS === "ios" ? 120 : 100,
           shadowColor: "#171717",
           shadowOffset: { width: -2, height: 4 },
-          shadowOpacity: 0.7,
+          shadowOpacity: 0.2,
           shadowRadius: 5,
           padding: 20,
         }}
@@ -42,7 +42,7 @@ const tabRoundButton = () => {
           height: Platform.OS === "ios" ? 120 : 100,
           shadowColor: "#171717",
           shadowOffset: { width: -2, height: 4 },
-          shadowOpacity: 0.7,
+          shadowOpacity: 0.2,
           shadowRadius: 5,
           padding: 20,
         }}
