@@ -149,7 +149,8 @@ const Mainscreen = () => {
                             Alert.alert('Paid Items', data.items)
                           }}
                           >
-                        <Icon name="check-circle" size={30} color="green"/>
+                        <Icon name="
+                        " size={30} color="green"/>
                         </TouchableOpacity>
 
                         <TouchableOpacity
