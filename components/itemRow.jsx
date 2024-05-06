@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import React from "react";
 import { useFonts } from "expo-font";
 
@@ -6,15 +6,24 @@ const ItemRow = ({ item, color }) => {
   return (
     <View style={styles.itemsParent}>
       <View style={styles.items(color)}>
-        <Text style={styles.itemText}>{item.items}</Text>
+        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={styles.itemTextMenu}>{item.items}</Text>
       </View>
       <View style={[styles.price, styles.priceSpaceBlock(color)]}>
         <Text style={styles.itemText}>{item.price}</Text>
       </View>
       <View style={[styles.friends, styles.priceSpaceBlock(color)]}>
-        <Text style={styles.itemText}>
-          {item.friends && Object.keys(item.friends).join(", ")}
-        </Text>
+        {item.friends && item.friends.length > 1 ? (
+          <ScrollView horizontal={true}>
+            <Text style={styles.itemText}>
+              {item.friends.join(", ")}
+            </Text>
+          </ScrollView>
+        ) : (
+          <Text style={styles.itemText}>
+            {item.friends.join(", ")}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -33,10 +42,32 @@ const styles = StyleSheet.create({
     fontSize: 20,
     top: 10,
   },
+  itemTextMenu: {
+    textAlign: "center",
+    color: "#000",
+    fontFamily: "Gudea-Regular",
+    fontWeight: "700",
+    fontSize: 20,
+    top: 0,
+  },
+  itemName: {
+    textAlign: "left",
+    color: "#000",
+    fontFamily: "Gudea-Regular",
+    fontWeight: "500",
+    marginLeft: 5,
+    paddingLeft: 5,
+    marginTop: 5,
+    fontSize: 12,
+    borderRadius: 5,
+    backgroundColor: "#D9D9D9",
+    width: 40,
+    height: 15
+  },
   priceSpaceBlock: (color) => ({
     marginLeft: 4,
     backgroundColor: color,
-    borderRadius: 10,
+    borderRadius: 10
   }),
   items: (color) => ({
     flex: 4,
@@ -65,6 +96,7 @@ const styles = StyleSheet.create({
   itemsParent: {
     width: "100%",
     flexDirection: "row",
+    marginBottom: -5
   },
 });
 export default ItemRow;

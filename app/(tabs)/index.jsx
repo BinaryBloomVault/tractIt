@@ -4,12 +4,15 @@ import Receipt from "../../components/receiptCard";
 import Mainscreen from "../../components/mainscreen";
 import data from "../../mockData/mockData";
 import { Card } from "@rneui/themed";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 
 const index = () => {
   return (
-    <View style={styles.mainactivity}>
+    <GestureHandlerRootView style={styles.mainactivity}>
       <Mainscreen />
-    </View>
+  </GestureHandlerRootView>
   );
 };
 
