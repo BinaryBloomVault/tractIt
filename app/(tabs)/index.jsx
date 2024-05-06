@@ -1,18 +1,17 @@
 import { View, Text, StyleSheet, Pressable, Button } from "react-native";
 import React from "react";
-import Receipt from "../../components/card/receiptCard";
-import TotalCard from "../../components/totalPayment";
-import FriendList from "./friendList";
-import Login from "./login";
+import Receipt from "../../components/receiptCard";
+import Mainscreen from "../../components/mainscreen";
+import data from "../../mockData/mockData";
+import { Card } from "@rneui/themed";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Icon from "react-native-vector-icons/FontAwesome";
+
 const index = () => {
   return (
-    //Receipt Card
-    <View style={styles.mainactivity}>
-      {/* <Receipt />
-      <TotalCard /> */}
-      {/* <FriendList /> */}
-      <Login />
-    </View>
+    <GestureHandlerRootView style={styles.mainactivity}>
+      <Mainscreen />
+    </GestureHandlerRootView>
   );
 };
 

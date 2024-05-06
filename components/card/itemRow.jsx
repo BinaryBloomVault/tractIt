@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import React from "react";
 import { useFonts } from "expo-font";
 
@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
   itemsParent: {
     width: "100%",
     flexDirection: "row",
+    marginBottom: -5,
   },
 });
 export default ItemRow;
