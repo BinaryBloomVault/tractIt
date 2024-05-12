@@ -3,17 +3,24 @@ import React from "react";
 
 const screenWidth = Dimensions.get("window").width;
 
-const addButton = ({ onPress, bottom, title, width, fontSize, left }) => {
+const addButton = ({
+  onPress,
+  bottom,
+  title,
+  width,
+  fontSize,
+  left,
+  height,
+}) => {
   return (
     <View style={styles.addButtonContainer(bottom, left)}>
-      <Pressable style={styles.addButton(width)} onPress={onPress}>
+      <Pressable style={styles.addButton(width, height)} onPress={onPress}>
         <Text style={styles.addButtonTitle(fontSize)}>{title}</Text>
       </Pressable>
     </View>
   );
 };
 
-console.log(screenWidth);
 const styles = StyleSheet.create({
   addButtonContainer: (bottom, left) => ({
     bottom: bottom,
@@ -21,7 +28,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   }),
-  addButton: (width) => ({
+  addButton: (width, height) => ({
     backgroundColor: "#00BEE5",
     borderColor: "transparent",
     borderRadius: 30,
@@ -30,7 +37,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     width: width,
-    height: 40,
+    height: height,
     alignItems: "center",
     justifyContent: "center",
   }),

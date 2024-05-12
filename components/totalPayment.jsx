@@ -31,7 +31,13 @@ const TotalPayment = () => {
   return (
     <View style={styles.container}>
       <PaymentInfo />
-      <AddButton onPress={showModal} title="Add" width={120} fontSize={25} />
+      <AddButton
+        onPress={showModal}
+        title="Add"
+        width={120}
+        fontSize={25}
+        height={40}
+      />
       <TabButton />
       <TotalPaymentModal modalVisible={modalVisible} hideModal={hideModal} />
     </View>
@@ -82,6 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
+    backgroundColor: "#A9DFBF",
   },
   modalView: {
     backgroundColor: "white",
