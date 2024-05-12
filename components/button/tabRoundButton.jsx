@@ -1,8 +1,11 @@
 import { View, Text, Platform } from "react-native";
 import React from "react";
 import { Button } from "@rneui/base";
+import { useRouter } from "expo-router";
 
 const tabRoundButton = () => {
+  const router = useRouter();
+
   return (
     <View
       style={{
@@ -30,6 +33,7 @@ const tabRoundButton = () => {
           shadowRadius: 5,
           padding: 20,
         }}
+        onPress={() => router.push("/mainscreen")}
       />
       <Button
         title="Right Button"
@@ -46,6 +50,7 @@ const tabRoundButton = () => {
           shadowRadius: 5,
           padding: 20,
         }}
+        onPress={() => router.push("/mainscreen")}
       />
     </View>
   );

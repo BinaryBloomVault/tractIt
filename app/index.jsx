@@ -1,16 +1,20 @@
 import { Image, StyleSheet, Text, View, TextInput } from "react-native";
 import { Input } from "@rneui/themed";
-import SignIn from "../../components/button/addButton";
+import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+
 import React from "react";
 
 const login = () => {
+  const router = useRouter();
+
   return (
     <View style={styles.loginscreen}>
       <Image
         style={styles.designer11}
         resizeMode="cover"
-        source={require(`../../assets/images/friends.png`)}
+        source={require(`../assets/images/friends.png`)}
       />
       <Text style={styles.welcomeBack}>Welcome</Text>
 
@@ -31,7 +35,13 @@ const login = () => {
         <Text style={[styles.reset, styles.resetTypo]}>Reset</Text>
       </View>
       <View style={styles.signInWrapper}>
-        <SignIn title="Log in" fontSize={18} width={350} height={45} />
+        <SignIn
+          title="Log in"
+          fontSize={18}
+          width={350}
+          height={45}
+          onPress={() => router.replace("/mainscreen")}
+        />
       </View>
       <View style={styles.orParent}>
         <Text style={styles.or}>or</Text>
@@ -39,7 +49,7 @@ const login = () => {
           <Image
             style={styles.svgrepocomIconLayout}
             resizeMode="cover"
-            source={require(`../../assets/images/google.png`)}
+            source={require(`../assets/images/google.png`)}
           />
           <FontAwesome name="apple" size={44} color="black" />
         </View>

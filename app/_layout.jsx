@@ -52,11 +52,8 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <Stack>
-      <Stack.Screen
-        // Name of the route to hide.
-        name="(tabs)"
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -16,7 +16,8 @@ import PaymentInfo from "../components/card/paymentInfo";
 import AddDataModal from "./card/addDataModal";
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
-
+import { AntDesign } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 const TotalPayment = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -61,17 +62,11 @@ const TotalPaymentModal = ({ modalVisible, hideModal }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <View style={styles.exitButton}>
-              <Pressable
-                style={[styles.button, styles.buttonCancel]}
-                onPress={hideModal}
-              >
-                <Text style={styles.textStyle}>Cancel</Text>
+              <Pressable onPress={hideModal}>
+                <Feather name="x" size={28} color="black" />
               </Pressable>
-              <Pressable
-                style={[styles.button, styles.buttonDone]}
-                onPress={hideModal}
-              >
-                <Text style={styles.textStyle}>Done</Text>
+              <Pressable onPress={hideModal}>
+                <AntDesign name="check" size={28} color="black" />
               </Pressable>
             </View>
             <AddDataModal />
@@ -88,7 +83,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    backgroundColor: "#A9DFBF",
   },
   modalView: {
     backgroundColor: "white",
@@ -106,10 +100,11 @@ const styles = StyleSheet.create({
     width: screenWidth,
   },
   exitButton: {
+    marginTop: 16,
     flexShrink: 0,
     flexDirection: "row",
     alignItems: "flex-start",
-    columnGap: 190,
+    columnGap: 290,
     justifyContent: "center",
   },
   button: {
@@ -121,12 +116,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonDone: {
-    backgroundColor: "#00BEE5",
-  },
-  buttonCancel: {
-    backgroundColor: "#E62D2B",
-  },
+
   textStyle: {
     fontSize: 15,
     color: "white",

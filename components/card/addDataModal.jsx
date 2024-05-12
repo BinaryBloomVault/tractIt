@@ -56,7 +56,7 @@ const useStyle = () => {
       alignItems: "center",
       marginLeft: 24,
       marginRight: 24,
-      marginTop: 16,
+      marginTop: 8,
     },
     itemsParent: {
       flexDirection: "row",

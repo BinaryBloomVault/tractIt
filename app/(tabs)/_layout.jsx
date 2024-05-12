@@ -2,15 +2,13 @@ import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-
+import { Tabs, router } from "expo-router";
+import { Text, StyleSheet, Pressable, View } from "react-native";
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{ tabBarActiveTintColor: "#00BEE5", headerShown: false }}
-    >
+    <Tabs>
       <Tabs.Screen
-        name="index"
+        name="mainscreen"
         options={{
           tabBarLabel: "",
           tabBarIcon: ({ color }) => (
@@ -20,11 +18,13 @@ export default function TabLayout() {
               color={color}
             />
           ),
+          headerShown: false,
         }}
       />
       <Tabs.Screen
-        name="addButton"
+        name="writeReceipt"
         options={{
+          tabBarStyle: { display: "none" },
           tabBarLabel: "",
           tabBarIcon: ({ color }) => (
             <FontAwesome size={30} name="plus-circle" color={color} />

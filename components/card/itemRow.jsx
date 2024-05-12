@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import React from "react";
 import { useFonts } from "expo-font";
 
-const ItemRow = ({ item, color, font, size }) => {
+const ItemRow = ({ item, color, font, size, height }) => {
   return (
     <View style={styles.itemsParent}>
       <View style={styles.items(color)}>
