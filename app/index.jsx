@@ -3,11 +3,42 @@ import { Input } from "@rneui/themed";
 import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useAuthStore, db } from "../store/zustand";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+} from "firebase/firestore";
+import { firestore } from "../config/firebaseConfig";
+import * as SecureStore from "expo-secure-store";
 
-import React from "react";
+import React, { useState } from "react";
 
 const login = () => {
   const router = useRouter();
+  const { login } = useAuthStore((state) => ({
+    login: state.login,
+  }));
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleCredentials = async () => {
+    try {
+      await login(email, password);
+      const { user } = useAuthStore.getState();
+      if (user) {
+        router.replace("/mainscreen");
+      }
+      const token1 = await SecureStore.getItemAsync("auth_token");
+      console.log(token1);
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
+  };
 
   return (
     <View style={styles.loginscreen}>
@@ -23,11 +54,16 @@ const login = () => {
           style={[styles.inputFormChild, styles.inputShadowBox]}
           placeholder="Email"
           placeholderTextColor="#92a0a9"
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
           style={[styles.inputFormItem, styles.inputShadowBox]}
           placeholder="Password"
           placeholderTextColor="#92a0a9"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
       <View style={styles.forgotPasswordParent}>
@@ -40,7 +76,7 @@ const login = () => {
           fontSize={18}
           width={350}
           height={45}
-          onPress={() => router.replace("/mainscreen")}
+          onPress={handleCredentials}
         />
       </View>
       <View style={styles.orParent}>

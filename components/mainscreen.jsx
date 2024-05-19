@@ -14,7 +14,7 @@ import {
 import { Card } from "@rneui/themed";
 import ItemRow from "../components/card/itemRow";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { useStore } from "../zustand/zustand";
+import { useStore } from "../store/zustand";
 
 import { db } from "../config/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
@@ -92,26 +92,25 @@ const LeftSwipeActions = () => {
 };
 
 const Mainscreen = () => {
-  const { tableData, setTableData } = useStore();
+  // const { tableData, setTableData } = useStore();
   const styles = useStyle();
 
   const fetchData = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "Users"));
-      const newData: TableData[] = [];
-      querySnapshot.forEach(doc => {
-          const userData = doc.data();
-          newData.push({
-              name: userData.name,
-              items: userData.menu,
-              price: userData.price,
-              friends: userData.groupfriends
-          });
-      });
-      setTableData(newData);
-      console.log("Data fetched successfully");
+      // const newData = [];
+      // querySnapshot.forEach((doc) => {
+      //   const userData = doc.data();
+      //   newData.push({
+      //     name: userData.name,
+      //     items: userData.menu,
+      //     price: userData.price,
+      //     friends: userData.groupfriends,
+      //   });
+      // });
+      // setTableData(newData);
     } catch (error) {
-      console.log("Error displaying data ", error);
+      // console.log("Error displaying data ", error);
     }
   };
 
@@ -133,7 +132,7 @@ const Mainscreen = () => {
       </View>
       <View></View>
       <Card containerStyle={styles.container}>
-        <ScrollView vertical={true}>
+        {/* <ScrollView vertical={true}>
           {tableData.slice(0, tableData.length).map((item, index) => (
             <Swipeable
               key={index}
@@ -148,7 +147,7 @@ const Mainscreen = () => {
               </View>
             </Swipeable>
           ))}
-        </ScrollView>
+        </ScrollView> */}
       </Card>
     </View>
   );
@@ -156,7 +155,6 @@ const Mainscreen = () => {
 
 const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
-  console.log(deviceHeight);
 
   const styles = StyleSheet.create({
     mainContainer: {
