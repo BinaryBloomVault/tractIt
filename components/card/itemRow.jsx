@@ -24,10 +24,6 @@ const ItemRow = ({ item, color, font, size, height }) => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    paddingVertical: 8,
-  },
   itemText: (font, size) => ({
     textAlign: "center",
     justifyContent: "center",
@@ -76,7 +72,7 @@ const styles = StyleSheet.create({
   itemsParent: {
     width: "100%",
     flexDirection: "row",
-    marginBottom: -5,
+    marginBottom: 8,
   },
 });
 export default ItemRow;

@@ -292,7 +292,7 @@ const receiptCard = () => {
         />
       </View>
       <Card.Divider
-        style={{ width: "100%", marginBottom: 0 }}
+        style={{ width: "100%", marginBottom: 0, marginTop: 0 }}
         color="#888"
         width={2}
         orientation="horizontal"
@@ -313,6 +313,12 @@ const receiptCard = () => {
           keyExtractor={(item, index) => index.toString()}
         />
       </View>
+      <Card.Divider
+        style={{ width: "100%", marginBottom: 0 }}
+        color="#888"
+        width={2}
+        orientation="horizontal"
+      />
       <View style={styles.header}>
         <ItemRow
           item={{
@@ -336,7 +342,7 @@ const useStyle = () => {
   const styles = StyleSheet.create({
     header: {
       flexDirection: "row",
-      paddingVertical: 8,
+      marginTop: 8,
     },
     middle: {
       flexDirection: "row",

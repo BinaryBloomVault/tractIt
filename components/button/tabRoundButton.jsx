@@ -33,7 +33,7 @@ const tabRoundButton = () => {
           shadowRadius: 5,
           padding: 20,
         }}
-        onPress={() => router.push("/mainscreen")}
+        onPress={() => router.replace("/mainscreen")}
       />
       <Button
         title="Right Button"
@@ -50,7 +50,7 @@ const tabRoundButton = () => {
           shadowRadius: 5,
           padding: 20,
         }}
-        onPress={() => router.push("/mainscreen")}
+        onPress={() => router.replace("/mainscreen")}
       />
     </View>
   );
