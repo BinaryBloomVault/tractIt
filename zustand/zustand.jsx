@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   signInWithCustomToken,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -22,6 +23,7 @@ import {
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -52,7 +54,6 @@ export const useAuthStore = create((set, get) => ({
         localUserData: userDataPayload,
         isOffline: false,
       });
-      await syncUserData(token, user.toJSON());
     } catch (error) {
       console.error("Error logging in:", error);
       set({ isOffline: true });
@@ -76,7 +77,38 @@ export const useAuthStore = create((set, get) => ({
       set({ isOffline: true });
     }
   },
+  register: async (email, password, name) => {
+    try {
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const userRef = doc(firestore, "users", user.uid);
+      const userData = { name: name, email: email };
+      await setDoc(userRef, userData);
 
+      const userDataPayload = {
+        name: name,
+        email: email,
+        friends: {},
+        sharedReceipts: {},
+      };
+      await SecureStore.setItemAsync(
+        "user_data",
+        JSON.stringify(userDataPayload)
+      );
+
+      set({
+        user: userDataPayload,
+        localUserData: userDataPayload,
+        isOffline: false,
+      });
+    } catch (error) {
+      console.error("Error registering:", error);
+      set({ isOffline: true });
+    }
+  },
   getAuthToken: async () => {
     try {
       const token = await SecureStore.getItemAsync("auth_token");
@@ -165,6 +197,30 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  addSharedReceipt: async (receiptData) => {
+    try {
+      const user = get().user;
+      const receiptId = uuidv4(); // Generate unique ID using UUID
+      const receiptRef = doc(
+        firestore,
+        "users",
+        user.uid,
+        "sharedReceipts",
+        receiptId
+      );
+      await setDoc(receiptRef, receiptData);
+
+      const updatedUser = {
+        ...user,
+        sharedReceipts: { ...user.sharedReceipts, [receiptId]: receiptData },
+      };
+      await SecureStore.setItemAsync("user_data", JSON.stringify(updatedUser));
+      set({ user: updatedUser, localUserData: updatedUser });
+    } catch (error) {
+      console.error("Error adding shared receipt:", error);
+    }
+  },
+
   getReceipts: () => get().receipts,
 }));
 
@@ -172,21 +228,6 @@ const syncUserData = async (token, newUserData) => {
   try {
     const localUserData = await SecureStore.getItemAsync("user_data");
     const prevUserData = localUserData ? JSON.parse(localUserData) : {};
-
-    const userRef = doc(firestore, "users", newUserData.uid);
-    const userDoc = await getDoc(userRef);
-
-    const userPayload = {
-      name: newUserData.name || "",
-      email: newUserData.email || "",
-      friends: newUserData.friends || {},
-      sharedReceipts: newUserData.sharedReceipts || {},
-    };
-
-    // Create user document if it doesn't exist
-    if (!userDoc.exists()) {
-      await setDoc(userRef, userPayload);
-    }
 
     // Check and update friends collection
     if (

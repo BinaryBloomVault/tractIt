@@ -1,39 +1,46 @@
 import { Image, StyleSheet, Text, View, TextInput } from "react-native";
 import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
-import { useAuthStore, db } from "../zustand/zustand";
+import { useAuthStore } from "../zustand/zustand";
 import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import { Link } from "expo-router";
 
-const login = () => {
-  const { login } = useAuthStore((state) => ({
-    login: state.login,
+const Register = () => {
+  const { register } = useAuthStore((state) => ({
+    register: state.register,
   }));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
-  const handleCredentials = async () => {
+  const handleRegister = async () => {
     try {
-      await login(email, password);
-      const token1 = await SecureStore.getItemAsync("auth_token");
+      await register(email, password, name);
     } catch (error) {
-      console.error("Error logging in:", error);
+      console.error("Error registering:", error);
     }
   };
 
   return (
-    <View style={styles.loginscreen}>
+    <View style={styles.registerscreen}>
       <Image
         style={styles.designer11}
         resizeMode="cover"
         source={require(`../assets/images/friends.png`)}
       />
-      <Text style={styles.welcomeBack}>Welcome</Text>
+      <Text style={styles.welcome}>Register</Text>
 
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
+          placeholder="Name"
+          placeholderTextColor="#92a0a9"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={[styles.inputFormItem, styles.inputShadowBox]}
           placeholder="Email"
           placeholderTextColor="#92a0a9"
           value={email}
@@ -48,33 +55,20 @@ const login = () => {
           onChangeText={setPassword}
         />
       </View>
-      <View style={styles.forgotPasswordParent}>
-        <Text style={styles.forgotPassword}>Forgot Password?</Text>
-        <Text style={[styles.reset, styles.resetTypo]}>Reset</Text>
-      </View>
       <View style={styles.signInWrapper}>
         <SignIn
-          title="Log in"
+          title="Sign Up"
           fontSize={18}
           width={350}
           height={45}
-          onPress={handleCredentials}
+          onPress={handleRegister}
         />
       </View>
       <View style={styles.orParent}>
-        <Text style={styles.or}>or</Text>
-        <View style={styles.icons}>
-          <Image
-            style={styles.svgrepocomIconLayout}
-            resizeMode="cover"
-            source={require(`../assets/images/google.png`)}
-          />
-          <FontAwesome name="apple" size={44} color="black" />
-        </View>
         <View style={styles.signUpContainer}>
-          <Text style={styles.forgotPassword}>Don’t have an account?</Text>
-          <Link href="/register" asChild>
-            <Text style={styles.resetTypo}>Sign up</Text>
+          <Text style={styles.forgotPassword}>Already have an account?</Text>
+          <Link href="/" asChild>
+            <Text style={styles.resetTypo}>Log in</Text>
           </Link>
         </View>
       </View>
@@ -113,7 +107,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 260,
   },
-  welcomeBack: {
+  welcome: {
     fontSize: 45,
     height: 70,
     marginTop: 16,
@@ -138,39 +132,14 @@ const styles = StyleSheet.create({
     color: "#92a0a9",
     fontWeight: "700",
   },
-  reset: {
-    marginLeft: 5,
-  },
-  forgotPasswordParent: {
-    height: 30,
-    marginTop: 8,
-    flexDirection: "row",
-  },
-  inputForm: {
-    height: 115,
-    marginTop: 16,
-    alignItems: "center",
-  },
-  signIn: {
-    fontSize: 25,
-    color: "#fff",
-    width: 177,
-    height: 36,
-    textAlign: "center",
-    fontFamily: "Gudea-Bold",
-    fontWeight: "700",
-  },
   signInWrapper: {
-    marginTop: 16,
+    marginTop: 24,
   },
   or: {
     color: "#000",
     textAlign: "left",
     fontWeight: "600",
     fontSize: 15,
-  },
-  apple173SvgrepocomIcon: {
-    marginLeft: 57,
   },
   icons: {
     marginTop: 8,
@@ -183,15 +152,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     columnGap: 8,
   },
-  signUp: {
-    marginLeft: 8,
-  },
+
   orParent: {
     marginTop: 16,
     alignItems: "center",
   },
 
-  loginscreen: {
+  registerscreen: {
     backgroundColor: "#f2e3a9",
     flex: 1,
     width: "100%",
@@ -199,4 +166,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default login;
+export default Register;

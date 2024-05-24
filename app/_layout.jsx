@@ -5,9 +5,12 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useSegments, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config/firebaseConfig";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -31,7 +34,9 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  const router = useRouter();
+  const segments = useSegments();
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -42,18 +47,35 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  //Change this so that ang onAuthStateChanged kay ma butang sa Zustand and have isLogin or isLogout
+  // para ika isa ra siya ma call if naay changes ra sa state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (userData) => {
+      if (userData && segments[0] !== "(auth)") {
+        router.replace("(auth)");
+      } else if (!userData && segments[0] === "(auth)") {
+        router.replace("/");
+      }
+    });
 
-  return <RootLayoutNav />;
+    return unsubscribe;
+  }, [segments]);
+
+  return (
+    <>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <RootLayoutNav />
+      </GestureHandlerRootView>
+    </>
+  );
 }
 
 function RootLayoutNav() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="register" options={{ headerShown: false }} />
     </Stack>
   );
 }

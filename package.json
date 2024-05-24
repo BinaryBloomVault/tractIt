@@ -39,6 +39,7 @@
     "react-native-svg": "15.2.0",
     "react-native-vector-icons": "^10.0.3",
     "react-native-web": "~0.19.6",
+    "uuidv4": "^6.2.13",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

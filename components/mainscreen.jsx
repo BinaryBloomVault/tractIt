@@ -14,8 +14,7 @@ import {
 import { Card } from "@rneui/themed";
 import ItemRow from "../components/card/itemRow";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { useStore } from "../store/zustand";
-
+import { useAuthStore } from "../zustand/zustand";
 import { db } from "../config/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -95,6 +94,11 @@ const Mainscreen = () => {
   // const { tableData, setTableData } = useStore();
   const styles = useStyle();
 
+  /* Ako ra gi usab ni para naa koy ma pislit na logout, don't mind this */
+  const { logout } = useAuthStore((state) => ({
+    logout: state.logout,
+  }));
+
   const fetchData = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "Users"));
@@ -121,7 +125,8 @@ const Mainscreen = () => {
   return (
     <View styles={styles.mainContainer}>
       <View style={styles.userProfile}>
-        <Pressable onPress={fetchData}>
+        {/* Ako ra gi usab ni para naa koy ma pislit na logout, don't mind this */}
+        <Pressable onPress={logout}>
           <Image
             style={styles.images}
             source={require("../assets/images/avatar.png")}

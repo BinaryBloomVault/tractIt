@@ -8,7 +8,7 @@ export default function TabLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        name="mainscreen"
+        name="index"
         options={{
           tabBarLabel: "",
           tabBarIcon: ({ color }) => (
@@ -38,6 +38,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="notifications-sharp" size={30} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="(friendList)"
+        options={{
+          tabBarLabel: "",
+          href: null,
+          headerShown: false,
         }}
       />
     </Tabs>
