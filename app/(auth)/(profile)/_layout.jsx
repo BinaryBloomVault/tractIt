@@ -10,6 +10,7 @@ export default function TabLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen name="profile" />
     </Stack>
   );
 }

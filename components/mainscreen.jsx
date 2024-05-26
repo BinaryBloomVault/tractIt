@@ -12,11 +12,12 @@ import {
 } from "react-native";
 
 import { Card } from "@rneui/themed";
-import ItemRow from "../components/card/itemRow";
+import ItemRow from "./card/ItemRow";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useAuthStore } from "../zustand/zustand";
 import { db } from "../config/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import { Link } from "expo-router";
 
 const swipeFromRightOpen = () => {
   Alert.alert("Swipe from right");
@@ -135,7 +136,6 @@ const Mainscreen = () => {
           />
         </Pressable>
       </View>
-      <View></View>
       <Card containerStyle={styles.container}>
         {/* <ScrollView vertical={true}>
           {tableData.slice(0, tableData.length).map((item, index) => (
@@ -187,7 +187,7 @@ const useStyle = () => {
     },
     userProfile: {
       position: "absolute",
-      top: 50,
+      top: 60,
       right: 20,
     },
     images: {

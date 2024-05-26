@@ -1,9 +1,17 @@
-import { Image, StyleSheet, Text, View, TextInput } from "react-native";
-import SignIn from "../components/button/addButton";
-import { FontAwesome } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  useWindowDimensions,
+} from "react-native";
+import SignIn from "../components/button/AddButton";
 import { useAuthStore } from "../zustand/zustand";
 import * as SecureStore from "expo-secure-store";
-import React, { useState } from "react";
 import { Link } from "expo-router";
 
 const Register = () => {
@@ -13,6 +21,8 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const windowHeight = useWindowDimensions().height;
 
   const handleRegister = async () => {
     try {
@@ -24,13 +34,7 @@ const Register = () => {
 
   return (
     <View style={styles.registerscreen}>
-      <Image
-        style={styles.designer11}
-        resizeMode="cover"
-        source={require(`../assets/images/friends.png`)}
-      />
       <Text style={styles.welcome}>Register</Text>
-
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
@@ -77,6 +81,9 @@ const Register = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   inputShadowBox: {
     fontSize: 15,
     justifyContent: "center",
@@ -89,23 +96,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     alignItems: "center",
   },
-
   resetTypo: {
     color: "#00bee5",
     textAlign: "left",
     fontSize: 15,
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
-  },
-  svgrepocomIconLayout: {
-    height: 40,
-    width: 40,
-    overflow: "hidden",
-  },
-  designer11: {
-    marginTop: 100,
-    width: 220,
-    height: 260,
   },
   welcome: {
     fontSize: 45,
@@ -135,34 +131,22 @@ const styles = StyleSheet.create({
   signInWrapper: {
     marginTop: 24,
   },
-  or: {
-    color: "#000",
-    textAlign: "left",
-    fontWeight: "600",
-    fontSize: 15,
-  },
-  icons: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    columnGap: 80,
-  },
-  signUpContainer: {
-    marginTop: 21,
-    flexDirection: "row",
-    columnGap: 8,
-  },
-
   orParent: {
     marginTop: 16,
     alignItems: "center",
   },
-
   registerscreen: {
     backgroundColor: "#f2e3a9",
     flex: 1,
     width: "100%",
     alignItems: "center",
+    paddingBottom: 20,
+    justifyContent: "center",
+  },
+  signUpContainer: {
+    marginTop: 21,
+    flexDirection: "row",
+    columnGap: 8,
   },
 });
 

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useState, useRef } from "react";
-import AddButton from "../button/addButton";
+import AddButton from "../button/AddButton";
 
 const AddDataModal = () => {
   const styles = useStyle();
@@ -16,6 +16,10 @@ const AddDataModal = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
+  const itemRefs = useRef([]);
+  const quantityRefs = useRef([]);
+  const priceRefs = useRef([]);
+  const friendsRefs = useRef([]);
 
   const addNewPage = () => {
     if (pages.length < 99) {
@@ -36,8 +40,25 @@ const AddDataModal = () => {
     setCurrentPage(currentPage);
   };
 
+  const handleSaveReceipts = () => {
+    const receipts = itemRefs.current.map((_, index) => ({
+      item: itemRefs.current[index].value,
+      quantity: quantityRefs.current[index].value,
+      price: priceRefs.current[index].value,
+      friends: friendsRefs.current[index].value,
+    }));
+
+    receipts.forEach((receipt) => {
+      setAddSharedReceipt(receipt);
+    });
+
+    // Optionally clear the form after submission
+    setPages([0]);
+    setCurrentPage(1);
+  };
+
   return (
-    <>
+    <View style={{ marginTop: 16 }}>
       <ScrollView
         horizontal
         pagingEnabled
@@ -52,6 +73,7 @@ const AddDataModal = () => {
             <View style={styles.itemsParent}>
               <Text style={styles.title}>Items</Text>
               <TextInput
+                ref={(ref) => (itemRefs.current[index] = ref)}
                 style={styles.rectangleInput}
                 selectTextOnFocus={true}
               />
@@ -59,6 +81,7 @@ const AddDataModal = () => {
             <View style={styles.itemsParent}>
               <Text style={styles.title}>Quantity</Text>
               <TextInput
+                ref={(ref) => (quantityRefs.current[index] = ref)}
                 style={styles.rectangleInput}
                 selectTextOnFocus={true}
               />
@@ -66,6 +89,7 @@ const AddDataModal = () => {
             <View style={styles.itemsParent}>
               <Text style={styles.title}>Price</Text>
               <TextInput
+                ref={(ref) => (priceRefs.current[index] = ref)}
                 style={styles.rectangleInput}
                 selectTextOnFocus={true}
               />
@@ -73,6 +97,7 @@ const AddDataModal = () => {
             <View style={styles.itemsParent}>
               <Text style={styles.title}>Friends</Text>
               <TextInput
+                ref={(ref) => (friendsRefs.current[index] = ref)}
                 style={styles.rectangleInput}
                 selectTextOnFocus={true}
               />
@@ -94,7 +119,7 @@ const AddDataModal = () => {
           {currentPage > 0 ? currentPage : 1}/{pages.length}
         </Text>
       </View>
-    </>
+    </View>
   );
 };
 
@@ -116,6 +141,7 @@ const useStyle = () => {
       justifyContent: "space-between",
       paddingHorizontal: 24,
       marginBottom: 30,
+      marginTop: 60,
     },
     paginationText: {
       fontSize: 18,
@@ -144,31 +170,6 @@ const useStyle = () => {
       borderWidth: 1,
       width: "70%",
       height: deviceHeight < 813 ? 32 : 40,
-    },
-    frameParent: {
-      flex: 1,
-      flexDirection: "column",
-      alignItems: "center",
-      marginLeft: 24,
-      marginRight: 24,
-      marginTop: 8,
-    },
-    paginationButtons: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      columnGap: 0,
-      marginTop: 16,
-    },
-    button: {
-      padding: 10,
-      backgroundColor: "#00bee5",
-      borderRadius: 5,
-    },
-    buttonText: {
-      color: "#fff",
-      fontSize: 18,
-      fontFamily: "Gudea-Bold",
-      fontWeight: "700",
     },
   });
   return styles;

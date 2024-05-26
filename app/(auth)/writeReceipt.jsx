@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
-import Receipt from "../../components/card/receiptCard";
-import TotalCard from "../../components/totalPayment";
+import Receipt from "../../components/card/ReceiptCard";
+import TotalCard from "../../components/TotalPayment";
 const addButton = () => {
   return (
     <View style={styles.mainactivity}>

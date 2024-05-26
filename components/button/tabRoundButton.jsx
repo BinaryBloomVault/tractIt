@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@rneui/base";
 import { useRouter } from "expo-router";
 
-const tabRoundButton = () => {
+const tabRoundButton = ({ onPress }) => {
   const router = useRouter();
 
   return (
@@ -50,7 +50,7 @@ const tabRoundButton = () => {
           shadowRadius: 5,
           padding: 20,
         }}
-        onPress={() => router.replace("/mainscreen")}
+        onPress={onPress}
       />
     </View>
   );

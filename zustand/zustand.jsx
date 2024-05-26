@@ -23,15 +23,18 @@ import {
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import _ from "lodash";
-import { v4 as uuidv4 } from "uuid";
+import * as Crypto from "expo-crypto";
 
 export const useAuthStore = create((set, get) => ({
-  user: null,
+  authUser: null,
   authToken: null,
   localUserData: null,
   isOffline: true,
   receipts: [],
-
+  addReceipts: (receipt) =>
+    set((state) => ({
+      receipts: [...state.receipts, receipt],
+    })),
   login: async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
@@ -39,6 +42,7 @@ export const useAuthStore = create((set, get) => ({
       const userDataPayload = {
         name: user.displayName || "",
         email: user.email || "",
+        uid: user.uid,
         friends: {},
         sharedReceipts: {},
       };
@@ -46,10 +50,10 @@ export const useAuthStore = create((set, get) => ({
       await SecureStore.setItemAsync("auth_token", token);
       await SecureStore.setItemAsync(
         "user_data",
-        JSON.stringify(user.toJSON())
+        JSON.stringify(userDataPayload)
       );
       set({
-        user: userDataPayload,
+        authUser: user,
         authToken: token,
         localUserData: userDataPayload,
         isOffline: false,
@@ -66,7 +70,7 @@ export const useAuthStore = create((set, get) => ({
       await SecureStore.deleteItemAsync("auth_token");
       await SecureStore.deleteItemAsync("user_data");
       set({
-        user: null,
+        authUser: null,
         authToken: null,
         localUserData: null,
         isOffline: true,
@@ -85,22 +89,27 @@ export const useAuthStore = create((set, get) => ({
         password
       );
       const userRef = doc(firestore, "users", user.uid);
+      const token = await user.getIdToken();
+
       const userData = { name: name, email: email };
       await setDoc(userRef, userData);
 
       const userDataPayload = {
-        name: name,
-        email: email,
+        name: user.displayName || "",
+        email: user.email || "",
+        uid: user.uid,
         friends: {},
         sharedReceipts: {},
       };
+
+      await SecureStore.setItemAsync("auth_token", token);
       await SecureStore.setItemAsync(
         "user_data",
         JSON.stringify(userDataPayload)
       );
 
       set({
-        user: userDataPayload,
+        authUser: user,
         localUserData: userDataPayload,
         isOffline: false,
       });
@@ -116,7 +125,12 @@ export const useAuthStore = create((set, get) => ({
       if (token && userData) {
         const user = JSON.parse(userData);
         await signInWithCustomToken(auth, token);
-        set({ authToken: token, user, localUserData: user, isOffline: false });
+        set({
+          authToken: token,
+          authUser: user,
+          localUserData: user,
+          isOffline: false,
+        });
         await syncUserData(token, user);
       }
       return token;
@@ -197,25 +211,43 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  addSharedReceipt: async (receiptData) => {
+  addSharedReceipt: async (receiptDataArray) => {
     try {
-      const user = get().user;
-      const receiptId = uuidv4(); // Generate unique ID using UUID
-      const receiptRef = doc(
-        firestore,
-        "users",
-        user.uid,
-        "sharedReceipts",
-        receiptId
-      );
-      await setDoc(receiptRef, receiptData);
+      const userDataString = await SecureStore.getItemAsync("user_data");
+      console.log("asdasdasdasd", userDataString);
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const receiptId = Crypto.randomUUID();
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId
+        );
 
-      const updatedUser = {
-        ...user,
-        sharedReceipts: { ...user.sharedReceipts, [receiptId]: receiptData },
-      };
-      await SecureStore.setItemAsync("user_data", JSON.stringify(updatedUser));
-      set({ user: updatedUser, localUserData: updatedUser });
+        const receiptData = {
+          receipts: receiptDataArray,
+        };
+        await setDoc(receiptRef, receiptData);
+
+        const updatedUser = {
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [receiptId]: receiptData,
+          },
+        };
+        await SecureStore.setItemAsync(
+          "user_data",
+          JSON.stringify(updatedUser)
+        );
+        set({
+          authUser: updatedUser,
+          localUserData: updatedUser,
+          receipts: [...get().receipts, receiptData],
+        });
+      }
     } catch (error) {
       console.error("Error adding shared receipt:", error);
     }

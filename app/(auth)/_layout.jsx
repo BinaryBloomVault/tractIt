@@ -41,8 +41,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="(friendList)"
+        name="(profile)"
         options={{
+          tabBarStyle: { display: "none" },
           tabBarLabel: "",
           href: null,
           headerShown: false,
