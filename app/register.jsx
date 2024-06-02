@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import SignIn from "../components/button/AddButton";
 import { useAuthStore } from "../zustand/zustand";
-import * as SecureStore from "expo-secure-store";
 import { Link } from "expo-router";
 
 const Register = () => {

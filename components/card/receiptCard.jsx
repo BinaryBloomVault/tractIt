@@ -15,7 +15,6 @@ const receiptCard = () => {
   const { receipts } = useAuthStore((state) => ({
     receipts: state.receipts,
   }));
-  console.log("rererer", receipts);
 
   return (
     <Card containerStyle={styles.container}>
@@ -79,7 +78,6 @@ const receiptCard = () => {
 
 const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
-  console.log(deviceHeight < 813 == true);
   const styles = StyleSheet.create({
     header: {
       flexDirection: "row",

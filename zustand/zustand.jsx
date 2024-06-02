@@ -1,10 +1,5 @@
 import { create } from "zustand";
-import * as SecureStore from "expo-secure-store";
-import {
-  hasUserDataChanged,
-  hasUserFriendsChanged,
-  hasUserReceiptsChanged,
-} from "../util/dataUtil";
+import { MMKV } from "react-native-mmkv";
 import { auth } from "../config/firebaseConfig";
 import {
   signInWithEmailAndPassword,
@@ -12,18 +7,17 @@ import {
   signInWithCustomToken,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  collection,
-} from "firebase/firestore";
+import { doc, setDoc, collection } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
-import _ from "lodash";
 import * as Crypto from "expo-crypto";
+
+const mmkv = new MMKV();
+
+const mmkvStorage = {
+  getItem: (key) => mmkv.getString(key),
+  setItem: (key, value) => mmkv.set(key, value),
+  removeItem: (key) => mmkv.delete(key),
+};
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -31,10 +25,13 @@ export const useAuthStore = create((set, get) => ({
   localUserData: null,
   isOffline: true,
   receipts: [],
+
   addReceipts: (receipt) =>
     set((state) => ({
       receipts: [...state.receipts, receipt],
     })),
+  clearReceipts: () => set({ receipts: [] }),
+
   login: async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
@@ -47,11 +44,8 @@ export const useAuthStore = create((set, get) => ({
         sharedReceipts: {},
       };
 
-      await SecureStore.setItemAsync("auth_token", token);
-      await SecureStore.setItemAsync(
-        "user_data",
-        JSON.stringify(userDataPayload)
-      );
+      mmkvStorage.setItem("auth_token", token);
+      mmkvStorage.setItem("user_data", JSON.stringify(userDataPayload));
       set({
         authUser: user,
         authToken: token,
@@ -67,8 +61,8 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await signOut(auth);
-      await SecureStore.deleteItemAsync("auth_token");
-      await SecureStore.deleteItemAsync("user_data");
+      mmkvStorage.removeItem("auth_token");
+      mmkvStorage.removeItem("user_data");
       set({
         authUser: null,
         authToken: null,
@@ -81,6 +75,7 @@ export const useAuthStore = create((set, get) => ({
       set({ isOffline: true });
     }
   },
+
   register: async (email, password, name) => {
     try {
       const { user } = await createUserWithEmailAndPassword(
@@ -91,7 +86,7 @@ export const useAuthStore = create((set, get) => ({
       const userRef = doc(firestore, "users", user.uid);
       const token = await user.getIdToken();
 
-      const userData = { name: name, email: email };
+      const userData = { name };
       await setDoc(userRef, userData);
 
       const userDataPayload = {
@@ -102,11 +97,8 @@ export const useAuthStore = create((set, get) => ({
         sharedReceipts: {},
       };
 
-      await SecureStore.setItemAsync("auth_token", token);
-      await SecureStore.setItemAsync(
-        "user_data",
-        JSON.stringify(userDataPayload)
-      );
+      mmkvStorage.setItem("auth_token", token);
+      mmkvStorage.setItem("user_data", JSON.stringify(userDataPayload));
 
       set({
         authUser: user,
@@ -118,10 +110,11 @@ export const useAuthStore = create((set, get) => ({
       set({ isOffline: true });
     }
   },
+
   getAuthToken: async () => {
     try {
-      const token = await SecureStore.getItemAsync("auth_token");
-      const userData = await SecureStore.getItemAsync("user_data");
+      const token = mmkvStorage.getItem("auth_token");
+      const userData = mmkvStorage.getItem("user_data");
       if (token && userData) {
         const user = JSON.parse(userData);
         await signInWithCustomToken(auth, token);
@@ -146,7 +139,7 @@ export const useAuthStore = create((set, get) => ({
       const token = await get().authToken;
       const userData = await get().localUserData;
       const newReceiptList = [...get().receipts, newReceipt];
-      await SecureStore.setItemAsync(
+      mmkvStorage.setItem(
         "user_data",
         JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
       );
@@ -170,7 +163,7 @@ export const useAuthStore = create((set, get) => ({
       const newReceiptList = get().receipts.filter(
         (receipt) => receipt.id !== receiptId
       );
-      await SecureStore.setItemAsync(
+      mmkvStorage.setItem(
         "user_data",
         JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
       );
@@ -194,7 +187,7 @@ export const useAuthStore = create((set, get) => ({
       const newReceiptList = get().receipts.map((receipt) =>
         receipt.id === updatedReceipt.id ? updatedReceipt : receipt
       );
-      await SecureStore.setItemAsync(
+      mmkvStorage.setItem(
         "user_data",
         JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
       );
@@ -213,8 +206,7 @@ export const useAuthStore = create((set, get) => ({
 
   addSharedReceipt: async (receiptDataArray) => {
     try {
-      const userDataString = await SecureStore.getItemAsync("user_data");
-      console.log("asdasdasdasd", userDataString);
+      const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const userData = JSON.parse(userDataString);
         const receiptId = Crypto.randomUUID();
@@ -226,9 +218,7 @@ export const useAuthStore = create((set, get) => ({
           receiptId
         );
 
-        const receiptData = {
-          receipts: receiptDataArray,
-        };
+        const receiptData = { receipts: receiptDataArray };
         await setDoc(receiptRef, receiptData);
 
         const updatedUser = {
@@ -238,14 +228,11 @@ export const useAuthStore = create((set, get) => ({
             [receiptId]: receiptData,
           },
         };
-        await SecureStore.setItemAsync(
-          "user_data",
-          JSON.stringify(updatedUser)
-        );
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
-          receipts: [...get().receipts, receiptData],
+          receipts: [],
         });
       }
     } catch (error) {
@@ -258,7 +245,7 @@ export const useAuthStore = create((set, get) => ({
 
 const syncUserData = async (token, newUserData) => {
   try {
-    const localUserData = await SecureStore.getItemAsync("user_data");
+    const localUserData = mmkvStorage.getItem("user_data");
     const prevUserData = localUserData ? JSON.parse(localUserData) : {};
 
     // Check and update friends collection

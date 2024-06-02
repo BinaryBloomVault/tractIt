@@ -11,7 +11,6 @@ import {
 import SignIn from "../components/button/AddButton";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuthStore } from "../zustand/zustand";
-import * as SecureStore from "expo-secure-store";
 import { Link } from "expo-router";
 
 const index = () => {

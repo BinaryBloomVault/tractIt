@@ -26,6 +26,7 @@ export default function TabLayout() {
         options={{
           tabBarStyle: { display: "none" },
           tabBarLabel: "",
+          headerTitle: "",
           tabBarIcon: ({ color }) => (
             <FontAwesome size={30} name="plus-circle" color={color} />
           ),

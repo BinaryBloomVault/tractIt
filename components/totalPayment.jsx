@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,24 +15,29 @@ import {
 import TabButton from "./button/TabRoundButton";
 import AddButton from "./button/AddButton";
 import PaymentInfo from "./card/PaymentInfo";
-// import AddDataModal from "./card/AddDataModal";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
+
 const TotalPayment = () => {
   const styles = useStyle();
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
+  const [title, setTitle] = useState("");
+  const navigation = useNavigation();
 
-  const { addReceipts, receipts, addSharedReceipt } = useAuthStore((state) => ({
-    addReceipts: state.addReceipts,
-    receipts: state.receipts,
-    addSharedReceipt: state.addSharedReceipt,
-  }));
+  const { addReceipts, receipts, addSharedReceipt, clearReceipts } =
+    useAuthStore((state) => ({
+      addReceipts: state.addReceipts,
+      receipts: state.receipts,
+      addSharedReceipt: state.addSharedReceipt,
+      clearReceipts: state.clearReceipts,
+    }));
+
   const showModal = () => {
     setModalVisible(true);
   };
@@ -41,8 +46,9 @@ const TotalPayment = () => {
     setModalVisible(false);
   };
 
-  const shareReceipts = () => {
-    addSharedReceipt(receipts);
+  const shareReceipts = async () => {
+    await addSharedReceipt(receipts);
+    clearReceipts();
     router.replace("/mainscreen");
   };
 
@@ -56,44 +62,78 @@ const TotalPayment = () => {
         fontSize={25}
         height={40}
       />
-      <TabButton onPress={shareReceipts} />
+      <TabButton onPressRight={shareReceipts} />
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
         addPage={addReceipts}
+        initialPages={receipts}
+        clearReceipts={clearReceipts}
       />
     </View>
   );
 };
 
-const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
+const TotalPaymentModal = ({
+  modalVisible,
+  hideModal,
+  addPage,
+  initialPages,
+  clearReceipts,
+}) => {
   const styles = useStyle();
   const [pages, setPages] = useState([{}]);
   const [currentPage, setCurrentPage] = useState(1);
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
 
+  useEffect(() => {
+    if (modalVisible && initialPages.length > 0) {
+      setPages(initialPages);
+    } else {
+      setPages([{}]);
+    }
+
+    if (modalVisible) {
+      setTimeout(() => {
+        scrollViewRef.current.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [modalVisible, initialPages]);
+
   const addNewPage = () => {
     if (pages.length < 99) {
       const newPage = { items: "", quantity: "", price: "", friends: "" };
-      setPages((prevPages) => [...prevPages, newPage]);
-      setCurrentPage(currentPage + 1);
+      setPages((prevPages) => {
+        const updatedPages = [...prevPages, newPage];
+        return updatedPages;
+      });
+
       setTimeout(() => {
-        scrollViewRef.current.scrollTo({
-          x: windowWidth * pages.length,
-          animated: true,
-        });
+        scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
     }
   };
 
   const handleScroll = (event) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const currentPage = Math.floor(contentOffset / windowWidth) + 1;
-    setCurrentPage(currentPage);
+    const newPage = Math.floor(contentOffset / windowWidth) + 1;
+    setCurrentPage(newPage);
   };
 
   const handleSaveReceipts = useCallback(() => {
+    const isValid = pages.every(
+      (page) => page.items && page.quantity && page.price && page.friends
+    );
+
+    if (!isValid) {
+      alert("All fields must be filled out");
+      return;
+    }
+
+    // Clear previous receipts before adding new ones
+    clearReceipts();
+
     pages.forEach((page) => {
       addPage(page);
     });
@@ -114,6 +154,12 @@ const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
     [setPages]
   );
 
+  const isButtonDisabled = useCallback(() => {
+    return pages.some(
+      (page) => !page.items || !page.quantity || !page.price || !page.friends
+    );
+  }, [pages]);
+
   return (
     <Modal
       animationType="slide"
@@ -130,8 +176,15 @@ const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             <View style={styles.exitButton}>
-              <Pressable onPress={handleSaveReceipts}>
-                <AntDesign name="check" size={28} color="black" />
+              <Pressable
+                onPress={handleSaveReceipts}
+                disabled={isButtonDisabled()}
+              >
+                <AntDesign
+                  name="check"
+                  size={28}
+                  color={isButtonDisabled() ? "grey" : "black"}
+                />
               </Pressable>
             </View>
             <View style={{ marginTop: 16 }}>
@@ -149,7 +202,7 @@ const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
                     <View style={styles.itemsParent}>
                       <Text style={styles.title}>Items</Text>
                       <TextInput
-                        value={page.item}
+                        value={page.items}
                         onChangeText={(text) =>
                           handleFieldUpdate(index, "items", text)
                         }
@@ -204,7 +257,7 @@ const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
                   disabled={pages.length >= 99}
                 />
                 <Text style={styles.paginationText}>
-                  {currentPage > 0 ? currentPage : 1}/{pages.length}
+                  {currentPage}/{pages.length}
                 </Text>
               </View>
             </View>
@@ -214,6 +267,7 @@ const TotalPaymentModal = ({ modalVisible, hideModal, addPage }) => {
     </Modal>
   );
 };
+
 const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
   const styles = StyleSheet.create({

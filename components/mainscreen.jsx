@@ -29,12 +29,10 @@ const swipeFromLeftOpen = () => {
 
 const handleSwipeableOpen = (direction) => {
   if (direction === "left") {
-    console.log("Swipeable opened in left direction");
     Alert.alert("Swipe from left");
 
     // Add your left swipe logic here
   } else if (direction === "right") {
-    console.log("Swipeable opened in right direction");
     Alert.alert("Swipe from right");
 
     // Add your right swipe logic here
@@ -126,15 +124,9 @@ const Mainscreen = () => {
   return (
     <View styles={styles.mainContainer}>
       <View style={styles.userProfile}>
-        {/* Ako ra gi usab ni para naa koy ma pislit na logout, don't mind this */}
-        <Pressable onPress={logout}>
-          <Image
-            style={styles.images}
-            source={require("../assets/images/avatar.png")}
-            contentFit="cover"
-            transition={1000}
-          />
-        </Pressable>
+        <Link href="/profile" asChild>
+          <Text>asdasdasd</Text>
+        </Link>
       </View>
       <Card containerStyle={styles.container}>
         {/* <ScrollView vertical={true}>
