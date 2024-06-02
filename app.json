@@ -16,7 +16,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.binarybloom.tractit"
     },
     "android": {
       "adaptiveIcon": {
@@ -37,6 +38,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "9a0d152b-8074-4e75-bcc1-d78b340ac3e2"
+      }
     }
   }
 }
