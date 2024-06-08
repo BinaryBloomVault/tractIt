@@ -23,19 +23,17 @@ import { useRouter, useNavigation } from "expo-router";
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
-const TotalPayment = () => {
+const TotalPayment = ({ title }) => {
   const styles = useStyle();
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
-  const [title, setTitle] = useState("");
-  const navigation = useNavigation();
 
   const { addReceipts, receipts, addSharedReceipt, clearReceipts } =
     useAuthStore((state) => ({
       addReceipts: state.addReceipts,
-      receipts: state.receipts,
+      receipts: state.getReceipts(title) || [],
       addSharedReceipt: state.addSharedReceipt,
-      clearReceipts: state.clearReceipts,
+      clearReceipts: () => state.clearReceipts(title),
     }));
 
   const showModal = () => {
@@ -47,7 +45,7 @@ const TotalPayment = () => {
   };
 
   const shareReceipts = async () => {
-    await addSharedReceipt(receipts);
+    await addSharedReceipt(title, receipts);
     clearReceipts();
     router.replace("/mainscreen");
   };
@@ -66,7 +64,7 @@ const TotalPayment = () => {
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
-        addPage={addReceipts}
+        addPage={(receipt) => addReceipts(title, receipt)}
         initialPages={receipts}
         clearReceipts={clearReceipts}
       />

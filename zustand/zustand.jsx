@@ -7,7 +7,7 @@ import {
   signInWithCustomToken,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { doc, setDoc, collection } from "firebase/firestore";
+import { doc, setDoc, collection, getDoc, getDocs } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import * as Crypto from "expo-crypto";
 
@@ -24,24 +24,65 @@ export const useAuthStore = create((set, get) => ({
   authToken: null,
   localUserData: null,
   isOffline: true,
-  receipts: [],
+  receipts: {},
+  sharedReceipts: {},
 
-  addReceipts: (receipt) =>
+  addReceipts: (title, receipt) =>
     set((state) => ({
-      receipts: [...state.receipts, receipt],
+      receipts: {
+        ...state.receipts,
+        [title]: [...(state.receipts[title] || []), receipt],
+      },
     })),
-  clearReceipts: () => set({ receipts: [] }),
+  clearReceipts: (title) =>
+    set((state) => ({
+      receipts: {
+        ...state.receipts,
+        [title]: [],
+      },
+    })),
+
+  getReceipts: (title) => get().receipts[title],
+
+  loadUserData: () => {
+    const userDataString = mmkvStorage.getItem("user_data");
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      set({ localUserData: userData });
+      return userData;
+    }
+    return null;
+  },
 
   login: async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       const token = await user.getIdToken();
+
+      // Get user data from Firestore
+      const userRef = doc(firestore, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+
+      let sharedReceipts = {};
+      if (userDoc.exists()) {
+        const sharedReceiptsCollectionRef = collection(
+          userRef,
+          "sharedReceipts"
+        );
+        const sharedReceiptsSnapshot = await getDocs(
+          sharedReceiptsCollectionRef
+        );
+        sharedReceiptsSnapshot.forEach((doc) => {
+          sharedReceipts[doc.id] = doc.data();
+        });
+      }
+
       const userDataPayload = {
         name: user.displayName || "",
         email: user.email || "",
         uid: user.uid,
         friends: {},
-        sharedReceipts: {},
+        sharedReceipts: sharedReceipts,
       };
 
       mmkvStorage.setItem("auth_token", token);
@@ -50,6 +91,7 @@ export const useAuthStore = create((set, get) => ({
         authUser: user,
         authToken: token,
         localUserData: userDataPayload,
+        sharedReceipts: sharedReceipts,
         isOffline: false,
       });
     } catch (error) {
@@ -68,7 +110,8 @@ export const useAuthStore = create((set, get) => ({
         authToken: null,
         localUserData: null,
         isOffline: true,
-        receipts: [],
+        receipts: {},
+        sharedReceipts: {},
       });
     } catch (error) {
       console.error("Error logging out:", error);
@@ -122,6 +165,7 @@ export const useAuthStore = create((set, get) => ({
           authToken: token,
           authUser: user,
           localUserData: user,
+          sharedReceipts: user.sharedReceipts,
           isOffline: false,
         });
         await syncUserData(token, user);
@@ -134,77 +178,113 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  addReceipt: async (newReceipt) => {
+  addReceipt: async (title, newReceipt) => {
     try {
       const token = await get().authToken;
       const userData = await get().localUserData;
-      const newReceiptList = [...get().receipts, newReceipt];
+      const newReceiptList = [...(get().receipts[title] || []), newReceipt];
       mmkvStorage.setItem(
         "user_data",
-        JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
+        JSON.stringify({
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        })
       );
       set({
-        localUserData: { ...userData, sharedReceipts: newReceiptList },
-        receipts: newReceiptList,
+        localUserData: {
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        },
+        receipts: { ...get().receipts, [title]: newReceiptList },
       });
       await syncUserData(token, {
         ...userData,
-        sharedReceipts: newReceiptList,
+        sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
       });
     } catch (error) {
       console.error("Error adding receipt:", error);
     }
   },
 
-  removeReceipt: async (receiptId) => {
+  removeReceipt: async (title, receiptId) => {
     try {
       const token = await get().authToken;
       const userData = await get().localUserData;
-      const newReceiptList = get().receipts.filter(
+      const newReceiptList = get().receipts[title].filter(
         (receipt) => receipt.id !== receiptId
       );
       mmkvStorage.setItem(
         "user_data",
-        JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
+        JSON.stringify({
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        })
       );
       set({
-        localUserData: { ...userData, sharedReceipts: newReceiptList },
-        receipts: newReceiptList,
+        localUserData: {
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        },
+        receipts: { ...get().receipts, [title]: newReceiptList },
       });
       await syncUserData(token, {
         ...userData,
-        sharedReceipts: newReceiptList,
+        sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
       });
     } catch (error) {
       console.error("Error removing receipt:", error);
     }
   },
 
-  updateReceipt: async (updatedReceipt) => {
+  updateReceipt: async (title, updatedReceipt) => {
     try {
       const token = await get().authToken;
       const userData = await get().localUserData;
-      const newReceiptList = get().receipts.map((receipt) =>
+      const newReceiptList = get().receipts[title].map((receipt) =>
         receipt.id === updatedReceipt.id ? updatedReceipt : receipt
       );
       mmkvStorage.setItem(
         "user_data",
-        JSON.stringify({ ...userData, sharedReceipts: newReceiptList })
+        JSON.stringify({
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        })
       );
       set({
-        localUserData: { ...userData, sharedReceipts: newReceiptList },
-        receipts: newReceiptList,
+        localUserData: {
+          ...userData,
+          sharedReceipts: {
+            ...userData.sharedReceipts,
+            [title]: newReceiptList,
+          },
+        },
+        receipts: { ...get().receipts, [title]: newReceiptList },
       });
       await syncUserData(token, {
         ...userData,
-        sharedReceipts: newReceiptList,
+        sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
       });
     } catch (error) {
       console.error("Error updating receipt:", error);
     }
   },
 
-  addSharedReceipt: async (receiptDataArray) => {
+  addSharedReceipt: async (title, receiptDataArray) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
@@ -218,7 +298,7 @@ export const useAuthStore = create((set, get) => ({
           receiptId
         );
 
-        const receiptData = { receipts: receiptDataArray };
+        const receiptData = { [title]: receiptDataArray };
         await setDoc(receiptRef, receiptData);
 
         const updatedUser = {
@@ -232,15 +312,13 @@ export const useAuthStore = create((set, get) => ({
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
-          receipts: [],
+          receipts: {},
         });
       }
     } catch (error) {
       console.error("Error adding shared receipt:", error);
     }
   },
-
-  getReceipts: () => get().receipts,
 }));
 
 const syncUserData = async (token, newUserData) => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -15,6 +15,10 @@ const receiptCard = () => {
   const { receipts } = useAuthStore((state) => ({
     receipts: state.receipts,
   }));
+
+  const formattedReceipts = Object.entries(receipts).flatMap(([title, items]) =>
+    items.map((item) => ({ title, ...item }))
+  );
 
   return (
     <Card containerStyle={styles.container}>
@@ -39,7 +43,7 @@ const receiptCard = () => {
       />
       <View style={styles.flatListContainer}>
         <FlatList
-          data={receipts}
+          data={formattedReceipts}
           renderItem={({ item }) => (
             <View style={styles.middle}>
               <ItemRow
