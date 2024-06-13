@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { Avatar, Button, ListItem, Icon, Card } from "@rneui/themed";
 import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
@@ -11,7 +11,7 @@ const Profile = () => {
   }));
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.profileCard}>
         <View style={styles.profileContainer}>
           <Avatar
@@ -90,18 +90,24 @@ const Profile = () => {
         buttonStyle={styles.logoutButton}
         onPress={logout}
       />
-    </View>
+      <Button
+        title="Delete Account"
+        buttonStyle={styles.deleteButton}
+        titleStyle={styles.deleteButtonText}
+        onPress={logout}
+      />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "#F5F5F5",
+    paddingVertical: 20,
   },
   profileCard: {
-    marginTop: 20,
-    marginBottom: 24,
+    marginBottom: 16,
     marginLeft: 20,
     marginRight: 20,
     borderRadius: 8,
@@ -132,20 +138,34 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 8,
     overflow: "hidden",
-    marginBottom: 20,
+    marginBottom: 8,
   },
   couponButton: {
     marginRight: 10,
   },
   addFriendButton: {
+    height: 50,
     marginHorizontal: 20,
     backgroundColor: "#007BFF",
-    marginBottom: 10,
+    borderRadius: 3,
+    marginBottom: 8,
   },
   logoutButton: {
+    height: 50,
     marginHorizontal: 20,
     backgroundColor: "#FF3B30",
+    borderRadius: 3,
+    marginBottom: 8,
   },
+  deleteButton: {
+    height: 50,
+    marginHorizontal: 20,
+    backgroundColor: "#2C2C2C",
+    marginBottom: 8,
+  },
+  deleteButtonText: {
+    color: "#FFFFFF", // White text color
+  }
 });
 
 export default Profile;
