@@ -9,7 +9,7 @@ import {
   Keyboard,
   useWindowDimensions,
 } from "react-native";
-import SignIn from "../components/button/AddButton";
+import SignIn from "../components/button/addButton";
 import { useAuthStore } from "../zustand/zustand";
 import { Link } from "expo-router";
 

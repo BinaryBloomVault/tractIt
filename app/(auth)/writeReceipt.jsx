@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput } from "react-native";
-import Receipt from "../../components/card/ReceiptCard";
-import TotalCard from "../../components/TotalPayment";
+import Receipt from "../../components/card/receiptCard";
+import TotalCard from "../../components/totalPayment";
 
 const AddButton = () => {
   const [title, setTitle] = useState("");

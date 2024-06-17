@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import SignIn from "../components/button/AddButton";
+import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuthStore } from "../zustand/zustand";
 import { Link } from "expo-router";

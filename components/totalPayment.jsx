@@ -12,9 +12,9 @@ import {
   ScrollView,
   useWindowDimensions,
 } from "react-native";
-import TabButton from "./button/TabRoundButton";
-import AddButton from "./button/AddButton";
-import PaymentInfo from "./card/PaymentInfo";
+import TabButton from "./button/tabRoundButton";
+import AddButton from "./button/addButton";
+import PaymentInfo from "./card/paymentInfo";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
@@ -22,11 +22,43 @@ import { useRouter, useNavigation } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
+const mockReceipts = [
+  {
+    items: "Pizza",
+    quantity: "2",
+    price: "20",
+    friends: {
+      ID_123123213123: "Lucas Green",
+      ID_6546565: "Kaidus Paltos",
+      ID_798789798: "Kai Tay",
+    },
+  },
+  {
+    items: "Soda",
+    quantity: "5",
+    price: "10",
+    friends: {
+      ID_123123213123: "Lucas Green",
+      ID_6546565: "Kaidus Paltos",
+    },
+  },
+  {
+    items: "Burger",
+    quantity: "3",
+    price: "15",
+    friends: {
+      ID_798789798: "Kai Tay",
+      ID_999999999: "Sam Smith",
+    },
+  },
+];
 
 const TotalPayment = ({ title }) => {
   const styles = useStyle();
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
+  const modalVisible = useAuthStore((state) => state.modalVisible);
+  const setModalVisible = useAuthStore((state) => state.setModalVisible);
+  const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
 
   const { addReceipts, receipts, addSharedReceipt, clearReceipts } =
     useAuthStore((state) => ({
@@ -65,8 +97,9 @@ const TotalPayment = ({ title }) => {
         modalVisible={modalVisible}
         hideModal={hideModal}
         addPage={(receipt) => addReceipts(title, receipt)}
-        initialPages={receipts}
+        initialPages={mockReceipts}
         clearReceipts={clearReceipts}
+        selectedItemIndex={selectedItemIndex}
       />
     </View>
   );
@@ -78,6 +111,7 @@ const TotalPaymentModal = ({
   addPage,
   initialPages,
   clearReceipts,
+  selectedItemIndex,
 }) => {
   const styles = useStyle();
   const [pages, setPages] = useState([{}]);
@@ -101,14 +135,24 @@ const TotalPaymentModal = ({
 
   const addNewPage = () => {
     if (pages.length < 99) {
-      const newPage = { items: "", quantity: "", price: "", friends: "" };
+      const newPage = { items: "", quantity: "", price: "", friends: {} };
       setPages((prevPages) => {
         const updatedPages = [...prevPages, newPage];
         return updatedPages;
       });
+      // console.log("Selected Item Index:", selectedItemIndex * windowWidth);
 
       setTimeout(() => {
-        scrollViewRef.current.scrollToEnd({ animated: true });
+        if (selectedItemIndex !== null && selectedItemIndex !== undefined) {
+          scrollViewRef.current.scrollTo({
+            x: selectedItemIndex * windowWidth,
+            animated: true,
+          });
+          setCurrentPage(selectedItemIndex + 1);
+        } else {
+          scrollViewRef.current.scrollToEnd({ animated: true });
+          setCurrentPage(pages.length + 1);
+        }
       }, 100);
     }
   };
@@ -146,6 +190,22 @@ const TotalPaymentModal = ({
       setPages((prevPages) =>
         prevPages.map((page, i) =>
           i === index ? { ...page, [field]: value } : page
+        )
+      );
+    },
+    [setPages]
+  );
+
+  const handleFriendUpdate = useCallback(
+    (index, friendId, friendName) => {
+      setPages((prevPages) =>
+        prevPages.map((page, i) =>
+          i === index
+            ? {
+                ...page,
+                friends: { ...page.friends, [friendId]: friendName },
+              }
+            : page
         )
       );
     },
@@ -233,10 +293,15 @@ const TotalPaymentModal = ({
                     <View style={styles.itemsParent}>
                       <Text style={styles.title}>Friends</Text>
                       <TextInput
-                        value={page.friends}
-                        onChangeText={(text) =>
-                          handleFieldUpdate(index, "friends", text)
-                        }
+                        value={JSON.stringify(page.friends)}
+                        onChangeText={(text) => {
+                          try {
+                            const friends = JSON.parse(text);
+                            handleFieldUpdate(index, "friends", friends);
+                          } catch (e) {
+                            console.error("Invalid JSON");
+                          }
+                        }}
                         style={styles.rectangleInput}
                         selectTextOnFocus={true}
                       />

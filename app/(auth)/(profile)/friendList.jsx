@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
 import React from "react";
-import AddButton from "../../../components/button/AddButton";
+import AddButton from "../../../components/button/addButton";
 import { Card } from "@rneui/themed";
-import TabButton from "../../../components/button/TabRoundButton";
+import TabButton from "../../../components/button/tabRoundButton";
 
 const friendList = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();

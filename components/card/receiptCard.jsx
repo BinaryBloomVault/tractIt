@@ -4,13 +4,14 @@ import {
   Text,
   View,
   FlatList,
+  TouchableOpacity,
   useWindowDimensions,
 } from "react-native";
 import { Card } from "@rneui/themed";
-import ItemRow from "./ItemRow";
+import ItemRow from "./itemRow";
 import { useAuthStore } from "../../zustand/zustand"; // Import the new Zustand store
 
-const receiptCard = () => {
+const ReceiptCard = () => {
   const styles = useStyle();
   const { receipts } = useAuthStore((state) => ({
     receipts: state.receipts,
@@ -19,6 +20,10 @@ const receiptCard = () => {
   const formattedReceipts = Object.entries(receipts).flatMap(([title, items]) =>
     items.map((item) => ({ title, ...item }))
   );
+
+  const handleItemPress = (item) => {
+    // console.log("Pressed item:", item);
+  };
 
   return (
     <Card containerStyle={styles.container}>
@@ -44,15 +49,19 @@ const receiptCard = () => {
       <View style={styles.flatListContainer}>
         <FlatList
           data={formattedReceipts}
-          renderItem={({ item }) => (
-            <View style={styles.middle}>
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              style={styles.middle}
+              onPress={() => handleItemPress(item)}
+            >
               <ItemRow
                 item={item}
+                index={index}
                 color="#A9DFBF"
                 font="Cabin-Regular"
                 size={15}
               />
-            </View>
+            </TouchableOpacity>
           )}
           keyExtractor={(item, index) => index.toString()}
         />
@@ -109,4 +118,5 @@ const useStyle = () => {
   });
   return styles;
 };
-export default receiptCard;
+
+export default ReceiptCard;

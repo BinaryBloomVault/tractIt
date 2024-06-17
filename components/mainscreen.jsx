@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -91,11 +91,10 @@ const RightSwipeActions = () => {
 };
 
 const Mainscreen = () => {
-  // const { tableData, setTableData } = useStore();
+  const [tableData, setTableData] = useState([]);
   const styles = useStyle();
-
-  /* Ako ra gi usab ni para naa koy ma pislit na logout, don't mind this */
-  const { logout } = useAuthStore((state) => ({
+  const { localUserData, logout } = useAuthStore((state) => ({
+    localUserData: state.localUserData,
     logout: state.logout,
   }));
 
@@ -107,16 +106,20 @@ const Mainscreen = () => {
 
       const receiptsArray = [];
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
-        Object.entries(receiptData).forEach(([title, itemsArray]) => {
-          itemsArray.forEach((item) => {
-            receiptsArray.push({
-              title: title,
-              item: item.items,
-              price: item.price,
-              friends: item.friends,
-            });
+        if (receiptData.friends) {
+          Object.entries(receiptData).forEach(([title, itemsArray]) => {
+            if (title !== "friends") {
+              itemsArray.forEach((item) => {
+                receiptsArray.push({
+                  title: title,
+                  item: item.items,
+                  price: item.price,
+                  friends: item.friends,
+                });
+              });
+            }
           });
-        });
+        }
       });
 
       setTableData(receiptsArray);
@@ -160,10 +163,7 @@ const Mainscreen = () => {
             renderRightActions={RightSwipeActions}
             onSwipeableOpen={handleSwipeableOpen}
           >
-            <TouchableOpacity // Wrap the Card component with TouchableOpacity
-              key={index}
-              onPress={() => handleCardPress(item)} // Handle press event
-            >
+            <TouchableOpacity key={index} onPress={() => handleCardPress(item)}>
               <Card containerStyle={styles.receiptCard}>
                 <View style={styles.receiptCardHeader}>
                   <Text style={styles.receiptUser}>{item.item}</Text>
@@ -178,8 +178,8 @@ const Mainscreen = () => {
                     <View style={styles.horizontalLine} />
                     <Text style={styles.txtFriends}>Friends</Text>
                     <View style={styles.friendIcons}>
-                      {Array.isArray(item.friends) ? (
-                        item.friends.map((friend, index) => (
+                      {item.friends ? (
+                        Object.values(item.friends).map((friend, index) => (
                           <View style={styles.friendCircle} key={index}>
                             <Text style={styles.friendInitial}>{friend}</Text>
                           </View>
@@ -262,6 +262,7 @@ const useStyle = () => {
       borderRadius: 15,
       height: 100,
       marginTop: 2,
+      marginBottom: 8,
     },
     receiptCardHeader: {
       flexDirection: "row",
@@ -292,8 +293,8 @@ const useStyle = () => {
     },
     receiptTitle: {
       fontWeight: "bold",
-      fontSize: 18,
-      marginLeft: 18,
+      fontSize: 20,
+      marginLeft: 26,
       marginTop: 18,
     },
     receiptAmount: {

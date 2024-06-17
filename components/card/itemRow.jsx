@@ -1,24 +1,48 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
-import { useFonts } from "expo-font";
+import { useAuthStore } from "../../zustand/zustand"; //
 
-const ItemRow = ({ item, color, font, size, height }) => {
+const ItemRow = ({ item, color, font, size, height, index }) => {
+  const setModalVisible = useAuthStore((state) => state.setModalVisible);
+  const setSelectedItemIndex = useAuthStore(
+    (state) => state.setSelectedItemIndex
+  );
+
+  const handlePress = (type) => {
+    // console.log(`Pressed ${type}:`, item);
+    // console.log("Index:", index);
+    setSelectedItemIndex(index);
+    setModalVisible(true);
+  };
+
   return (
     <View style={styles.itemsParent}>
-      <View style={styles.items(color)}>
+      <TouchableOpacity
+        style={styles.items(color)}
+        onPress={() => handlePress("Items")}
+      >
         <Text style={styles.itemText(font, size)}>{item.items}</Text>
-      </View>
-      <View style={[styles.items2, styles.priceSpaceBlock(color)]}>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.items2, styles.priceSpaceBlock(color)]}
+        onPress={() => handlePress("Quantity")}
+      >
         <Text style={styles.itemText(font, size)}>{item.quantity}</Text>
-      </View>
-      <View style={[styles.price, styles.priceSpaceBlock(color)]}>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.price, styles.priceSpaceBlock(color)]}
+        onPress={() => handlePress("Price")}
+      >
         <Text style={styles.itemText(font, size)}>{item.price}</Text>
-      </View>
-      <View style={[styles.friends, styles.priceSpaceBlock(color)]}>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.friends, styles.priceSpaceBlock(color)]}
+        onPress={() => handlePress("Friends")}
+      >
         <Text style={styles.itemText(font, size)}>
           {item.friends && Object.keys(item.friends).join(", ")}
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -75,4 +99,5 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
+
 export default ItemRow;

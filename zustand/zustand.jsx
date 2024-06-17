@@ -23,9 +23,14 @@ export const useAuthStore = create((set, get) => ({
   authUser: null,
   authToken: null,
   localUserData: null,
+  selectedItemIndex: null, // Add selectedItemIndex state
   isOffline: true,
   receipts: {},
   sharedReceipts: {},
+  modalVisible: false,
+
+  setModalVisible: (visible) => set({ modalVisible: visible }),
+  setSelectedItemIndex: (index) => set({ selectedItemIndex: index }),
 
   addReceipts: (title, receipt) =>
     set((state) => ({
@@ -288,6 +293,27 @@ export const useAuthStore = create((set, get) => ({
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
+        const friends = {};
+        console.log("asdasdsadsadasdasdasdasdasd", receiptDataArray);
+
+        receiptDataArray.forEach((receipt) => {
+          const numFriends = Object.keys(receipt.friends).length;
+          const individualPayment = receipt.price / numFriends;
+
+          Object.keys(receipt.friends).forEach((friendId) => {
+            if (friends[friendId]) {
+              friends[friendId].payment += individualPayment;
+            } else {
+              friends[friendId] = {
+                name: receipt.friends[friendId],
+                payment: individualPayment,
+                paid: false,
+                originator: false,
+              };
+            }
+          });
+        });
+
         const userData = JSON.parse(userDataString);
         const receiptId = Crypto.randomUUID();
         const receiptRef = doc(
@@ -298,7 +324,7 @@ export const useAuthStore = create((set, get) => ({
           receiptId
         );
 
-        const receiptData = { [title]: receiptDataArray };
+        const receiptData = { friends: friends, [title]: receiptDataArray };
         await setDoc(receiptRef, receiptData);
 
         const updatedUser = {
