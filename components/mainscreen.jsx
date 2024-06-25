@@ -9,7 +9,7 @@ import {
   Image,
   Pressable,
   useWindowDimensions,
-  TouchableOpacity, // Import TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
@@ -20,19 +20,9 @@ const swipeFromRightOpen = () => {
   Alert.alert("Swipe from right");
 };
 
-const swipeFromLeftOpen = () => {
-  Alert.alert("Swipe from left");
-};
-
 const handleSwipeableOpen = (direction) => {
-  if (direction === "left") {
-    Alert.alert("Swipe from left");
-
-    // Add your left swipe logic here
-  } else if (direction === "right") {
+ if (direction === "right") {
     Alert.alert("Swipe from right");
-
-    // Add your right swipe logic here
   }
 };
 
@@ -90,8 +80,41 @@ const RightSwipeActions = () => {
   );
 };
 
+const generateInitials = (friends) => {
+  const initials = [];
+  // Track used initials to ensure uniqueness
+  const usedInitials = new Set();
+
+  for (let friend of friends) {
+    let initial = friend.substring(0, 2).toUpperCase();
+
+    let suffix = 1;
+    while (usedInitials.has(initial)) {
+      initial = friend[0].toUpperCase() + friend[suffix++].toUpperCase();
+    }
+
+    usedInitials.add(initial);
+
+    const color = getRandomColor();
+
+    initials.push({ initials: initial, color: color });
+  }
+
+  return initials;
+};
+
+
+const getRandomColor = () => {
+  const color = ["#2c2c2c", "#BF3E3E", "#2174D5", "#F2B33D", "#15251D", "#30833B", "#0E1211", "#446063", "#CCD4DD",
+    "#141E1D", "#967959", "#FBE4BD", "#221C0F", "#020203", "#2B4534", "#541E17", "#6D313D", "202BD2", "#015967"]
+
+  const randomIndex = Math.floor(Math.random() * color.length);
+  return color[randomIndex];
+};
+
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
+  const [totalPayment, setTotalPayment] = useState(0)
   const styles = useStyle();
   const { localUserData, logout } = useAuthStore((state) => ({
     localUserData: state.localUserData,
@@ -103,32 +126,42 @@ const Mainscreen = () => {
       const sharedReceipts = localUserData.sharedReceipts;
       console.log("localUserData:", localUserData);
       console.log("sharedReceipts:", sharedReceipts);
-
       const receiptsArray = [];
+      let totalamount = 0
+      let user = ""
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
           Object.entries(receiptData).forEach(([title, itemsArray]) => {
             if (title !== "friends") {
               itemsArray.forEach((item) => {
-                receiptsArray.push({
-                  title: title,
-                  item: item.items,
-                  price: item.price,
-                  friends: item.friends,
+                Object.keys(receiptData.friends).forEach((friendId) => {
+                  const mypayment = receiptData.friends[friendId].payment;
+                  if(receiptData.friends[friendId].originator === true) {
+                    user = receiptData.friends[friendId].name;
+                  }
+
+                  totalamount += mypayment
+                  receiptsArray.push({
+                    title: title,
+                    name: user,
+                    price: mypayment.toFixed(2),
+                    friends: item.friends,
+                  });
                 });
               });
             }
           });
         }
       });
-
+      setTotalPayment(totalamount.toFixed(2))
+      console.log("[DEBUG] TOTAL PAYMENT ", totalamount)
       setTableData(receiptsArray);
       console.log("Table data set to:", receiptsArray);
     } else {
       console.warn("localUserData or sharedReceipts is null or undefined");
     }
   };
-
+  
   useEffect(() => {
     fetchData();
   }, [localUserData]);
@@ -143,7 +176,7 @@ const Mainscreen = () => {
       <View style={styles.headerTop}>
         <View style={styles.totalContainer}>
           <Text style={styles.totalText}>Total Payment</Text>
-          <Text style={styles.totalAmount}>8200</Text>
+          <Text style={styles.totalAmount}>{totalPayment}</Text>
         </View>
         <Avatar
           size={50}
@@ -166,7 +199,7 @@ const Mainscreen = () => {
             <TouchableOpacity key={index} onPress={() => handleCardPress(item)}>
               <Card containerStyle={styles.receiptCard}>
                 <View style={styles.receiptCardHeader}>
-                  <Text style={styles.receiptUser}>{item.item}</Text>
+                  <Text style={styles.receiptUser}>{item.name}</Text>
                   <Text style={styles.txtSettle}>Settle Up</Text>
                 </View>
                 <View style={styles.receiptCardBody}>
@@ -179,9 +212,15 @@ const Mainscreen = () => {
                     <Text style={styles.txtFriends}>Friends</Text>
                     <View style={styles.friendIcons}>
                       {item.friends ? (
-                        Object.values(item.friends).map((friend, index) => (
-                          <View style={styles.friendCircle} key={index}>
-                            <Text style={styles.friendInitial}>{friend}</Text>
+                        generateInitials(Object.values(item.friends)).map((friend, idx) => (
+                          <View
+                            style={[
+                              styles.friendCircle,
+                              { backgroundColor: friend.color }
+                            ]}
+                            key={idx}
+                          >
+                            <Text style={styles.friendInitial}>{friend.initials}</Text>
                           </View>
                         ))
                       ) : (
@@ -202,7 +241,7 @@ const Mainscreen = () => {
 const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
 
-  const styles = StyleSheet.create({
+  return StyleSheet.create({
     mainContainer: {
       flex: 1,
       backgroundColor: "#F5F5F5",
@@ -319,22 +358,28 @@ const useStyle = () => {
     },
     friendIcons: {
       flexDirection: "row",
-      marginTop: 4,
+      marginTop: 1,
     },
     friendCircle: {
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: "#FFC107",
+      backgroundColor: "#2c2c2c", // Default background color
       justifyContent: "center",
       alignItems: "center",
-      marginHorizontal: 2,
+      marginHorizontal: -2,
+      elevation: 3, //Drop shadow for android
+      // Drop shadow for iOS
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.8,
+      shadowRadius: 2,
     },
     friendInitial: {
       color: "#FFF",
       fontWeight: "bold",
     },
   });
-  return styles;
 };
+
 export default Mainscreen;
