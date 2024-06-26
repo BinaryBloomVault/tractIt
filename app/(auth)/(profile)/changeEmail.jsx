@@ -1,34 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
   useWindowDimensions,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
-import SignIn from "../components/button/addButton";
-import { useAuthStore } from "../zustand/zustand";
+import SignIn from "../../../components/button/addButton";
+import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons"; // Make sure to install @expo/vector-icons
 
-const Register = () => {
+const ChangeEmail = () => {
   const { register } = useAuthStore((state) => ({
     register: state.register,
   }));
   const [email, setEmail] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [hideShow, setHideShow] = useState(true);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
   const windowHeight = useWindowDimensions().height;
-
-  const passHideShow = () => {
-    setHideShow(!hideShow);
-  };
 
   const handleRegister = async () => {
     try {
@@ -38,36 +30,40 @@ const Register = () => {
     }
   };
 
+  const toggleSecureTextEntry = () => {
+    setSecureTextEntry(!secureTextEntry);
+  };
+
   return (
-    <View style={styles.registerscreen}>
-      <Text style={styles.welcome}>Register</Text>
+    <View style={styles.mainscreen}>
+      <Text style={styles.title}>Update Email</Text>
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
-          placeholder="Name"
-          placeholderTextColor="#92a0a9"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={[styles.inputFormItem, styles.inputShadowBox]}
-          placeholder="Email"
+          placeholder="Old email"
           placeholderTextColor="#92a0a9"
           value={email}
           onChangeText={setEmail}
         />
+        <TextInput
+          style={[styles.inputFormItem, styles.inputShadowBox]}
+          placeholder="New email"
+          placeholderTextColor="#92a0a9"
+          value={newEmail}
+          onChangeText={setNewEmail}
+        />
         <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
           <TextInput
             style={{ flex: 1 }}
-            placeholder="New password"
+            placeholder="Confirm password"
             placeholderTextColor="#92a0a9"
-            secureTextEntry={hideShow}
+            secureTextEntry={secureTextEntry}
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
+          <TouchableOpacity onPress={toggleSecureTextEntry} style={styles.iconContainer}>
             <Ionicons
-              name={hideShow ? "eye-off" : "eye"}
+              name={secureTextEntry ? "eye-off" : "eye"}
               size={24}
               color="grey"
             />
@@ -76,7 +72,7 @@ const Register = () => {
       </View>
       <View style={styles.signInWrapper}>
         <SignIn
-          title="Sign Up"
+          title="Submit"
           fontSize={18}
           width={350}
           height={45}
@@ -85,7 +81,7 @@ const Register = () => {
       </View>
       <View style={styles.orParent}>
         <View style={styles.signUpContainer}>
-          <Text style={styles.forgotPassword}>Already have an account?</Text>
+          <Text style={styles.forgotPassword}>Go back to ?</Text>
           <Link href="/" asChild>
             <Text style={styles.resetTypo}>Log in</Text>
           </Link>
@@ -118,7 +114,7 @@ const styles = StyleSheet.create({
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
   },
-  welcome: {
+  title: {
     fontSize: 45,
     height: 70,
     marginTop: 16,
@@ -157,7 +153,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     alignItems: "center",
   },
-  registerscreen: {
+  mainscreen: {
     backgroundColor: "#f2e3a9",
     flex: 1,
     width: "100%",
@@ -172,4 +168,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Register;
+export default ChangeEmail;

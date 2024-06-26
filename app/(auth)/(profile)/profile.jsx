@@ -33,7 +33,7 @@ const Profile = () => {
       </Card>
 
       <View style={styles.infoContainer}>
-        <Link href="/email" asChild>
+        <Link href="/changeEmail" asChild>
           <ListItem bottomDivider>
             <Icon name="email" />
             <ListItem.Content>
@@ -49,7 +49,7 @@ const Profile = () => {
             </ListItem.Content>
           </ListItem>
         </Link>
-        <Link href="/change-password" asChild>
+        <Link href="/changePassword" asChild>
           <ListItem bottomDivider>
             <Icon name="lock" />
             <ListItem.Content>

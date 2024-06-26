@@ -7,11 +7,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity
 } from "react-native";
 import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
 import { useAuthStore } from "../zustand/zustand";
 import { Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const index = () => {
   const { login } = useAuthStore((state) => ({
@@ -19,7 +21,12 @@ const index = () => {
   }));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [hideShow, setHideShow] = useState(true);
 
+  const passHideShow = () => {
+    setHideShow(!hideShow);
+  };
+  
   const handleCredentials = async () => {
     try {
       await login(email, password);
@@ -51,14 +58,23 @@ const index = () => {
               value={email}
               onChangeText={setEmail}
             />
-            <TextInput
-              style={[styles.inputFormItem, styles.inputShadowBox]}
-              placeholder="Password"
-              placeholderTextColor="#92a0a9"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+            <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+              <TextInput
+                style={{ flex: 1 }}
+                placeholder="New password"
+                placeholderTextColor="#92a0a9"
+                secureTextEntry={hideShow}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
+                <Ionicons
+                  name={hideShow ? "eye-off" : "eye"}
+                  size={24}
+                  color="grey"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.signInWrapper}>
             <SignIn
@@ -154,6 +170,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 19,
     paddingVertical: 14,
     marginTop: 8,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconContainer: {
+    marginLeft: 10,
   },
   forgotPassword: {
     color: "#92a0a9",

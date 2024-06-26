@@ -106,7 +106,7 @@ const generateInitials = (friends) => {
 
 const getRandomColor = () => {
   const color = ["#2c2c2c", "#BF3E3E", "#2174D5", "#F2B33D", "#15251D", "#30833B", "#0E1211", "#446063", "#CCD4DD",
-    "#141E1D", "#967959", "#FBE4BD", "#221C0F", "#020203", "#2B4534", "#541E17", "#6D313D", "202BD2", "#015967"]
+    "#141E1D", "#967959", "#FBE4BD", "#221C0F", "#020203", "#2B4534", "#541E17", "#6D313D", "#202BD2", "#015967"]
 
   const randomIndex = Math.floor(Math.random() * color.length);
   return color[randomIndex];
@@ -154,7 +154,6 @@ const Mainscreen = () => {
         }
       });
       setTotalPayment(totalamount.toFixed(2))
-      console.log("[DEBUG] TOTAL PAYMENT ", totalamount)
       setTableData(receiptsArray);
       console.log("Table data set to:", receiptsArray);
     } else {
@@ -178,12 +177,16 @@ const Mainscreen = () => {
           <Text style={styles.totalText}>Total Payment</Text>
           <Text style={styles.totalAmount}>{totalPayment}</Text>
         </View>
-        <Avatar
-          size={50}
-          rounded
-          source={{ uri: "https://via.placeholder.com/150" }}
-          containerStyle={styles.avatar}
-        />
+        <Link href="/profile" asChild>
+          <TouchableOpacity>
+            <Avatar
+              size={50}
+              rounded
+              source={{ uri: "https://via.placeholder.com/150" }}
+              containerStyle={styles.avatar}
+            />
+          </TouchableOpacity>
+        </Link>
       </View>
       <View style={styles.recordsContainer}>
         <Text style={styles.textRecords}>Receipts Records</Text>
