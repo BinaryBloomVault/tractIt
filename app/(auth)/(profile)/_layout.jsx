@@ -11,6 +11,7 @@ export default function TabLayout() {
         }}
       />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="addFriends" />
     </Stack>
   );
 }

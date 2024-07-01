@@ -3,10 +3,12 @@ import React from "react";
 import AddButton from "../../../components/button/addButton";
 import { Card } from "@rneui/themed";
 import TabButton from "../../../components/button/tabRoundButton";
+import { useRouter } from "expo-router";
 
 const friendList = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
   const styles = useStyle();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -16,7 +18,10 @@ const friendList = () => {
         bottom={-22}
         left={131}
         fontSize={15}
+        height={35}
+        onPress={() => router.push("/addFriends")}
       />
+
       <View style={styles.friendListParent(40)}>
         <Text style={styles.friendList}>Friend List</Text>
       </View>

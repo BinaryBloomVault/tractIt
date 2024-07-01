@@ -7,7 +7,15 @@ import {
   signInWithCustomToken,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { doc, setDoc, collection, getDoc, getDocs } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  collection,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import * as Crypto from "expo-crypto";
 
@@ -28,6 +36,7 @@ export const useAuthStore = create((set, get) => ({
   receipts: {},
   sharedReceipts: {},
   modalVisible: false,
+  searchResults: [],
 
   setModalVisible: (visible) => set({ modalVisible: visible }),
   setSelectedItemIndex: (index) => set({ selectedItemIndex: index }),
@@ -343,6 +352,23 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       console.error("Error adding shared receipt:", error);
+    }
+  },
+
+  searchFriendsByName: async (name) => {
+    try {
+      const q = query(
+        collection(firestore, "users"),
+        where("name", "==", name)
+      );
+      const querySnapshot = await getDocs(q);
+      const friends = [];
+      querySnapshot.forEach((doc) => {
+        friends.push({ id: doc.id, ...doc.data() });
+      });
+      set({ searchResults: friends });
+    } catch (error) {
+      console.error("Error fetching friends:", error);
     }
   },
 }));
