@@ -21,7 +21,7 @@ const swipeFromRightOpen = () => {
 };
 
 const handleSwipeableOpen = (direction) => {
- if (direction === "right") {
+  if (direction === "right") {
     Alert.alert("Swipe from right");
   }
 };
@@ -103,10 +103,28 @@ const generateInitials = (friends) => {
   return initials;
 };
 
-
 const getRandomColor = () => {
-  const color = ["#2c2c2c", "#BF3E3E", "#2174D5", "#F2B33D", "#15251D", "#30833B", "#0E1211", "#446063", "#CCD4DD",
-    "#141E1D", "#967959", "#FBE4BD", "#221C0F", "#020203", "#2B4534", "#541E17", "#6D313D", "#202BD2", "#015967"]
+  const color = [
+    "#2c2c2c",
+    "#BF3E3E",
+    "#2174D5",
+    "#F2B33D",
+    "#15251D",
+    "#30833B",
+    "#0E1211",
+    "#446063",
+    "#CCD4DD",
+    "#141E1D",
+    "#967959",
+    "#FBE4BD",
+    "#221C0F",
+    "#020203",
+    "#2B4534",
+    "#541E17",
+    "#6D313D",
+    "#202BD2",
+    "#015967",
+  ];
 
   const randomIndex = Math.floor(Math.random() * color.length);
   return color[randomIndex];
@@ -114,7 +132,7 @@ const getRandomColor = () => {
 
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
-  const [totalPayment, setTotalPayment] = useState(0)
+  const [totalPayment, setTotalPayment] = useState(0);
   const styles = useStyle();
   const { localUserData, logout } = useAuthStore((state) => ({
     localUserData: state.localUserData,
@@ -127,8 +145,8 @@ const Mainscreen = () => {
       console.log("localUserData:", localUserData);
       console.log("sharedReceipts:", sharedReceipts);
       const receiptsArray = [];
-      let totalamount = 0
-      let user = ""
+      let totalamount = 0;
+      let user = "";
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
           Object.entries(receiptData).forEach(([title, itemsArray]) => {
@@ -136,11 +154,11 @@ const Mainscreen = () => {
               itemsArray.forEach((item) => {
                 Object.keys(receiptData.friends).forEach((friendId) => {
                   const mypayment = receiptData.friends[friendId].payment;
-                  if(receiptData.friends[friendId].originator === true) {
+                  if (receiptData.friends[friendId].originator === true) {
                     user = receiptData.friends[friendId].name;
                   }
 
-                  totalamount += mypayment
+                  totalamount += mypayment;
                   receiptsArray.push({
                     title: title,
                     name: user,
@@ -153,14 +171,14 @@ const Mainscreen = () => {
           });
         }
       });
-      setTotalPayment(totalamount.toFixed(2))
+      setTotalPayment(totalamount.toFixed(2));
       setTableData(receiptsArray);
       console.log("Table data set to:", receiptsArray);
     } else {
       console.warn("localUserData or sharedReceipts is null or undefined");
     }
   };
-  
+
   useEffect(() => {
     fetchData();
   }, [localUserData]);
@@ -215,17 +233,21 @@ const Mainscreen = () => {
                     <Text style={styles.txtFriends}>Friends</Text>
                     <View style={styles.friendIcons}>
                       {item.friends ? (
-                        generateInitials(Object.values(item.friends)).map((friend, idx) => (
-                          <View
-                            style={[
-                              styles.friendCircle,
-                              { backgroundColor: friend.color }
-                            ]}
-                            key={idx}
-                          >
-                            <Text style={styles.friendInitial}>{friend.initials}</Text>
-                          </View>
-                        ))
+                        generateInitials(Object.values(item.friends)).map(
+                          (friend, idx) => (
+                            <View
+                              style={[
+                                styles.friendCircle,
+                                { backgroundColor: friend.color },
+                              ]}
+                              key={idx}
+                            >
+                              <Text style={styles.friendInitial}>
+                                {friend.initials}
+                              </Text>
+                            </View>
+                          )
+                        )
                       ) : (
                         <Text>No friends data available</Text>
                       )}
