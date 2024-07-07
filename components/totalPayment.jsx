@@ -91,6 +91,7 @@ const TotalPayment = ({ title }) => {
         width={120}
         fontSize={25}
         height={40}
+        bcolor={"#00BEE5"}
       />
       <TabButton onPressRight={shareReceipts} />
       <TotalPaymentModal
@@ -316,6 +317,7 @@ const TotalPaymentModal = ({
                   width={150}
                   fontSize={25}
                   height={40}
+                  bcolor={"#00BEE5"}
                   onPress={addNewPage}
                   disabled={pages.length >= 99}
                 />

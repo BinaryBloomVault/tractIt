@@ -12,24 +12,16 @@ export default function TabLayout() {
       />
       <Stack.Screen
         name="friendList"
-        options={{
-          headerShown: false,
-        }}
       />
       <Stack.Screen
-        name="changeEmail"
-        options={{
-          headerShown: false,
-        }}
+        name="email"
       />
       <Stack.Screen
-        name="changePassword"
-        options={{
-          headerShown: false,
-        }}
+        name="password"
       />
-
-      <Stack.Screen name="addFriends" />
+      <Stack.Screen
+       name="addFriends"
+       />
     </Stack>
   );
 }

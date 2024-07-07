@@ -82,6 +82,7 @@ const index = () => {
               fontSize={18}
               width={350}
               height={45}
+              bcolor={"#00BEE5"}
               onPress={handleCredentials}
             />
           </View>

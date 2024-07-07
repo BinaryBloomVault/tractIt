@@ -33,7 +33,7 @@ const Profile = () => {
       </Card>
 
       <View style={styles.infoContainer}>
-        <Link href="/changeEmail" asChild>
+        <Link href="/email" asChild>
           <ListItem bottomDivider>
             <Icon name="email" />
             <ListItem.Content>
@@ -49,7 +49,7 @@ const Profile = () => {
             </ListItem.Content>
           </ListItem>
         </Link>
-        <Link href="/changePassword" asChild>
+        <Link href="/password" asChild>
           <ListItem bottomDivider>
             <Icon name="lock" />
             <ListItem.Content>
@@ -88,12 +88,6 @@ const Profile = () => {
       <Button
         title="Logout"
         buttonStyle={styles.logoutButton}
-        onPress={logout}
-      />
-      <Button
-        title="Delete Account"
-        buttonStyle={styles.deleteButton}
-        titleStyle={styles.deleteButtonText}
         onPress={logout}
       />
     </ScrollView>
@@ -157,15 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginBottom: 8,
   },
-  deleteButton: {
-    height: 50,
-    marginHorizontal: 20,
-    backgroundColor: "#2C2C2C",
-    marginBottom: 8,
-  },
-  deleteButtonText: {
-    color: "#FFFFFF", // White text color
-  }
 });
 
 export default Profile;

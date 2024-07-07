@@ -11,10 +11,11 @@ const addButton = ({
   fontSize,
   left,
   height,
+  bcolor,
 }) => {
   return (
     <View style={styles.addButtonContainer(bottom, left)}>
-      <Pressable style={styles.addButton(width, height)} onPress={onPress}>
+      <Pressable style={styles.addButton(width, height, bcolor)} onPress={onPress}>
         <Text style={styles.addButtonTitle(fontSize)}>{title}</Text>
       </Pressable>
     </View>
@@ -28,8 +29,8 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   }),
-  addButton: (width, height) => ({
-    backgroundColor: "#00BEE5",
+  addButton: (width, height, bcolor) => ({
+    backgroundColor: bcolor,
     borderColor: "transparent",
     borderRadius: 30,
     shadowColor: "#171717",
