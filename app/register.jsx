@@ -81,6 +81,7 @@ const Register = () => {
           width={350}
           height={45}
           onPress={handleRegister}
+          bcolor={"#00BEE5"}
         />
       </View>
       <View style={styles.orParent}>

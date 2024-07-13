@@ -7,7 +7,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert
 } from "react-native";
 import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
@@ -32,6 +33,7 @@ const index = () => {
       await login(email, password);
     } catch (error) {
       console.error("Error logging in:", error);
+      Alert('Invalid username/password!')
     }
   };
 

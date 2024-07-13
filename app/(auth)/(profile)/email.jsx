@@ -12,21 +12,26 @@ import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-const email = () => {
-  const { register } = useAuthStore((state) => ({
-    register: state.register,
+const EmailUpdate = () => {
+
+  const { authUser, logout } = useAuthStore((state) => ({
+    authUser: state.authUser,
+    logout: state.logout,
   }));
-  const [email, setEmail] = useState("");
+
+  const { updateEmail } = useAuthStore((state) => ({
+    updateEmail: state.updateEmail,
+  }));
   const [newEmail, setNewEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const windowHeight = useWindowDimensions().height;
 
-  const handleRegister = async () => {
+  const handleUpdateEmail = async () => {
     try {
-      await register(email, password, name);
+      await updateEmail(authUser.email, newEmail, password);
     } catch (error) {
-      console.error("Error registering:", error);
+      console.error("Error updating email:", error);
     }
   };
 
@@ -40,10 +45,9 @@ const email = () => {
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
-          placeholder="Old email"
           placeholderTextColor="#92a0a9"
-          value={email}
-          onChangeText={setEmail}
+          value={authUser.email}
+          editable={false}
         />
         <TextInput
           style={[styles.inputFormItem, styles.inputShadowBox]}
@@ -86,7 +90,7 @@ const email = () => {
           width={350}
           height={45}
           bcolor={"#00BEE5"}
-          onPress={handleRegister}
+          onPress={handleUpdateEmail}
         />
       </View>
       <View style={styles.orParent}>
@@ -101,7 +105,7 @@ const email = () => {
           width={350}
           height={45}
           bcolor={"#d2d7ea"}
-          onPress={handleRegister}
+          onPress={handleUpdateEmail}
         />
       </View>
       <View style={styles.orParent}>
@@ -193,4 +197,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default email;
+export default EmailUpdate;

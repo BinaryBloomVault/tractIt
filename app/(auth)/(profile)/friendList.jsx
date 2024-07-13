@@ -19,6 +19,7 @@ const friendList = () => {
         left={131}
         fontSize={15}
         height={35}
+        bcolor={"#00BEE5"}
         onPress={() => router.push("/addFriends")}
       />
 

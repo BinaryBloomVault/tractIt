@@ -65,6 +65,22 @@ const Profile = () => {
             </ListItem.Content>
           </ListItem>
         </Link>
+        <Link href="/qrcode" asChild>
+          <ListItem bottomDivider>
+            <Icon name="qr-code" />
+            <ListItem.Content>
+              <ListItem.Title>QR Code</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        </Link>
+        <Link href="/avatar" asChild>
+          <ListItem bottomDivider>
+            <Icon name="person" />
+            <ListItem.Content>
+              <ListItem.Title>Select Avatar</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
+        </Link>
         <Link href="/coupon" asChild>
           <ListItem bottomDivider>
             <Icon name="tag" />

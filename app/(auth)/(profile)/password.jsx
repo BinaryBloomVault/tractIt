@@ -6,28 +6,54 @@ import {
   TextInput,
   useWindowDimensions,
   TouchableOpacity,
+  Alert
 } from "react-native";
 import SignIn from "../../../components/button/addButton";
 import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { auth } from "../../../config/firebaseConfig";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 
-const password = () => {
+const Password = () => {
+
+  const { authUser, logout } = useAuthStore((state) => ({
+    authUser: state.authUser,
+    logout: state.logout,
+  }));
+
   const { register } = useAuthStore((state) => ({
     register: state.register,
   }));
-  const [email, setEmail] = useState("");
-  const [oldPassword, setOldPasword] = useState("");
+
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [verification, setVerification] = useState("");
+  const [validate, setValidate] = useState(false);
   const [hideShowOld, setHideShowOld] = useState(true);
   const [hideShowNew, setHideShowNew] = useState(true);
   const windowHeight = useWindowDimensions().height;
 
-  const handleRegister = async () => {
+  const handlePasswordUpdate = async () => {
     try {
-      await register(email, password, name);
+      // Get the current user
+      const user = auth.currentUser;
+
+      if (user) {
+        // Re-authenticate the user
+        const credential = EmailAuthProvider.credential(email, oldPassword);
+        await reauthenticateWithCredential(user, credential);
+
+        // Update the password
+        await updatePassword(user, newPassword);
+        setValidate(true)
+        setVerification("Success! Updated password.")
+        setOldPassword('')
+        setNewPassword('')
+      }
     } catch (error) {
-      console.error("Error registering:", error);
+      setValidate(false)
+      setVerification("Old password is incorrect.");
     }
   };
 
@@ -41,30 +67,29 @@ const password = () => {
 
   return (
     <View style={styles.mainscreen}>
-      <Text style={styles.title}>Update passcode</Text>
+      <Text style={styles.title}>Update Password</Text>
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
-          placeholder="Email"
           placeholderTextColor="#92a0a9"
-          value={email}
-          onChangeText={setEmail}
+          value={authUser.email}
+          editable={false}
         />
         <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
-            <TextInput
-            style={{flex: 1}}
+          <TextInput
+            style={{ flex: 1 }}
             placeholder="Old password"
             placeholderTextColor="#92a0a9"
             secureTextEntry={hideShowOld}
             value={oldPassword}
-            onChangeText={setOldPasword}
+            onChangeText={setOldPassword}
+          />
+          <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
+            <Ionicons
+              name={hideShowOld ? "eye-off" : "eye"}
+              size={24}
+              color="grey"
             />
-            <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
-                <Ionicons
-                name={hideShowOld ? "eye-off" : "eye"}
-                size={24}
-                color="grey"
-                />
           </TouchableOpacity>
         </View>
         <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
@@ -92,16 +117,19 @@ const password = () => {
           width={350}
           height={45}
           bcolor={"#00BEE5"}
-          onPress={handleRegister}
+          onPress={handlePasswordUpdate}
         />
       </View>
       <View style={styles.orParent}>
         <View style={styles.signUpContainer}>
-          <Text style={styles.forgotPassword}>Go back to ?</Text>
-          <Link href="/" asChild>
-            <Text style={styles.resetTypo}>Log in</Text>
-          </Link>
+          <Text style={styles.forgotPassword}>Go back to?</Text>
+          <TouchableOpacity onPress={logout}>
+              <Text style={styles.resetTypo}>Log in</Text>
+          </TouchableOpacity>
         </View>
+        <Text style={[styles.verified, { color: validate ? "#8cb1d5" : "#EAAA64" }]}>
+            {verification}
+          </Text>
       </View>
     </View>
   );
@@ -126,9 +154,17 @@ const styles = StyleSheet.create({
   resetTypo: {
     color: "#00bee5",
     textAlign: "left",
+    marginLeft: 5,
     fontSize: 15,
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
+  },
+  verified: {
+    textAlign: "center",
+    fontSize: 15,
+    fontFamily: "Gudea-Bold",
+    fontWeight: "700",
+    marginTop: 16,
   },
   title: {
     fontSize: 40,
@@ -178,10 +214,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   signUpContainer: {
-    marginTop: 21,
     flexDirection: "row",
-    columnGap: 8,
+    alignItems: "center",
   },
 });
 
-export default password;
+export default Password;
