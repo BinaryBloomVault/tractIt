@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import SignIn from "../../../components/button/addButton";
 import { useAuthStore } from "../../../zustand/zustand";
-import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../../../config/firebaseConfig";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
@@ -36,11 +35,9 @@ const Password = () => {
 
   const handlePasswordUpdate = async () => {
     try {
-      // Get the current user
       const user = auth.currentUser;
 
       if (user) {
-        // Re-authenticate the user
         const credential = EmailAuthProvider.credential(email, oldPassword);
         await reauthenticateWithCredential(user, credential);
 
