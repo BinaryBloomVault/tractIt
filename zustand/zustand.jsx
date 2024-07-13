@@ -138,7 +138,7 @@ export const useAuthStore = create((set, get) => ({
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const userRef = doc(firestore, "users", user.uid);
       const token = await user.getIdToken();

@@ -33,11 +33,11 @@ const Profile = () => {
       </Card>
 
       <View style={styles.infoContainer}>
-        <Link href="/email" asChild>
+        <Link href="/userDetails" asChild>
           <ListItem bottomDivider>
-            <Icon name="email" />
+            <Icon name="account-circle" />
             <ListItem.Content>
-              <ListItem.Title>Email</ListItem.Title>
+              <ListItem.Title>User Details</ListItem.Title>
             </ListItem.Content>
           </ListItem>
         </Link>
@@ -65,17 +65,9 @@ const Profile = () => {
             </ListItem.Content>
           </ListItem>
         </Link>
-        <Link href="/qrcode" asChild>
-          <ListItem bottomDivider>
-            <Icon name="qr-code" />
-            <ListItem.Content>
-              <ListItem.Title>QR Code</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        </Link>
         <Link href="/avatar" asChild>
           <ListItem bottomDivider>
-            <Icon name="person" />
+            <Icon name="face" />
             <ListItem.Content>
               <ListItem.Title>Select Avatar</ListItem.Title>
             </ListItem.Content>
