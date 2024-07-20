@@ -73,26 +73,24 @@ export const useAuthStore = create((set, get) => ({
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       const token = await user.getIdToken();
 
-      // Get user data from Firestore
       const userRef = doc(firestore, "users", user.uid);
       const userDoc = await getDoc(userRef);
 
       let sharedReceipts = {};
+      let userName = "";
+
       if (userDoc.exists()) {
-        const sharedReceiptsCollectionRef = collection(
-          userRef,
-          "sharedReceipts"
-        );
-        const sharedReceiptsSnapshot = await getDocs(
-          sharedReceiptsCollectionRef
-        );
+        const userData = userDoc.data();
+        userName = userData.name || "";
+        const sharedReceiptsCollectionRef = collection(userRef, "sharedReceipts");
+        const sharedReceiptsSnapshot = await getDocs(sharedReceiptsCollectionRef);
         sharedReceiptsSnapshot.forEach((doc) => {
           sharedReceipts[doc.id] = doc.data();
         });
       }
 
       const userDataPayload = {
-        name: user.displayName || "",
+        name: userName || user.displayName || "",
         email: user.email || "",
         uid: user.uid,
         friends: {},
@@ -104,6 +102,7 @@ export const useAuthStore = create((set, get) => ({
       set({
         authUser: user,
         authToken: token,
+        userName: userDataPayload.name,
         localUserData: userDataPayload,
         sharedReceipts: sharedReceipts,
         isOffline: false,

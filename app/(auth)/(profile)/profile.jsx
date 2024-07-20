@@ -5,9 +5,10 @@ import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 
 const Profile = () => {
-  const { authUser, logout } = useAuthStore((state) => ({
+  const { authUser, logout, userName } = useAuthStore((state) => ({
     authUser: state.authUser,
     logout: state.logout,
+    userName: state.userName
   }));
 
   return (
@@ -24,7 +25,7 @@ const Profile = () => {
           />
           <Button type="clear" title="Edit Photo" />
           <ListItem.Title style={styles.profileName}>
-            {authUser?.displayName || "No Name"}
+            {userName}
           </ListItem.Title>
           <ListItem.Subtitle style={styles.profileUsername}>
             {authUser?.email || "No Email"}

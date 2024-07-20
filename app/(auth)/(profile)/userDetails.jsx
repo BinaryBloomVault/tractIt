@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
   Modal,
   Text,
-  Alert,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import { Avatar, Button, ListItem, Icon, Card } from "@rneui/themed";
+import { ListItem, Icon } from "@rneui/themed";
 import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 import { auth } from "../../../config/firebaseConfig";
@@ -17,9 +17,9 @@ import { deleteUser } from "firebase/auth";
 const UserDetails = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
-  const { authUser, logout } = useAuthStore((state) => ({
+  const { userName, authUser } = useAuthStore((state) => ({
+    userName: state.userName,
     authUser: state.authUser,
-    logout: state.logout,
   }));
 
   const handleRemoveOAuth = async () => {
@@ -27,13 +27,13 @@ const UserDetails = () => {
     if (user) {
       deleteUser(user)
         .then(() => {
-          Alert('Success! Deleting Account.')
+          Alert.alert("Success! Deleting Account.");
           setTimeout(() => {
-            authUser.logout
-          }, 3000)
+            logout();
+          }, 3000);
         })
         .catch((error) => {
-          Alert('Something went wrong in deleting account! ')
+          Alert.alert("Something went wrong in deleting account!");
         });
     }
   };
@@ -49,7 +49,7 @@ const UserDetails = () => {
         <ListItem bottomDivider>
           <Icon name="person" />
           <ListItem.Content>
-            <ListItem.Title>{auth.displayName}</ListItem.Title>
+            <ListItem.Title>{userName}</ListItem.Title>
           </ListItem.Content>
         </ListItem>
         <ListItem bottomDivider>
@@ -84,7 +84,9 @@ const UserDetails = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Are you sure you want to delete your account?</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete your account?
+            </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.buttonCancel]}
@@ -102,8 +104,6 @@ const UserDetails = () => {
           </View>
         </View>
       </Modal>
-
-
     </ScrollView>
   );
 };

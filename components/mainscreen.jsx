@@ -134,9 +134,8 @@ const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
   const styles = useStyle();
-  const { localUserData, logout } = useAuthStore((state) => ({
+  const { localUserData } = useAuthStore((state) => ({
     localUserData: state.localUserData,
-    logout: state.logout,
   }));
 
   const fetchData = () => {
@@ -174,8 +173,6 @@ const Mainscreen = () => {
       setTotalPayment(totalamount.toFixed(2));
       setTableData(receiptsArray);
       console.log("Table data set to:", receiptsArray);
-    } else {
-      console.warn("localUserData or sharedReceipts is null or undefined");
     }
   };
 
