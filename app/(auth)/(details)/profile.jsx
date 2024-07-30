@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { View,
-         StyleSheet,
-         ScrollView,
-         Modal,
-         TouchableOpacity,
-         Image } from "react-native";
-import { Avatar,
-         Button,
-         ListItem,
-         Icon,
-         Card } from "@rneui/themed";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { Avatar, Button, ListItem, Icon, Card } from "@rneui/themed";
 import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 
 const Profile = () => {
-  const { authUser, logout, userName } = useAuthStore((state) => ({
+  const { authUser, logout, localUserData } = useAuthStore((state) => ({
     authUser: state.authUser,
     logout: state.logout,
-    userName: state.userName,
+    localUserData: state.localUserData,
   }));
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [updatePhotoURL, setUpdatePhotoUrl] = useState("");
+  const [userName, setUserName] = useState('')
   const isNotUpdate = "";
+
 
   const defaultAvatarUrl = "https://robohash.org/example1000.png";
 
@@ -58,6 +58,13 @@ const Profile = () => {
     setIsModalVisible(false);
   };
 
+  useEffect(() => {
+    if (localUserData) {
+      setUserName(localUserData.name || 'No Name');
+    }
+  }, [localUserData]);
+  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.profileCard}>
@@ -66,7 +73,10 @@ const Profile = () => {
             size={100}
             rounded
             source={{
-              uri: updatePhotoURL !== isNotUpdate ? updatePhotoURL : defaultAvatarUrl,
+              uri:
+                updatePhotoURL !== isNotUpdate
+                  ? updatePhotoURL
+                  : defaultAvatarUrl,
             }}
             containerStyle={styles.avatar}
           />
@@ -75,9 +85,7 @@ const Profile = () => {
             title="Edit Photo"
             onPress={() => setIsModalVisible(true)}
           />
-          <ListItem.Title style={styles.profileName}>
-            {userName}
-          </ListItem.Title>
+          <ListItem.Title style={styles.profileName}>{userName}</ListItem.Title>
           <ListItem.Subtitle style={styles.profileUsername}>
             {authUser?.email || "No Email"}
           </ListItem.Subtitle>
@@ -153,7 +161,10 @@ const Profile = () => {
           <View style={styles.modalContent}>
             <ScrollView contentContainerStyle={styles.avatarScrollContainer}>
               {avatarSelection.map((url, index) => (
-                <TouchableOpacity key={index} onPress={() => handleAvatarSelect(url)}>
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleAvatarSelect(url)}
+                >
                   <Image source={{ uri: url }} style={styles.avatarOption} />
                 </TouchableOpacity>
               ))}

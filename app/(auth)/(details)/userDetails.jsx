@@ -16,9 +16,10 @@ import { deleteUser } from "firebase/auth";
 
 const UserDetails = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [userName, setUserName] = useState("")
 
-  const { userName, authUser } = useAuthStore((state) => ({
-    userName: state.userName,
+  const { localUserData, authUser } = useAuthStore((state) => ({
+    localUserData: state.localUserData,
     authUser: state.authUser,
   }));
 
@@ -42,6 +43,12 @@ const UserDetails = () => {
     setModalVisible(false);
     handleRemoveOAuth();
   };
+
+  useEffect(() => {
+    if (localUserData) {
+      setUserName(localUserData.name || 'No Name');
+    }
+  }, [localUserData]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

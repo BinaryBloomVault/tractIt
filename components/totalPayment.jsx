@@ -18,7 +18,7 @@ import PaymentInfo from "./card/paymentInfo";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
-import { useRouter, useNavigation } from "expo-router";
+import { useRouter, useNavigation, useSegments, Link } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -69,6 +69,7 @@ const TotalPayment = ({ title }) => {
     }));
 
   const showModal = () => {
+    console.log("Show Modal");
     setModalVisible(true);
   };
 
@@ -119,6 +120,8 @@ const TotalPaymentModal = ({
   const [currentPage, setCurrentPage] = useState(1);
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
     if (modalVisible && initialPages.length > 0) {
@@ -218,6 +221,10 @@ const TotalPaymentModal = ({
       (page) => !page.items || !page.quantity || !page.price || !page.friends
     );
   }, [pages]);
+  const handlePressFriends = (index) => {
+    hideModal();
+    console.log(`Pressed Friends button for page ${index}`);
+  };
 
   return (
     <Modal
@@ -292,20 +299,17 @@ const TotalPaymentModal = ({
                       />
                     </View>
                     <View style={styles.itemsParent}>
-                      <Text style={styles.title}>Friends</Text>
-                      <TextInput
-                        value={JSON.stringify(page.friends)}
-                        onChangeText={(text) => {
-                          try {
-                            const friends = JSON.parse(text);
-                            handleFieldUpdate(index, "friends", friends);
-                          } catch (e) {
-                            console.error("Invalid JSON");
-                          }
+                      <Link
+                        push
+                        href={{
+                          pathname: "/friendList",
+                          params: { index: index },
                         }}
-                        style={styles.rectangleInput}
-                        selectTextOnFocus={true}
-                      />
+                        style={styles.friendsButton}
+                        onPress={() => handlePressFriends(index)}
+                      >
+                        <Text style={styles.friendsButtonText}>Friends</Text>
+                      </Link>
                     </View>
                   </View>
                 ))}
@@ -429,6 +433,18 @@ const useStyle = () => {
       borderWidth: 1,
       width: "70%",
       height: deviceHeight < 813 ? 32 : 40,
+    },
+    friendsButton: {
+      backgroundColor: "#A7E2B3",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 5,
+    },
+    friendsButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+      textAlign: "center",
     },
   });
   return styles;

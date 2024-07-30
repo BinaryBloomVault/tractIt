@@ -6,55 +6,73 @@ import {
   TextInput,
   useWindowDimensions,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import SignIn from "../../../components/button/addButton";
 import { useAuthStore } from "../../../zustand/zustand";
-import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { auth } from "../../../config/firebaseConfig";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 
-const EmailUpdate = () => {
-
+const Password = () => {
   const { authUser, logout } = useAuthStore((state) => ({
     authUser: state.authUser,
     logout: state.logout,
   }));
 
-  const { updateEmail } = useAuthStore((state) => ({
-    updateEmail: state.updateEmail,
+  const { register } = useAuthStore((state) => ({
+    register: state.register,
   }));
-  const [newEmail, setNewEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [verification, setVerification] = useState("");
+  const [validate, setValidate] = useState(false);
+  const [hideShowOld, setHideShowOld] = useState(true);
+  const [hideShowNew, setHideShowNew] = useState(true);
   const windowHeight = useWindowDimensions().height;
 
-  const handleUpdateEmail = async () => {
+  const handlePasswordUpdate = async () => {
     try {
-      await updateEmail(authUser.email, newEmail, password);
+      const user = auth.currentUser;
+
+      if (user) {
+        const credential = EmailAuthProvider.credential(email, oldPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        setValidate(true);
+        setVerification("Success! Updated password.");
+        setTimeout(() => {
+          logout()
+        }, 3000)
+      }
     } catch (error) {
-      console.error("Error updating email:", error);
+      setValidate(false);
+      setVerification("Old password is incorrect.");
     }
   };
 
-  const toggleSecureTextEntry = () => {
-    setSecureTextEntry(!secureTextEntry);
+  const passHideShow = () => {
+    setHideShowOld(!hideShowOld);
+  };
+
+  const passHideShow1 = () => {
+    setHideShowNew(!hideShowNew);
   };
 
   return (
     <View style={styles.mainscreen}>
-      <Text style={styles.title}>Update Email</Text>
+      <Text style={styles.title}>Update Password</Text>
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
           placeholderTextColor="#92a0a9"
           value={authUser.email}
           editable={false}
-        />
-        <TextInput
-          style={[styles.inputFormItem, styles.inputShadowBox]}
-          placeholder="New email"
-          placeholderTextColor="#92a0a9"
-          value={newEmail}
-          onChangeText={setNewEmail}
         />
         <View
           style={[
@@ -65,18 +83,41 @@ const EmailUpdate = () => {
         >
           <TextInput
             style={{ flex: 1 }}
-            placeholder="Confirm password"
+            placeholder="Old password"
             placeholderTextColor="#92a0a9"
-            secureTextEntry={secureTextEntry}
-            value={password}
-            onChangeText={setPassword}
+            secureTextEntry={hideShowOld}
+            value={oldPassword}
+            onChangeText={setOldPassword}
+          />
+          <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
+            <Ionicons
+              name={hideShowOld ? "eye-off" : "eye"}
+              size={24}
+              color="grey"
+            />
+          </TouchableOpacity>
+        </View>
+        <View
+          style={[
+            styles.inputFormItem,
+            styles.inputShadowBox,
+            styles.passwordContainer,
+          ]}
+        >
+          <TextInput
+            style={{ flex: 1 }}
+            placeholder="New password"
+            placeholderTextColor="#92a0a9"
+            secureTextEntry={hideShowNew}
+            value={newPassword}
+            onChangeText={setNewPassword}
           />
           <TouchableOpacity
-            onPress={toggleSecureTextEntry}
+            onPress={passHideShow1}
             style={styles.iconContainer}
           >
             <Ionicons
-              name={secureTextEntry ? "eye-off" : "eye"}
+              name={hideShowNew ? "eye-off" : "eye"}
               size={24}
               color="grey"
             />
@@ -90,31 +131,8 @@ const EmailUpdate = () => {
           width={350}
           height={45}
           bcolor={"#00BEE5"}
-          onPress={handleUpdateEmail}
+          onPress={handlePasswordUpdate}
         />
-      </View>
-      <View style={styles.orParent}>
-        <View style={styles.signUpContainer}>
-          <Text style={styles.forgotPassword}>or</Text>
-        </View>
-      </View>
-      <View style={styles.signInWrapper}>
-        <SignIn
-          title="Delete Account"
-          fontSize={18}
-          width={350}
-          height={45}
-          bcolor={"#d2d7ea"}
-          onPress={handleUpdateEmail}
-        />
-      </View>
-      <View style={styles.orParent}>
-        <View style={styles.signUpContainer}>
-          <Text style={styles.forgotPassword}>Go back to ?</Text>
-          <Link href="/" asChild>
-            <Text style={styles.resetTypo}>Log in</Text>
-          </Link>
-        </View>
       </View>
     </View>
   );
@@ -139,14 +157,22 @@ const styles = StyleSheet.create({
   resetTypo: {
     color: "#00bee5",
     textAlign: "left",
+    marginLeft: 5,
     fontSize: 15,
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
   },
+  verified: {
+    textAlign: "center",
+    fontSize: 15,
+    fontFamily: "Gudea-Bold",
+    fontWeight: "700",
+    marginTop: 16,
+  },
   title: {
     fontSize: 40,
     height: 70,
-    marginTop: 20,
+    marginTop: 16,
     width: 350,
     textAlign: "center",
     color: "#000",
@@ -178,23 +204,6 @@ const styles = StyleSheet.create({
   signInWrapper: {
     marginTop: 24,
   },
-  orParent: {
-    marginTop: 16,
-    alignItems: "center",
-  },
-  mainscreen: {
-    backgroundColor: "#f3f3f3",
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-    paddingBottom: 10,
-    justifyContent: "center",
-  },
-  signUpContainer: {
-    marginTop: 21,
-    flexDirection: "row",
-    columnGap: 8,
-  },
 });
 
-export default EmailUpdate;
+export default Password;

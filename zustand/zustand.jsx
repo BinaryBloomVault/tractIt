@@ -15,6 +15,8 @@ import {
   getDocs,
   query,
   where,
+  addDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import * as Crypto from "expo-crypto";
@@ -37,6 +39,8 @@ export const useAuthStore = create((set, get) => ({
   sharedReceipts: {},
   modalVisible: false,
   searchResults: [],
+  friendRequests: [],
+  notifications: [],
 
   setModalVisible: (visible) => set({ modalVisible: visible }),
   setSelectedItemIndex: (index) => set({ selectedItemIndex: index }),
@@ -77,34 +81,43 @@ export const useAuthStore = create((set, get) => ({
       const userDoc = await getDoc(userRef);
 
       let sharedReceipts = {};
+      let notifications = [];
+      let friendRequest = [];
       let userName = "";
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
         userName = userData.name || "";
-        const sharedReceiptsCollectionRef = collection(userRef, "sharedReceipts");
-        const sharedReceiptsSnapshot = await getDocs(sharedReceiptsCollectionRef);
+        notifications = userData.notifications || [];
+        friendRequest = userData.friendRequests || [];
+
+        const sharedReceiptsCollectionRef = collection(
+          userRef,
+          "sharedReceipts"
+        );
+        const sharedReceiptsSnapshot = await getDocs(
+          sharedReceiptsCollectionRef
+        );
         sharedReceiptsSnapshot.forEach((doc) => {
           sharedReceipts[doc.id] = doc.data();
         });
       }
-
       const userDataPayload = {
         name: userName || user.displayName || "",
         email: user.email || "",
         uid: user.uid,
-        friends: {},
+        friendRequest: friendRequest,
         sharedReceipts: sharedReceipts,
+        notifications: notifications,
       };
-
       mmkvStorage.setItem("auth_token", token);
       mmkvStorage.setItem("user_data", JSON.stringify(userDataPayload));
       set({
         authUser: user,
         authToken: token,
-        userName: userDataPayload.name,
         localUserData: userDataPayload,
         sharedReceipts: sharedReceipts,
+        notifications: notifications,
         isOffline: false,
       });
     } catch (error) {
@@ -125,6 +138,8 @@ export const useAuthStore = create((set, get) => ({
         isOffline: true,
         receipts: {},
         sharedReceipts: {},
+        searchResults: null,
+        notifications: null,
       });
     } catch (error) {
       console.error("Error logging out:", error);
@@ -137,7 +152,7 @@ export const useAuthStore = create((set, get) => ({
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const userRef = doc(firestore, "users", user.uid);
       const token = await user.getIdToken();
@@ -302,7 +317,7 @@ export const useAuthStore = create((set, get) => ({
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const friends = {};
-        console.log("asdasdsadsadasdasdasdasdasd", receiptDataArray);
+        // console.log("asdasdsadsadasdasdasdasdasd", receiptDataArray);
 
         receiptDataArray.forEach((receipt) => {
           const numFriends = Object.keys(receipt.friends).length;
@@ -353,17 +368,232 @@ export const useAuthStore = create((set, get) => ({
       console.error("Error adding shared receipt:", error);
     }
   },
+  addFriendRequest: async (friendId, friendName) => {
+    try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const userRef = doc(firestore, "users", userData.uid);
 
+        // Check if the friend request already exists
+        const existingRequests = userData.friendRequests || [];
+        const duplicateRequest = existingRequests.find(
+          (request) => request.id === friendId
+        );
+        if (duplicateRequest) {
+          console.log("Friend request already exists");
+          return;
+        }
+
+        // Add the friend request to the current user's friendRequests
+        const friendRequest = {
+          id: friendId,
+          name: friendName,
+          confirmed: false,
+        };
+        const updatedFriendRequests = [...existingRequests, friendRequest];
+
+        await updateDoc(userRef, {
+          friendRequests: updatedFriendRequests,
+        });
+
+        const updatedUser = {
+          ...userData,
+          friendRequests: updatedFriendRequests,
+        };
+
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+        set({
+          localUserData: updatedUser,
+          friendRequests: updatedUser.friendRequests,
+        });
+
+        // Add the friend request to the other user's friendRequests
+        const recipientRef = doc(firestore, "users", friendId);
+        const recipientDoc = await getDoc(recipientRef);
+
+        if (recipientDoc.exists()) {
+          const recipientData = recipientDoc.data();
+
+          const newFriendRequestForRecipient = {
+            id: userData.uid,
+            name: userData.name,
+            confirmed: false,
+          };
+          const updatedFriendRequestsForRecipient = [
+            ...(recipientData.friendRequests || []),
+            newFriendRequestForRecipient,
+          ];
+
+          await updateDoc(recipientRef, {
+            friendRequests: updatedFriendRequestsForRecipient,
+          });
+
+          // Add notification for the other user
+          const newNotification = {
+            message: `${userData.name} wants to add you`,
+            userId: userData.uid,
+          };
+          const updatedNotifications = [
+            ...(recipientData.notifications || []),
+            newNotification,
+          ];
+
+          await updateDoc(recipientRef, {
+            notifications: updatedNotifications,
+          });
+        } else {
+          console.error("Recipient user does not exist.");
+        }
+      }
+    } catch (error) {
+      console.error("Error adding friend request:", error);
+    }
+  },
+
+  confirmFriendRequest: async (friendId) => {
+    console.log("Confirming friend request with ID:", friendId);
+    try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (!userDataString) {
+        throw new Error("User data not found in storage");
+      }
+
+      const userData = JSON.parse(userDataString);
+      const userRef = doc(firestore, "users", userData.uid);
+
+      const userFriendRequests = userData.friendRequest || [];
+
+      // Update the current user's friend requests
+      const updatedFriendRequests = userFriendRequests.map((request) =>
+        request.id === friendId ? { ...request, confirmed: true } : request
+      );
+      console.log("Updated friend requests:", updatedFriendRequests);
+
+      // Update the current user's Firestore document
+      await updateDoc(userRef, {
+        friendRequests: updatedFriendRequests,
+      });
+
+      const updatedUser = {
+        ...userData,
+        friendRequests: updatedFriendRequests,
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+      set({
+        localUserData: updatedUser,
+        friendRequests: updatedUser.friendRequests,
+      });
+
+      // Update the friend's friend requests to mark the request from the current user as confirmed
+      const friendRef = doc(firestore, "users", friendId);
+      const friendDoc = await getDoc(friendRef);
+
+      if (!friendDoc.exists()) {
+        throw new Error("Friend document does not exist");
+      }
+
+      const friendData = friendDoc.data();
+      const friendFriendRequests = friendData.friendRequests || [];
+
+      const updatedFriendRequestsForFriend = friendFriendRequests.map(
+        (request) =>
+          request.id === userData.uid
+            ? { ...request, confirmed: true }
+            : request
+      );
+
+      await updateDoc(friendRef, {
+        friendRequests: updatedFriendRequestsForFriend,
+      });
+    } catch (error) {
+      console.error("Error confirming friend request:", error);
+    }
+  },
+
+  cancelFriendRequest: async (friendId) => {
+    const userDataString = mmkvStorage.getItem("user_data");
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      const userRef = doc(firestore, "users", userData.uid);
+
+      const updatedFriendRequests = (userData.friendRequests || []).filter(
+        (request) => request.id !== friendId
+      );
+
+      await updateDoc(userRef, {
+        friendRequests: updatedFriendRequests,
+      });
+
+      const updatedUser = {
+        ...userData,
+        friendRequests: updatedFriendRequests,
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+      set({
+        localUserData: updatedUser,
+        friendRequests: updatedUser.friendRequests,
+      });
+
+      // Remove the friend request from the other user's friend requests
+      const friendRef = doc(firestore, "users", friendId);
+      const friendDoc = await getDoc(friendRef);
+      if (friendDoc.exists()) {
+        const friendData = friendDoc.data();
+        const updatedFriendData = {
+          ...friendData,
+          friendRequests: (friendData.friendRequests || []).filter(
+            (request) => request.id !== userData.uid
+          ),
+        };
+
+        await updateDoc(friendRef, updatedFriendData);
+      }
+    }
+  },
+
+  deleteNotification: async (notificationId) => {
+    const userDataString = mmkvStorage.getItem("user_data");
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      const userRef = doc(firestore, "users", userData.uid);
+
+      const updatedNotifications = (userData.notifications || []).filter(
+        (notification) => notification.id !== notificationId
+      );
+
+      await updateDoc(userRef, {
+        notifications: updatedNotifications,
+      });
+
+      const updatedUser = {
+        ...userData,
+        notifications: updatedNotifications,
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+      set({ localUserData: updatedUser, notifications: updatedNotifications });
+    }
+  },
   searchFriendsByName: async (name) => {
     try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+
       const q = query(
         collection(firestore, "users"),
         where("name", "==", name)
       );
       const querySnapshot = await getDocs(q);
       const friends = [];
+      console.log("Searching for friends with name:", userData);
+
       querySnapshot.forEach((doc) => {
-        friends.push({ id: doc.id, ...doc.data() });
+        if (doc.id !== userData?.uid) {
+          friends.push({ id: doc.id, ...doc.data() });
+        }
       });
       set({ searchResults: friends });
     } catch (error) {

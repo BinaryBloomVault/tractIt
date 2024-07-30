@@ -30,6 +30,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <FontAwesome size={30} name="plus-circle" color={color} />
           ),
+          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -39,14 +40,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="notifications-sharp" size={30} color={color} />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="(profile)"
-        options={{
-          tabBarStyle: { display: "none" },
-          tabBarLabel: "",
-          href: null,
           headerShown: false,
         }}
       />
