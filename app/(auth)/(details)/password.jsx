@@ -6,16 +6,19 @@ import {
   TextInput,
   useWindowDimensions,
   TouchableOpacity,
-  Alert
+  Alert,
 } from "react-native";
 import SignIn from "../../../components/button/addButton";
 import { useAuthStore } from "../../../zustand/zustand";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../../../config/firebaseConfig";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 
 const Password = () => {
-
   const { authUser, logout } = useAuthStore((state) => ({
     authUser: state.authUser,
     logout: state.logout,
@@ -43,13 +46,13 @@ const Password = () => {
 
         // Update the password
         await updatePassword(user, newPassword);
-        setValidate(true)
-        setVerification("Success! Updated password.")
-        setOldPassword('')
-        setNewPassword('')
+        setValidate(true);
+        setVerification("Success! Updated password.");
+        setOldPassword("");
+        setNewPassword("");
       }
     } catch (error) {
-      setValidate(false)
+      setValidate(false);
       setVerification("Old password is incorrect.");
     }
   };
@@ -72,7 +75,13 @@ const Password = () => {
           value={authUser.email}
           editable={false}
         />
-        <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+        <View
+          style={[
+            styles.inputFormItem,
+            styles.inputShadowBox,
+            styles.passwordContainer,
+          ]}
+        >
           <TextInput
             style={{ flex: 1 }}
             placeholder="Old password"
@@ -89,7 +98,13 @@ const Password = () => {
             />
           </TouchableOpacity>
         </View>
-        <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+        <View
+          style={[
+            styles.inputFormItem,
+            styles.inputShadowBox,
+            styles.passwordContainer,
+          ]}
+        >
           <TextInput
             style={{ flex: 1 }}
             placeholder="New password"
@@ -98,7 +113,10 @@ const Password = () => {
             value={newPassword}
             onChangeText={setNewPassword}
           />
-          <TouchableOpacity onPress={passHideShow1} style={styles.iconContainer}>
+          <TouchableOpacity
+            onPress={passHideShow1}
+            style={styles.iconContainer}
+          >
             <Ionicons
               name={hideShowNew ? "eye-off" : "eye"}
               size={24}
@@ -121,12 +139,14 @@ const Password = () => {
         <View style={styles.signUpContainer}>
           <Text style={styles.forgotPassword}>Go back to?</Text>
           <TouchableOpacity onPress={logout}>
-              <Text style={styles.resetTypo}>Log in</Text>
+            <Text style={styles.resetTypo}>Log in</Text>
           </TouchableOpacity>
         </View>
-        <Text style={[styles.verified, { color: validate ? "#8cb1d5" : "#EAAA64" }]}>
-            {verification}
-          </Text>
+        <Text
+          style={[styles.verified, { color: validate ? "#8cb1d5" : "#EAAA64" }]}
+        >
+          {verification}
+        </Text>
       </View>
     </View>
   );

@@ -13,7 +13,6 @@ import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 const EmailUpdate = () => {
-
   const { authUser, logout } = useAuthStore((state) => ({
     authUser: state.authUser,
     logout: state.logout,
