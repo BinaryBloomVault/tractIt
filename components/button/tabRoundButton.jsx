@@ -2,10 +2,9 @@ import { View, Text, Platform } from "react-native";
 import React from "react";
 import { Button } from "@rneui/base";
 import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons"; // Import icons
 
 const tabRoundButton = ({ onPressRight, onPressLeft }) => {
-  const router = useRouter();
-
   return (
     <View
       style={{
@@ -19,7 +18,7 @@ const tabRoundButton = ({ onPressRight, onPressLeft }) => {
       }}
     >
       <Button
-        title="Left Button"
+        icon={<Feather name="x" size={40} color="black" />}
         buttonStyle={{
           backgroundColor: "#FFFF",
           borderRadius: 100,
@@ -36,7 +35,7 @@ const tabRoundButton = ({ onPressRight, onPressLeft }) => {
         onPress={onPressLeft}
       />
       <Button
-        title="Right Button"
+        icon={<Feather name="check" size={40} color="black" />}
         buttonStyle={{
           backgroundColor: "#FFFF",
           borderRadius: 100,

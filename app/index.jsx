@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-  Alert
+  Alert,
 } from "react-native";
 import SignIn from "../components/button/addButton";
 import { FontAwesome } from "@expo/vector-icons";
@@ -27,13 +27,13 @@ const index = () => {
   const passHideShow = () => {
     setHideShow(!hideShow);
   };
-  
+
   const handleCredentials = async () => {
     try {
       await login(email, password);
     } catch (error) {
       console.error("Error logging in:", error);
-      Alert('Invalid username/password!')
+      Alert("Invalid username/password!");
     }
   };
 
@@ -60,16 +60,25 @@ const index = () => {
               value={email}
               onChangeText={setEmail}
             />
-            <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+            <View
+              style={[
+                styles.inputFormItem,
+                styles.inputShadowBox,
+                styles.passwordContainer,
+              ]}
+            >
               <TextInput
                 style={{ flex: 1 }}
-                placeholder="New password"
+                placeholder="Password"
                 placeholderTextColor="#92a0a9"
                 secureTextEntry={hideShow}
                 value={password}
                 onChangeText={setPassword}
               />
-              <TouchableOpacity onPress={passHideShow} style={styles.iconContainer}>
+              <TouchableOpacity
+                onPress={passHideShow}
+                style={styles.iconContainer}
+              >
                 <Ionicons
                   name={hideShow ? "eye-off" : "eye"}
                   size={24}

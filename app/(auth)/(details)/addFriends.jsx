@@ -23,6 +23,7 @@ const AddFriendScreen = () => {
   const searchFriendsByName = useAuthStore(
     (state) => state.searchFriendsByName
   );
+  const addFriendRequest = useAuthStore((state) => state.addFriendRequest);
 
   useEffect(() => {
     if (search) {
@@ -35,9 +36,12 @@ const AddFriendScreen = () => {
     setModalVisible(true);
   };
 
-  const handleAddFriend = () => {
+  const handleAddFriend = async () => {
     if (currentFriend) {
       setSelectedFriends((prev) => [...prev, currentFriend.id]);
+      console.log("item:", currentFriend.name);
+
+      await addFriendRequest(currentFriend.id, currentFriend.name);
     }
     closeModal();
   };
@@ -58,6 +62,7 @@ const AddFriendScreen = () => {
 
   const renderFriendItem = ({ item }) => {
     const isSelected = selectedFriends.includes(item.id);
+
     return (
       <TouchableOpacity onPress={() => handleSelectFriend(item)}>
         <Card containerStyle={styles.friendItem}>

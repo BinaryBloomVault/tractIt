@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import { View,
-         StyleSheet,
-         ScrollView,
-         Modal,
-         TouchableOpacity,
-         Image } from "react-native";
-import { Avatar,
-         Button,
-         ListItem,
-         Icon,
-         Card } from "@rneui/themed";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { Avatar, Button, ListItem, Icon, Card } from "@rneui/themed";
 import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 
@@ -66,7 +64,10 @@ const Profile = () => {
             size={100}
             rounded
             source={{
-              uri: updatePhotoURL !== isNotUpdate ? updatePhotoURL : defaultAvatarUrl,
+              uri:
+                updatePhotoURL !== isNotUpdate
+                  ? updatePhotoURL
+                  : defaultAvatarUrl,
             }}
             containerStyle={styles.avatar}
           />
@@ -75,9 +76,7 @@ const Profile = () => {
             title="Edit Photo"
             onPress={() => setIsModalVisible(true)}
           />
-          <ListItem.Title style={styles.profileName}>
-            {userName}
-          </ListItem.Title>
+          <ListItem.Title style={styles.profileName}>{userName}</ListItem.Title>
           <ListItem.Subtitle style={styles.profileUsername}>
             {authUser?.email || "No Email"}
           </ListItem.Subtitle>
@@ -153,7 +152,10 @@ const Profile = () => {
           <View style={styles.modalContent}>
             <ScrollView contentContainerStyle={styles.avatarScrollContainer}>
               {avatarSelection.map((url, index) => (
-                <TouchableOpacity key={index} onPress={() => handleAvatarSelect(url)}>
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => handleAvatarSelect(url)}
+                >
                   <Image source={{ uri: url }} style={styles.avatarOption} />
                 </TouchableOpacity>
               ))}
