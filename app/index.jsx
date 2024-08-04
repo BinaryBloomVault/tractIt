@@ -60,15 +60,9 @@ const index = () => {
               value={email}
               onChangeText={setEmail}
             />
-            <View
-              style={[
-                styles.inputFormItem,
-                styles.inputShadowBox,
-                styles.passwordContainer,
-              ]}
-            >
+            <View style={styles.inputContainer}>
               <TextInput
-                style={{ flex: 1 }}
+                style={[styles.inputFormItem, styles.inputShadowBox]}
                 placeholder="Password"
                 placeholderTextColor="#92a0a9"
                 secureTextEntry={hideShow}
@@ -135,15 +129,14 @@ const styles = StyleSheet.create({
   },
   inputShadowBox: {
     fontSize: 15,
-    justifyContent: "center",
     backgroundColor: "#ffff",
     borderRadius: 10,
-    flexDirection: "row",
     height: 50,
     width: 350,
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
-    alignItems: "center",
+    paddingLeft: 19,
+    paddingRight: 45, // Add space for the icon
   },
   resetTypo: {
     color: "#00bee5",
@@ -181,14 +174,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 19,
     paddingVertical: 14,
-    marginTop: 8,
   },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  inputContainer: {
+    position: "relative",
+    margin: 8,
+    width: "100%",
   },
   iconContainer: {
-    marginLeft: 10,
+    position: "absolute",
+    right: 15,
+    top: 13,
   },
   forgotPassword: {
     color: "#92a0a9",

@@ -11,49 +11,108 @@ import React, { useEffect, useState, useCallback } from "react";
 import AddButton from "../../../components/button/addButton";
 import { Card, Avatar } from "@rneui/themed";
 import TabButton from "../../../components/button/tabRoundButton";
-import { useRouter, useSegments } from "expo-router";
-import { useAuthStore } from "../../../zustand/zustand"; // Import Zustand store
+import {
+  useRouter,
+  useSegments,
+  useNavigation,
+  useLocalSearchParams,
+  useGlobalSearchParams,
+} from "expo-router";
+import { useAuthStore } from "../../../zustand/zustand";
 import { getDoc, doc } from "firebase/firestore";
-import { firestore } from "../../../config/firebaseConfig"; // Import Firestore config
-import { AntDesign } from "@expo/vector-icons"; // Import AntDesign icon
+import { firestore } from "../../../config/firebaseConfig";
+import { AntDesign } from "@expo/vector-icons";
+import { mmkvStorage } from "../../../zustand/zustand";
 
 const FriendList = () => {
   const [confirmedFriends, setConfirmedFriends] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const { height: deviceHeight } = useWindowDimensions();
+
   const styles = useStyle();
   const router = useRouter();
+
   const loadUserData = useAuthStore((state) => state.loadUserData);
-  const segments = useSegments();
+  const setModalVisible = useAuthStore((state) => state.setModalVisible);
 
-  console.log(segments[-1]);
-  const loadFriendRequests = useCallback(async () => {
-    const userData = loadUserData();
-    if (userData) {
-      const userRef = doc(firestore, "users", userData.uid);
-      const userDoc = await getDoc(userRef);
+  const { previousScreen, index } = useLocalSearchParams();
 
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        const friendRequests = data.friendRequests || [];
-        const confirmedFriends = friendRequests.filter(
-          (request) => request.confirmed
-        );
+  const loadFriendRequests = useCallback(
+    async (fromFirebase = false) => {
+      try {
+        const userData = loadUserData();
+        console.log("User", userData);
+
+        if (!userData) {
+          throw new Error("User data is not available");
+        }
+
+        let confirmedFriends = [];
+
+        if (fromFirebase) {
+          console.log("Fetching from Firebase", fromFirebase);
+          // Fetch from Firebase on refresh
+          const userRef = doc(firestore, "users", userData.uid);
+          const userDoc = await getDoc(userRef);
+
+          if (!userDoc.exists()) {
+            throw new Error("User document does not exist");
+          }
+
+          const data = userDoc.data();
+          const friendRequests = data.friendRequests || [];
+          confirmedFriends = friendRequests.filter(
+            (request) => request.confirmed
+          );
+
+          confirmedFriends.unshift({
+            id: userData.uid,
+            name: userData.name,
+            confirmed: true,
+          });
+
+          const localFriendRequests = userData.friendRequest || [];
+          const hasChanges =
+            JSON.stringify(localFriendRequests) !==
+            JSON.stringify(friendRequests);
+
+          if (hasChanges) {
+            const updatedUserData = {
+              ...userData,
+              friendRequest: friendRequests,
+            };
+            mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+          }
+        } else {
+          const friendRequests = userData.friendRequest || [];
+          confirmedFriends = friendRequests.filter(
+            (request) => request.confirmed
+          );
+          confirmedFriends.unshift({
+            id: userData.uid,
+            name: userData.name,
+            confirmed: true,
+          });
+        }
+
         setConfirmedFriends(confirmedFriends);
+      } catch (error) {
+        console.error("Error loading friend requests:", error.message);
       }
-    }
-  }, [loadUserData]);
-
+    },
+    [loadUserData]
+  );
   useEffect(() => {
-    loadFriendRequests();
+    loadFriendRequests(); // Load from local data initially
   }, [loadFriendRequests]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadFriendRequests();
+    await loadFriendRequests(true);
     setRefreshing(false);
   }, [loadFriendRequests]);
+  console.log(selectedFriends);
 
   const toggleCheck = (friend) => {
     setSelectedFriends((prevSelectedFriends) => {
@@ -61,17 +120,65 @@ const FriendList = () => {
       if (updatedSelectedFriends[friend.id]) {
         delete updatedSelectedFriends[friend.id];
       } else {
-        updatedSelectedFriends[friend.id] = friend;
+        updatedSelectedFriends[friend.id] = { ...friend, index: index };
       }
       return updatedSelectedFriends;
     });
   };
-  console.log(selectedFriends);
-  const onPressRight = () => {
-    router.back();
+
+  const renderFriendItem = (friend) => {
+    if (previousScreen === "writeReceipt") {
+      return (
+        <TouchableOpacity
+          key={friend.id}
+          style={styles.friendItem}
+          onPress={() => toggleCheck(friend)}
+        >
+          <Avatar
+            source={{ uri: "https://via.placeholder.com/50" }}
+            rounded
+            size="medium"
+          />
+          <Text style={styles.friendName}>{friend.name}</Text>
+          <AntDesign
+            name="checkcircle"
+            size={24}
+            color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
+            style={styles.checkIcon}
+          />
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <View key={friend.id} style={styles.friendItem}>
+          <Avatar
+            source={{ uri: "https://via.placeholder.com/50" }}
+            rounded
+            size="medium"
+          />
+          <Text style={styles.friendName}>{friend.name}</Text>
+        </View>
+      );
+    }
   };
+
+  const onPressRight = () => {
+    if (previousScreen === "writeReceipt") {
+      useAuthStore.setState({ selectedFriends });
+      setModalVisible(true);
+      router.back();
+    } else {
+      router.back();
+    }
+  };
+
   const onPressLeft = () => {
-    router.back();
+    if (previousScreen === "writeReceipt") {
+      setModalVisible(true);
+      router.back();
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -99,26 +206,7 @@ const FriendList = () => {
         containerStyle={styles.containerCard(deviceHeight < 813 ? 230 : 280)}
       >
         <ScrollView>
-          {confirmedFriends.map((friend) => (
-            <TouchableOpacity
-              key={friend.id}
-              style={styles.friendItem}
-              onPress={() => toggleCheck(friend)}
-            >
-              <Avatar
-                source={{ uri: "https://via.placeholder.com/50" }}
-                rounded
-                size="medium"
-              />
-              <Text style={styles.friendName}>{friend.name}</Text>
-              <AntDesign
-                name="checkcircle"
-                size={24}
-                color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
-                style={styles.checkIcon}
-              />
-            </TouchableOpacity>
-          ))}
+          {confirmedFriends.map((friend) => renderFriendItem(friend))}
         </ScrollView>
       </Card>
       <View style={styles.friendListParent(24)}>

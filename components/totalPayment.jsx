@@ -17,39 +17,28 @@ import AddButton from "./button/addButton";
 import PaymentInfo from "./card/paymentInfo";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
-import { Feather } from "@expo/vector-icons";
-import { useRouter, useNavigation, useSegments, Link } from "expo-router";
+import { useRouter, Link } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
-const mockReceipts = [
+const data = [
   {
     items: "Pizza",
     quantity: "2",
     price: "20",
-    friends: {
-      ID_123123213123: "Lucas Green",
-      ID_6546565: "Kaidus Paltos",
-      ID_798789798: "Kai Tay",
-    },
+    friends: {},
   },
   {
     items: "Soda",
     quantity: "5",
     price: "10",
-    friends: {
-      ID_123123213123: "Lucas Green",
-      ID_6546565: "Kaidus Paltos",
-    },
+    friends: {},
   },
   {
     items: "Burger",
     quantity: "3",
     price: "15",
-    friends: {
-      ID_798789798: "Kai Tay",
-      ID_999999999: "Sam Smith",
-    },
+    friends: {},
   },
 ];
 
@@ -59,17 +48,24 @@ const TotalPayment = ({ title }) => {
   const modalVisible = useAuthStore((state) => state.modalVisible);
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
+  const selectedFriends = useAuthStore((state) => state.selectedFriends);
 
   const { addReceipts, receipts, addSharedReceipt, clearReceipts } =
-    useAuthStore((state) => ({
-      addReceipts: state.addReceipts,
-      receipts: state.getReceipts(title) || [],
-      addSharedReceipt: state.addSharedReceipt,
-      clearReceipts: () => state.clearReceipts(title),
-    }));
+    useAuthStore((state) => {
+      const retrievedReceipts = state.getReceipts();
+      return {
+        addReceipts: state.addReceipts,
+        receipts: retrievedReceipts.length === 0 ? data : retrievedReceipts,
+        addSharedReceipt: state.addSharedReceipt,
+        clearReceipts: state.clearReceipts,
+      };
+    });
+
+  console.log("Receipts: ", receipts);
+  // Use useRef to store temporary data
+  const tempPagesRef = useRef(receipts);
 
   const showModal = () => {
-    console.log("Show Modal");
     setModalVisible(true);
   };
 
@@ -82,6 +78,27 @@ const TotalPayment = ({ title }) => {
     clearReceipts();
     router.replace("/mainscreen");
   };
+
+  useEffect(() => {
+    if (selectedFriends && Object.keys(selectedFriends).length > 0) {
+      // console.log("Received selected friends:", selectedFriends);
+
+      Object.entries(selectedFriends).forEach(([id, friend]) => {
+        const receiptIndex = parseInt(friend.index, 10);
+
+        // Update the corresponding receipt in tempPagesRef.current
+        if (tempPagesRef.current[receiptIndex]) {
+          tempPagesRef.current[receiptIndex] = {
+            ...tempPagesRef.current[receiptIndex],
+            friends: {
+              ...tempPagesRef.current[receiptIndex].friends,
+              [id]: friend.name,
+            },
+          };
+        }
+      });
+    }
+  }, [selectedFriends]);
 
   return (
     <View style={styles.container}>
@@ -98,10 +115,12 @@ const TotalPayment = ({ title }) => {
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
-        addPage={(receipt) => addReceipts(title, receipt)}
-        initialPages={mockReceipts}
+        addPage={(receipt) => addReceipts(receipt)}
+        initialPages={tempPagesRef.current}
         clearReceipts={clearReceipts}
         selectedItemIndex={selectedItemIndex}
+        selectedFriends={selectedFriends}
+        setTempPagesRef={(newPages) => (tempPagesRef.current = newPages)}
       />
     </View>
   );
@@ -114,15 +133,16 @@ const TotalPaymentModal = ({
   initialPages,
   clearReceipts,
   selectedItemIndex,
+  selectedFriends,
+  setTempPagesRef,
 }) => {
   const styles = useStyle();
   const [pages, setPages] = useState([{}]);
   const [currentPage, setCurrentPage] = useState(1);
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
-  const router = useRouter();
-  const segments = useSegments();
 
+  console.log("Initial: ", initialPages);
   useEffect(() => {
     if (modalVisible && initialPages.length > 0) {
       setPages(initialPages);
@@ -142,9 +162,9 @@ const TotalPaymentModal = ({
       const newPage = { items: "", quantity: "", price: "", friends: {} };
       setPages((prevPages) => {
         const updatedPages = [...prevPages, newPage];
+        setTempPagesRef(updatedPages);
         return updatedPages;
       });
-      // console.log("Selected Item Index:", selectedItemIndex * windowWidth);
 
       setTimeout(() => {
         if (selectedItemIndex !== null && selectedItemIndex !== undefined) {
@@ -178,12 +198,12 @@ const TotalPaymentModal = ({
     }
 
     // Clear previous receipts before adding new ones
-    clearReceipts();
 
     pages.forEach((page) => {
       addPage(page);
     });
 
+    console.log("OUT");
     setPages([{}]);
     setCurrentPage(1);
     hideModal();
@@ -191,29 +211,33 @@ const TotalPaymentModal = ({
 
   const handleFieldUpdate = useCallback(
     (index, field, value) => {
-      setPages((prevPages) =>
-        prevPages.map((page, i) =>
+      setPages((prevPages) => {
+        const updatedPages = prevPages.map((page, i) =>
           i === index ? { ...page, [field]: value } : page
-        )
-      );
+        );
+        setTempPagesRef(updatedPages);
+        return updatedPages;
+      });
     },
-    [setPages]
+    [setTempPagesRef]
   );
 
   const handleFriendUpdate = useCallback(
     (index, friendId, friendName) => {
-      setPages((prevPages) =>
-        prevPages.map((page, i) =>
+      setPages((prevPages) => {
+        const updatedPages = prevPages.map((page, i) =>
           i === index
             ? {
                 ...page,
                 friends: { ...page.friends, [friendId]: friendName },
               }
             : page
-        )
-      );
+        );
+        setTempPagesRef(updatedPages);
+        return updatedPages;
+      });
     },
-    [setPages]
+    [setTempPagesRef]
   );
 
   const isButtonDisabled = useCallback(() => {
@@ -221,10 +245,8 @@ const TotalPaymentModal = ({
       (page) => !page.items || !page.quantity || !page.price || !page.friends
     );
   }, [pages]);
-  const handlePressFriends = (index) => {
-    hideModal();
-    console.log(`Pressed Friends button for page ${index}`);
-  };
+
+  // console.log("Receipts: ", initialPages);
 
   return (
     <Modal
@@ -303,10 +325,13 @@ const TotalPaymentModal = ({
                         push
                         href={{
                           pathname: "/friendList",
-                          params: { index: index },
+                          params: {
+                            previousScreen: "writeReceipt",
+                            index: index,
+                          },
                         }}
                         style={styles.friendsButton}
-                        onPress={() => handlePressFriends(index)}
+                        onPress={() => hideModal()}
                       >
                         <Text style={styles.friendsButtonText}>Friends</Text>
                       </Link>

@@ -93,8 +93,8 @@ const Mainscreen = () => {
   const fetchData = () => {
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
-      console.log("localUserData:", localUserData);
-      console.log("sharedReceipts:", sharedReceipts);
+      // console.log("localUserData:", localUserData);
+      // console.log("sharedReceipts:", sharedReceipts);
       const receiptsArray = [];
       let totalamount = 0;
       let user = "";
@@ -124,7 +124,7 @@ const Mainscreen = () => {
       });
       setTotalPayment(totalamount.toFixed(2));
       setTableData(receiptsArray);
-      console.log("Table data set to:", receiptsArray);
+      // console.log("Table data set to:", receiptsArray);
     }
   };
 
@@ -134,7 +134,7 @@ const Mainscreen = () => {
 
   const handleCardPress = (item) => {
     // Handle the press event here
-    console.log("Card pressed:", item);
+    // console.log("Card pressed:", item);
   };
 
   return (
