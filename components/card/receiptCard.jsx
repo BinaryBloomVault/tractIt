@@ -17,10 +17,10 @@ const ReceiptCard = () => {
     receipts: state.receipts,
   }));
 
-  const formattedReceipts = Object.entries(receipts).flatMap(([title, items]) =>
-    items.map((item) => ({ title, ...item }))
-  );
-
+  const formattedReceipts = receipts.map((item) => ({
+    ...item,
+    title: item.items,
+  }));
   const handleItemPress = (item) => {
     // console.log("Pressed item:", item);
   };

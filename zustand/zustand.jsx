@@ -23,7 +23,7 @@ import * as Crypto from "expo-crypto";
 
 const mmkv = new MMKV();
 
-const mmkvStorage = {
+export const mmkvStorage = {
   getItem: (key) => mmkv.getString(key),
   setItem: (key, value) => mmkv.set(key, value),
   removeItem: (key) => mmkv.delete(key),
@@ -35,23 +35,23 @@ export const useAuthStore = create((set, get) => ({
   localUserData: null,
   selectedItemIndex: null, // Add selectedItemIndex state
   isOffline: true,
-  receipts: {},
+  receipts: [],
   sharedReceipts: {},
   modalVisible: false,
   searchResults: [],
   friendRequests: [],
   notifications: [],
+  selectedFriends: {}, // New state to hold selected friends
 
+  setSelectedFriends: (friends) => set({ selectedFriends: friends }),
   setModalVisible: (visible) => set({ modalVisible: visible }),
   setSelectedItemIndex: (index) => set({ selectedItemIndex: index }),
 
-  addReceipts: (title, receipt) =>
+  addReceipts: (receipt) => {
     set((state) => ({
-      receipts: {
-        ...state.receipts,
-        [title]: [...(state.receipts[title] || []), receipt],
-      },
-    })),
+      receipts: [...state.receipts, receipt],
+    }));
+  },
   clearReceipts: (title) =>
     set((state) => ({
       receipts: {
@@ -60,8 +60,9 @@ export const useAuthStore = create((set, get) => ({
       },
     })),
 
-  getReceipts: (title) => get().receipts[title],
-
+  getReceipts: () => {
+    return get().receipts;
+  },
   loadUserData: () => {
     const userDataString = mmkvStorage.getItem("user_data");
     if (userDataString) {
@@ -137,7 +138,7 @@ export const useAuthStore = create((set, get) => ({
         authToken: null,
         localUserData: null,
         isOffline: true,
-        receipts: {},
+        receipts: [],
         sharedReceipts: {},
         searchResults: null,
         notifications: null,
@@ -207,39 +208,39 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  addReceipt: async (title, newReceipt) => {
-    try {
-      const token = await get().authToken;
-      const userData = await get().localUserData;
-      const newReceiptList = [...(get().receipts[title] || []), newReceipt];
-      mmkvStorage.setItem(
-        "user_data",
-        JSON.stringify({
-          ...userData,
-          sharedReceipts: {
-            ...userData.sharedReceipts,
-            [title]: newReceiptList,
-          },
-        })
-      );
-      set({
-        localUserData: {
-          ...userData,
-          sharedReceipts: {
-            ...userData.sharedReceipts,
-            [title]: newReceiptList,
-          },
-        },
-        receipts: { ...get().receipts, [title]: newReceiptList },
-      });
-      await syncUserData(token, {
-        ...userData,
-        sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
-      });
-    } catch (error) {
-      console.error("Error adding receipt:", error);
-    }
-  },
+  // addReceipt: async (title, newReceipt) => {
+  //   try {
+  //     const token = await get().authToken;
+  //     const userData = await get().localUserData;
+  //     const newReceiptList = [...(get().receipts[title] || []), newReceipt];
+  //     mmkvStorage.setItem(
+  //       "user_data",
+  //       JSON.stringify({
+  //         ...userData,
+  //         sharedReceipts: {
+  //           ...userData.sharedReceipts,
+  //           [title]: newReceiptList,
+  //         },
+  //       })
+  //     );
+  //     set({
+  //       localUserData: {
+  //         ...userData,
+  //         sharedReceipts: {
+  //           ...userData.sharedReceipts,
+  //           [title]: newReceiptList,
+  //         },
+  //       },
+  //       receipts: { ...get().receipts, [title]: newReceiptList },
+  //     });
+  //     await syncUserData(token, {
+  //       ...userData,
+  //       sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
+  //     });
+  //   } catch (error) {
+  //     console.error("Error adding receipt:", error);
+  //   }
+  // },
 
   removeReceipt: async (title, receiptId) => {
     try {
@@ -318,7 +319,6 @@ export const useAuthStore = create((set, get) => ({
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const friends = {};
-        // console.log("asdasdsadsadasdasdasdasdasd", receiptDataArray);
 
         receiptDataArray.forEach((receipt) => {
           const numFriends = Object.keys(receipt.friends).length;
@@ -332,7 +332,7 @@ export const useAuthStore = create((set, get) => ({
                 name: receipt.friends[friendId],
                 payment: individualPayment,
                 paid: false,
-                originator: false,
+                originator: friendId === JSON.parse(userDataString).uid,
               };
             }
           });
@@ -362,7 +362,7 @@ export const useAuthStore = create((set, get) => ({
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
-          receipts: {},
+          receipts: [],
         });
       }
     } catch (error) {
