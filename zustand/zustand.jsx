@@ -52,13 +52,11 @@ export const useAuthStore = create((set, get) => ({
       receipts: [...state.receipts, receipt],
     }));
   },
-  clearReceipts: (title) =>
-    set((state) => ({
-      receipts: {
-        ...state.receipts,
-        [title]: [],
-      },
-    })),
+  clearReceipts: () => {
+    set(() => ({
+      receipts: [],
+    }));
+  },
 
   getReceipts: () => {
     return get().receipts;
@@ -207,40 +205,6 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // addReceipt: async (title, newReceipt) => {
-  //   try {
-  //     const token = await get().authToken;
-  //     const userData = await get().localUserData;
-  //     const newReceiptList = [...(get().receipts[title] || []), newReceipt];
-  //     mmkvStorage.setItem(
-  //       "user_data",
-  //       JSON.stringify({
-  //         ...userData,
-  //         sharedReceipts: {
-  //           ...userData.sharedReceipts,
-  //           [title]: newReceiptList,
-  //         },
-  //       })
-  //     );
-  //     set({
-  //       localUserData: {
-  //         ...userData,
-  //         sharedReceipts: {
-  //           ...userData.sharedReceipts,
-  //           [title]: newReceiptList,
-  //         },
-  //       },
-  //       receipts: { ...get().receipts, [title]: newReceiptList },
-  //     });
-  //     await syncUserData(token, {
-  //       ...userData,
-  //       sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
-  //     });
-  //   } catch (error) {
-  //     console.error("Error adding receipt:", error);
-  //   }
-  // },
-
   removeReceipt: async (title, receiptId) => {
     try {
       const token = await get().authToken;
@@ -281,9 +245,14 @@ export const useAuthStore = create((set, get) => ({
     try {
       const token = await get().authToken;
       const userData = await get().localUserData;
-      const newReceiptList = get().receipts[title].map((receipt) =>
+      const userUid = userData.uid;
+
+      // Get the current receipt list and update the relevant receipt
+      const newReceiptList = get().receipts.map((receipt) =>
         receipt.id === updatedReceipt.id ? updatedReceipt : receipt
       );
+
+      // Update MMKV storage
       mmkvStorage.setItem(
         "user_data",
         JSON.stringify({
@@ -294,6 +263,15 @@ export const useAuthStore = create((set, get) => ({
           },
         })
       );
+
+      // Update Firestore
+      const userRef = doc(firestore, "users", userUid);
+      const receiptRef = doc(userRef, "sharedReceipts", updatedReceipt.id); // Assuming title is unique
+      await updateDoc(receiptRef, {
+        [title]: newReceiptList,
+      });
+
+      // Update the local state with the new receipt list
       set({
         localUserData: {
           ...userData,
@@ -302,8 +280,10 @@ export const useAuthStore = create((set, get) => ({
             [title]: newReceiptList,
           },
         },
-        receipts: { ...get().receipts, [title]: newReceiptList },
+        receipts: newReceiptList,
       });
+
+      // Sync with server if needed
       await syncUserData(token, {
         ...userData,
         sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
@@ -318,6 +298,8 @@ export const useAuthStore = create((set, get) => ({
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const friends = {};
+
+        // console.log("qweqweqweqweqweqweqweqwe0", receiptDataArray);
 
         receiptDataArray.forEach((receipt) => {
           const numFriends = Object.keys(receipt.friends).length;
