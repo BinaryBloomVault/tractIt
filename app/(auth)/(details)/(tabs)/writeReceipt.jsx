@@ -17,7 +17,7 @@ const AddButton = () => {
         />
       </View>
       <Receipt />
-      <TotalCard title={title} />
+      <TotalCard title={title} setTitle={setTitle} />
     </View>
   );
 };
