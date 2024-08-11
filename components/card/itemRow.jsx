@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
 import { useAuthStore } from "../../zustand/zustand"; //
-
+import UserIcon from "../../components/icons/usersIcon";
 const ItemRow = ({ item, color, font, size, height, index }) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const setSelectedItemIndex = useAuthStore(
@@ -14,6 +14,8 @@ const ItemRow = ({ item, color, font, size, height, index }) => {
     setSelectedItemIndex(index);
     setModalVisible(true);
   };
+  const friendNames = item.friends ? Object.values(item.friends) : [];
+  const isFriendsArray = friendNames.join("") === "Friends";
 
   return (
     <View style={styles.itemsParent}>
@@ -39,9 +41,13 @@ const ItemRow = ({ item, color, font, size, height, index }) => {
         style={[styles.friends, styles.priceSpaceBlock(color)]}
         onPress={() => handlePress("Friends")}
       >
-        <Text style={styles.itemText(font, size)}>
-          {item.friends && Object.keys(item.friends).join(", ")}
-        </Text>
+        <View style={styles.iconsContainer}>
+          {isFriendsArray ? (
+            <Text style={styles.itemText(font, size)}>Friends</Text>
+          ) : (
+            <UserIcon friends={friendNames} />
+          )}
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -62,7 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   }),
   items: (color) => ({
-    flex: 4,
+    flex: 3.2,
     width: 142,
     backgroundColor: color,
     borderRadius: 10,
@@ -72,7 +78,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   }),
   items2: {
-    flex: 1,
+    flex: 1.3,
     width: 32,
     height: 35,
     justifyContent: "center",

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Card } from "@rneui/themed";
 import ItemRow from "./itemRow";
-import { useAuthStore } from "../../zustand/zustand"; // Import the new Zustand store
+import { useAuthStore } from "../../zustand/zustand";
 
 const ReceiptCard = () => {
   const styles = useStyle();
@@ -17,12 +17,27 @@ const ReceiptCard = () => {
     receipts: state.receipts,
   }));
 
+  const combinedFriends = Array.from(
+    new Set(receipts.flatMap((item) => Object.values(item.friends || {})))
+  );
+
+  // Format receipts to include the title
   const formattedReceipts = receipts.map((item) => ({
     ...item,
     title: item.items,
   }));
+
+  // Calculate the total price and total quantity
+  const totals = formattedReceipts.reduce(
+    (acc, item) => {
+      acc.totalPrice += parseFloat(item.price || 0);
+      acc.totalQuantity += parseInt(item.quantity || 0, 10);
+      return acc;
+    },
+    { totalPrice: 0, totalQuantity: 0 }
+  );
   const handleItemPress = (item) => {
-    // console.log("Pressed item:", item);
+    console.log("Pressed item:", item);
   };
 
   return (
@@ -76,13 +91,13 @@ const ReceiptCard = () => {
         <ItemRow
           item={{
             items: "Total",
-            quantity: "X",
-            price: "Price",
-            friends: "Friends",
+            quantity: totals.totalQuantity,
+            price: totals.totalPrice,
+            friends: combinedFriends,
           }}
           color="#00BEE5"
           font="Gudea-Regular"
-          size={20}
+          size={15}
         />
       </View>
     </Card>

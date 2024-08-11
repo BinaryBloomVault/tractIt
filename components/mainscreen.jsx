@@ -14,7 +14,7 @@ import {
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 
 const swipeFromRightOpen = () => {
@@ -81,7 +81,6 @@ const RightSwipeActions = () => {
   );
 };
 
-
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
@@ -90,41 +89,59 @@ const Mainscreen = () => {
     localUserData: state.localUserData,
   }));
 
+  const router = useRouter();
+
   const fetchData = () => {
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
-      // console.log("localUserData:", localUserData);
-      // console.log("sharedReceipts:", sharedReceipts);
       const receiptsArray = [];
       let totalamount = 0;
-      let user = "";
+
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
-          Object.entries(receiptData).forEach(([title, itemsArray]) => {
-            if (title !== "friends") {
-              itemsArray.forEach((item) => {
-                Object.keys(receiptData.friends).forEach((friendId) => {
-                  const mypayment = receiptData.friends[friendId].payment;
-                  if (receiptData.friends[friendId].originator === true) {
-                    user = receiptData.friends[friendId].name;
-                  }
+          let user = "";
+          let combinedFriends = {};
+          let title = "";
+          let combinedItems = [];
 
-                  totalamount += mypayment;
-                  receiptsArray.push({
-                    title: title,
-                    name: user,
-                    price: mypayment.toFixed(2),
-                    friends: item.friends,
-                  });
-                });
+          Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
+            if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
+              title = currentTitle;
+              combinedItems = combinedItems.concat(itemsArray);
+
+              itemsArray.forEach((item) => {
+                Object.entries(receiptData.friends).forEach(
+                  ([friendId, friendData]) => {
+                    if (friendData.originator === true) {
+                      user = friendData.name;
+                    }
+
+                    combinedFriends[friendId] = friendData.name;
+                  }
+                );
+              });
+            } else if (currentTitle === "friends") {
+              Object.entries(itemsArray).forEach(([friendId, friendData]) => {
+                if (friendId === localUserData.uid) {
+                  totalamount = friendData.payment;
+                }
               });
             }
           });
+
+          // Push to receiptsArray only once per receiptData
+          receiptsArray.push({
+            title: title,
+            name: user,
+            price: totalamount.toFixed(2),
+            friends: combinedFriends,
+            items: combinedItems,
+          });
         }
       });
+
       setTotalPayment(totalamount.toFixed(2));
       setTableData(receiptsArray);
-      // console.log("Table data set to:", receiptsArray);
     }
   };
 
@@ -133,8 +150,8 @@ const Mainscreen = () => {
   }, [localUserData]);
 
   const handleCardPress = (item) => {
-    // Handle the press event here
-    // console.log("Card pressed:", item);
+    router.push("/writeReceipt");
+    console.log("Card pressed:", item);
   };
 
   return (
@@ -166,8 +183,8 @@ const Mainscreen = () => {
             renderRightActions={RightSwipeActions}
             onSwipeableOpen={handleSwipeableOpen}
           >
-            <TouchableOpacity key={index} onPress={() => handleCardPress(item)}>
-              <Card containerStyle={styles.receiptCard}>
+            <Card containerStyle={styles.receiptCard}>
+              <Pressable>
                 <View style={styles.receiptCardHeader}>
                   <Text style={styles.receiptUser}>{item.name}</Text>
                   <Text style={styles.txtSettle}>Settle Up</Text>
@@ -180,11 +197,11 @@ const Mainscreen = () => {
                     <Text style={styles.receiptAmount}>{item.price}</Text>
                     <View style={styles.horizontalLine} />
                     <Text style={styles.txtFriends}>Friends</Text>
-                    <UserIcon friends={Object.values(item.friends)}/>
+                    <UserIcon friends={Object.values(item.friends)} />
                   </View>
                 </View>
-              </Card>
-            </TouchableOpacity>
+              </Pressable>
+            </Card>
           </Swipeable>
         ))}
       </ScrollView>

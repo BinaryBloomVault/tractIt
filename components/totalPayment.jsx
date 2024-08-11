@@ -42,7 +42,7 @@ const data = [
   },
 ];
 
-const TotalPayment = ({ title }) => {
+const TotalPayment = ({ title, setTitle }) => {
   const styles = useStyle();
   const router = useRouter();
   const modalVisible = useAuthStore((state) => state.modalVisible);
@@ -55,7 +55,7 @@ const TotalPayment = ({ title }) => {
       const retrievedReceipts = state.getReceipts();
       return {
         addReceipts: state.addReceipts,
-        receipts: retrievedReceipts.length === 0 ? data : retrievedReceipts,
+        receipts: retrievedReceipts,
         addSharedReceipt: state.addSharedReceipt,
         clearReceipts: state.clearReceipts,
       };
@@ -76,7 +76,15 @@ const TotalPayment = ({ title }) => {
   const shareReceipts = async () => {
     await addSharedReceipt(title, receipts);
     clearReceipts();
+    setTitle("");
     router.replace("/mainscreen");
+  };
+
+  const handleGoBack = () => {
+    tempPagesRef.current = [];
+    clearReceipts();
+    setTitle("");
+    router.back();
   };
 
   useEffect(() => {
@@ -111,7 +119,7 @@ const TotalPayment = ({ title }) => {
         height={40}
         bcolor={"#00BEE5"}
       />
-      <TabButton onPressRight={shareReceipts} />
+      <TabButton onPressLeft={handleGoBack} onPressRight={shareReceipts} />
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
@@ -142,7 +150,7 @@ const TotalPaymentModal = ({
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
 
-  console.log("Initial: ", initialPages);
+  // console.log("Initial: ", initialPages);
   useEffect(() => {
     if (modalVisible && initialPages.length > 0) {
       setPages(initialPages);
@@ -198,12 +206,13 @@ const TotalPaymentModal = ({
     }
 
     // Clear previous receipts before adding new ones
+    clearReceipts();
 
     pages.forEach((page) => {
       addPage(page);
     });
 
-    console.log("OUT");
+    // console.log("OUT");
     setPages([{}]);
     setCurrentPage(1);
     hideModal();
