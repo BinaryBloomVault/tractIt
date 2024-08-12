@@ -32,8 +32,15 @@ const PaymentInfo = () => {
     }
   }, [localUserData, receipts]);
 
+  let cardStyle = styles.smallCard;
+  if (payment.toFixed(2) > 1000) {
+    cardStyle = styles.mediumCard;
+  } else if (payment.toFixed(2) > 100000) {
+    cardStyle = styles.largeCard;
+  }
+
   return (
-    <Card containerStyle={styles.cardContainer}>
+    <Card containerStyle={[styles.cardContainer, cardStyle]}>
       <View style={styles.font}>
         <Text style={styles.text}>Your Total Payment</Text>
         <Text style={styles.total}>{payment.toFixed(2)}</Text>
@@ -47,12 +54,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     borderRadius: 10,
-    width: 150,
-    height: 80,
     shadowColor: "#171717",
     shadowOffset: { width: -2, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 5,
+  },
+  smallCard: {
+    width: 150,
+    height: 80,
+  },
+  mediumCard: {
+    width: 200,
+    height: 100,
+  },
+  largeCard: {
+    width: 250,
+    height: 100,
   },
   font: {
     justifyContent: "center",

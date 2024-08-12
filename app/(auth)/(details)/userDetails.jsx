@@ -16,11 +16,12 @@ import { deleteUser } from "firebase/auth";
 
 const UserDetails = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [userName, setUserName] = useState("")
+  const [userName, setUserName] = useState("");
 
-  const { localUserData, authUser } = useAuthStore((state) => ({
+  const { localUserData, authUser, logout } = useAuthStore((state) => ({
     localUserData: state.localUserData,
     authUser: state.authUser,
+    logout: state.logout,
   }));
 
   const handleRemoveOAuth = async () => {
@@ -46,7 +47,7 @@ const UserDetails = () => {
 
   useEffect(() => {
     if (localUserData) {
-      setUserName(localUserData.name || 'No Name');
+      setUserName(localUserData.name || "No Name");
     }
   }, [localUserData]);
 
