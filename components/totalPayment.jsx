@@ -17,7 +17,7 @@ import AddButton from "./button/addButton";
 import PaymentInfo from "./card/paymentInfo";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
-import { useRouter, Link } from "expo-router";
+import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -49,19 +49,25 @@ const TotalPayment = ({ title, setTitle }) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
   const selectedFriends = useAuthStore((state) => state.selectedFriends);
+  const { previousScreen, uniqued } = useLocalSearchParams();
 
-  const { addReceipts, receipts, addSharedReceipt, clearReceipts } =
-    useAuthStore((state) => {
-      const retrievedReceipts = state.getReceipts();
-      return {
-        addReceipts: state.addReceipts,
-        receipts: retrievedReceipts,
-        addSharedReceipt: state.addSharedReceipt,
-        clearReceipts: state.clearReceipts,
-      };
-    });
+  const {
+    addReceipts,
+    receipts,
+    addSharedReceipt,
+    updateReceipt,
+    clearReceipts,
+  } = useAuthStore((state) => {
+    const retrievedReceipts = state.getReceipts();
+    return {
+      addReceipts: state.addReceipts,
+      receipts: retrievedReceipts,
+      addSharedReceipt: state.addSharedReceipt,
+      updateReceipt: state.updateReceipt,
+      clearReceipts: state.clearReceipts,
+    };
+  });
 
-  console.log("Receipts: ", receipts);
   // Use useRef to store temporary data
   const tempPagesRef = useRef(receipts);
 
@@ -74,10 +80,17 @@ const TotalPayment = ({ title, setTitle }) => {
   };
 
   const shareReceipts = async () => {
-    await addSharedReceipt(title, receipts);
-    clearReceipts();
-    setTitle("");
-    router.replace("/mainscreen");
+    if (previousScreen === "update") {
+      await updateReceipt(title, receipts, uniqued);
+      clearReceipts();
+      setTitle("");
+      router.replace("/mainscreen");
+    } else {
+      await addSharedReceipt(title, receipts);
+      clearReceipts();
+      setTitle("");
+      router.replace("/mainscreen");
+    }
   };
 
   const handleGoBack = () => {
@@ -88,8 +101,12 @@ const TotalPayment = ({ title, setTitle }) => {
   };
 
   useEffect(() => {
+    tempPagesRef.current = receipts;
+  }, [receipts]);
+
+  useEffect(() => {
     if (selectedFriends && Object.keys(selectedFriends).length > 0) {
-      // console.log("Received selected friends:", selectedFriends);
+      console.log("Received selected friends:", selectedFriends);
 
       Object.entries(selectedFriends).forEach(([id, friend]) => {
         const receiptIndex = parseInt(friend.index, 10);
