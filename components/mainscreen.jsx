@@ -85,57 +85,87 @@ const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
   const styles = useStyle();
+  const { localUserData } = useAuthStore((state) => ({
+    localUserData: state.localUserData,
+  }));
   const { sharedReceipts } = useAuthStore((state) => ({
     sharedReceipts: state.sharedReceipts,
   }));
+  const { updateReceiptsWithShared, updateTitle } = useAuthStore();
+  const { receipts } = useAuthStore((state) => ({
+    receipts: state.receipts,
+  }));
 
-  
+  const router = useRouter();
+
   const fetchData = () => {
-    if (sharedReceipts) {
-      console.log("sharedReceipts:", sharedReceipts);
-      const receiptFriends = []
-      const myfriends = []
-      let totalAmount = 0
-      Object.keys(sharedReceipts).forEach(receiptId => {
-        const receipt = sharedReceipts[receiptId];
-  
-        console.log(`Receipt ID: ${receiptId}`);
-        console.log(`Receipt Name: ${Object.keys(receipt)[0]}`);
-  
-        const friends = receipt.friends;
-        if (friends) {
-          Object.keys(friends).forEach(friendId => {
-            const friendData = friends[friendId];
+    if (localUserData && localUserData.sharedReceipts) {
+      const sharedReceipts = localUserData.sharedReceipts;
+      console.log("sharedReceipts: ", sharedReceipts);
+      const receiptsArray = [];
+      let totalamount = 0;
 
-            const userOriginator  = friendData.originator ? friendData.name : "Unknwon";
-            totalAmount += friendData.payment
-            const mypayment = friendData.payment
-            myfriends.push(friendData.name)
-            receiptFriends.push({
-              title: friendData.title,
-              name: userOriginator,
-              price: mypayment,
-              friends: myfriends
-            })
+      Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
+        if (receiptData.friends) {
+          let user = "";
+          let combinedFriends = {};
+          let title = "";
+          let combinedItems = [];
 
-            console.log(`  Friend ID: ${friendId}`);
-            console.log(`  Friend Data:`, friendData);
+          Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
+            if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
+              title = currentTitle;
+              combinedItems = combinedItems.concat(itemsArray);
+
+              itemsArray.forEach((item) => {
+                Object.entries(receiptData.friends).forEach(
+                  ([friendId, friendData]) => {
+                    if (friendData.originator === true) {
+                      user = friendData.name;
+                    }
+
+                    combinedFriends[friendId] = friendData.name;
+                  }
+                );
+              });
+            } else if (currentTitle === "friends") {
+              Object.entries(itemsArray).forEach(([friendId, friendData]) => {
+                if (friendId === localUserData.uid) {
+                  totalamount = friendData.payment;
+                }
+              });
+            }
           });
-          setTableData(receiptFriends)
-          setTotalPayment(totalAmount.toFixed(2))
+
+          receiptsArray.push({
+            receiptId: receiptId,
+            title: title,
+            name: user,
+            price: totalamount.toFixed(2),
+            friends: combinedFriends,
+            items: combinedItems,
+          });
         }
       });
+
+      setTotalPayment(totalamount.toFixed(2));
+      setTableData(receiptsArray);
     }
-  }
-  
+  };
 
   useEffect(() => {
+    console.log("localUserData: ", tableData);
     fetchData();
-  }, [sharedReceipts]);
+  }, [localUserData]);
 
   const handleCardPress = (item) => {
-    router.push("/writeReceipt");
-    console.log("Card pressed:", item);
+    if (item.receiptId) {
+      updateReceiptsWithShared(item.receiptId);
+    }
+
+    if (item.title) {
+      updateTitle(item.title);
+    }
   };
 
   return (
@@ -168,23 +198,36 @@ const Mainscreen = () => {
             onSwipeableOpen={handleSwipeableOpen}
           >
             <Card containerStyle={styles.receiptCard}>
-              <Pressable>
-                <View style={styles.receiptCardHeader}>
-                  <Text style={styles.receiptUser}>{item.name}</Text>
-                  <Text style={styles.txtSettle}>Settle Up</Text>
-                </View>
-                <View style={styles.receiptCardBody}>
-                  <View style={styles.receiptDetails}>
-                    <Text style={styles.receiptTitle}>{item.title}</Text>
+              <Link
+                push
+                href={{
+                  pathname: "/writeReceipt",
+                  params: {
+                    previousScreen: "update",
+                    uniqued: item.receiptId,
+                  },
+                }}
+                onPress={() => handleCardPress(item)}
+                asChild
+              >
+                <Pressable>
+                  <View style={styles.receiptCardHeader}>
+                    <Text style={styles.receiptUser}>{item.name}</Text>
+                    <Text style={styles.txtSettle}>Settle Up</Text>
                   </View>
-                  <View style={styles.receiptDetails}>
-                    <Text style={styles.receiptAmount}>{item.price}</Text>
-                    <View style={styles.horizontalLine} />
-                    <Text style={styles.txtFriends}>Friends</Text>
-                    <UserIcon friends={Object.values(item.friends)} />
+                  <View style={styles.receiptCardBody}>
+                    <View style={styles.receiptDetails}>
+                      <Text style={styles.receiptTitle}>{item.title}</Text>
+                    </View>
+                    <View style={styles.receiptDetails}>
+                      <Text style={styles.receiptAmount}>{item.price}</Text>
+                      <View style={styles.horizontalLine} />
+                      <Text style={styles.txtFriends}>Friends</Text>
+                      <UserIcon friends={Object.values(item.friends)} />
+                    </View>
                   </View>
-                </View>
-              </Pressable>
+                </Pressable>
+              </Link>
             </Card>
           </Swipeable>
         ))}
