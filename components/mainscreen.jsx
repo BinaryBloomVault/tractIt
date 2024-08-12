@@ -85,69 +85,53 @@ const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
   const styles = useStyle();
-  const { localUserData } = useAuthStore((state) => ({
-    localUserData: state.localUserData,
+  const { sharedReceipts } = useAuthStore((state) => ({
+    sharedReceipts: state.sharedReceipts,
   }));
 
-  const router = useRouter();
-
+  
   const fetchData = () => {
-    if (localUserData && localUserData.sharedReceipts) {
-      const sharedReceipts = localUserData.sharedReceipts;
-      const receiptsArray = [];
-      let totalamount = 0;
+    if (sharedReceipts) {
+      console.log("sharedReceipts:", sharedReceipts);
+      const receiptFriends = []
+      const myfriends = []
+      let totalAmount = 0
+      Object.keys(sharedReceipts).forEach(receiptId => {
+        const receipt = sharedReceipts[receiptId];
+  
+        console.log(`Receipt ID: ${receiptId}`);
+        console.log(`Receipt Name: ${Object.keys(receipt)[0]}`);
+  
+        const friends = receipt.friends;
+        if (friends) {
+          Object.keys(friends).forEach(friendId => {
+            const friendData = friends[friendId];
 
-      Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
-        if (receiptData.friends) {
-          let user = "";
-          let combinedFriends = {};
-          let title = "";
-          let combinedItems = [];
+            const userOriginator  = friendData.originator ? friendData.name : "Unknwon";
+            totalAmount += friendData.payment
+            const mypayment = friendData.payment
+            myfriends.push(friendData.name)
+            receiptFriends.push({
+              title: friendData.title,
+              name: userOriginator,
+              price: mypayment,
+              friends: myfriends
+            })
 
-          Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
-            if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
-              title = currentTitle;
-              combinedItems = combinedItems.concat(itemsArray);
-
-              itemsArray.forEach((item) => {
-                Object.entries(receiptData.friends).forEach(
-                  ([friendId, friendData]) => {
-                    if (friendData.originator === true) {
-                      user = friendData.name;
-                    }
-
-                    combinedFriends[friendId] = friendData.name;
-                  }
-                );
-              });
-            } else if (currentTitle === "friends") {
-              Object.entries(itemsArray).forEach(([friendId, friendData]) => {
-                if (friendId === localUserData.uid) {
-                  totalamount = friendData.payment;
-                }
-              });
-            }
+            console.log(`  Friend ID: ${friendId}`);
+            console.log(`  Friend Data:`, friendData);
           });
-
-          // Push to receiptsArray only once per receiptData
-          receiptsArray.push({
-            title: title,
-            name: user,
-            price: totalamount.toFixed(2),
-            friends: combinedFriends,
-            items: combinedItems,
-          });
+          setTableData(receiptFriends)
+          setTotalPayment(totalAmount.toFixed(2))
         }
       });
-
-      setTotalPayment(totalamount.toFixed(2));
-      setTableData(receiptsArray);
     }
-  };
+  }
+  
 
   useEffect(() => {
     fetchData();
-  }, [localUserData]);
+  }, [sharedReceipts]);
 
   const handleCardPress = (item) => {
     router.push("/writeReceipt");

@@ -19,13 +19,10 @@ import {
 } from "firebase/auth";
 
 const Password = () => {
-  const { authUser, logout } = useAuthStore((state) => ({
+  const { authUser, register, logout } = useAuthStore((state) => ({
     authUser: state.authUser,
-    logout: state.logout,
-  }));
-
-  const { register } = useAuthStore((state) => ({
     register: state.register,
+    logout: state.logout
   }));
 
   const [oldPassword, setOldPassword] = useState("");
@@ -34,28 +31,50 @@ const Password = () => {
   const [validate, setValidate] = useState(false);
   const [hideShowOld, setHideShowOld] = useState(true);
   const [hideShowNew, setHideShowNew] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const windowHeight = useWindowDimensions().height;
 
   const handlePasswordUpdate = async () => {
+    if (isUpdating) return; // Prevent multiple executions
+    setIsUpdating(true); // Set to true to indicate the process has started
+    
+    if(newPassword.length  < 6) {
+      setValidate(true)
+      setVerification('Password should be at least 6 characters')
+      return;
+    }
+
     try {
       const user = auth.currentUser;
 
       if (user) {
-        const credential = EmailAuthProvider.credential(email, oldPassword);
+
+        const authEmail = authUser.email;
+        if (!authEmail) {
+          throw new Error("User is not authenticated!");
+        }
+
+        const credential = EmailAuthProvider.credential(authEmail, oldPassword);
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, newPassword);
-        setValidate(true);
-        setVerification("Success! Updated password.");
+
         setTimeout(() => {
-          logout()
-        }, 3000)
+          setValidate(true);
+          setVerification("Success! Updated password.");
+          logout();
+          setIsUpdating(false)
+        }, 3000);
+      } else {
+        throw new Error("User is not authenticated!");
       }
     } catch (error) {
-      setValidate(false);
+      console.error('Error updating password:', error);
+      setValidate(true);
       setVerification("Old password is incorrect.");
+      setIsUpdating(false);
     }
   };
-
   const passHideShow = () => {
     setHideShowOld(!hideShowOld);
   };
@@ -134,6 +153,9 @@ const Password = () => {
           onPress={handlePasswordUpdate}
         />
       </View>
+      <View style={styles.status}>
+          <Text style={{color: (validate) ? "#F97F51" : "#2C2C2C"}}>{(validate) ? verification : ''}</Text>
+      </View>
     </View>
   );
 };
@@ -141,6 +163,13 @@ const Password = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  mainscreen: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    paddingBottom: 20,
+    justifyContent: "center",
   },
   inputShadowBox: {
     fontSize: 15,
@@ -203,6 +232,11 @@ const styles = StyleSheet.create({
   },
   signInWrapper: {
     marginTop: 24,
+  },
+  status: {
+    marginTop: 24,
+    alignItems: 'center',
+    textAlign: 'center'
   },
 });
 
