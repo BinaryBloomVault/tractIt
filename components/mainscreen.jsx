@@ -3,10 +3,8 @@ import {
   StyleSheet,
   Text,
   View,
-  FlatList,
   ScrollView,
   Alert,
-  Image,
   Pressable,
   useWindowDimensions,
   TouchableOpacity,
@@ -84,7 +82,9 @@ const RightSwipeActions = () => {
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
-  const styles = useStyle();
+  const [headerZIndex, setHeaderZIndex] = useState(0); // New state for header zIndex
+
+  const styles = useStyle(headerZIndex);
   const { localUserData } = useAuthStore((state) => ({
     localUserData: state.localUserData,
   }));
@@ -104,6 +104,7 @@ const Mainscreen = () => {
       console.log("sharedReceipts: ", sharedReceipts);
       const receiptsArray = [];
       let totalamount = 0;
+      let totalPay = 0;
 
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
@@ -120,9 +121,7 @@ const Mainscreen = () => {
               itemsArray.forEach((item) => {
                 Object.entries(receiptData.friends).forEach(
                   ([friendId, friendData]) => {
-                    if (friendData.originator === true) {
-                      user = friendData.name;
-                    }
+                    friendData.originator ? (user = friendData.name) : (user = "Unknown");
 
                     combinedFriends[friendId] = friendData.name;
                   }
@@ -133,6 +132,7 @@ const Mainscreen = () => {
                 if (friendId === localUserData.uid) {
                   totalamount = friendData.payment;
                 }
+                totalPay += friendData.payment;
               });
             }
           });
@@ -148,7 +148,7 @@ const Mainscreen = () => {
         }
       });
 
-      setTotalPayment(totalamount.toFixed(2));
+      setTotalPayment(totalPay.toFixed(2));
       setTableData(receiptsArray);
     }
   };
@@ -168,12 +168,23 @@ const Mainscreen = () => {
     }
   };
 
+  // New handleScroll function to manage zIndex
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 0) {
+      setHeaderZIndex(1); // Bring header to front when scrolling
+    } else {
+      setHeaderZIndex(0); // Send header to back when at top
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headerTop}>
         <View style={styles.totalContainer}>
           <Text style={styles.totalText}>Total Payment</Text>
           <Text style={styles.totalAmount}>{totalPayment}</Text>
+          <Text style={styles.textRecords}>Receipts Records</Text>
         </View>
         <Link href="/profile" asChild>
           <TouchableOpacity>
@@ -186,11 +197,12 @@ const Mainscreen = () => {
           </TouchableOpacity>
         </Link>
       </View>
-      <View style={styles.recordsContainer}>
-        <Text style={styles.textRecords}>Receipts Records</Text>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        onScroll={handleScroll} // Attach scroll handler
+        scrollEventThrottle={16} // Update frequently
+      >
         {tableData.map((item, index) => (
           <Swipeable
             key={index}
@@ -236,7 +248,7 @@ const Mainscreen = () => {
   );
 };
 
-const useStyle = () => {
+const useStyle = (headerZIndex) => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
 
   return StyleSheet.create({
@@ -250,6 +262,10 @@ const useStyle = () => {
       alignItems: "center",
       padding: 50,
       backgroundColor: "#A9DFBF",
+      position: 'absolute',  // Set position to absolute
+      top: 0,  // Align to top
+      width: deviceWidth,  // Ensure full width
+      zIndex: headerZIndex, // Dynamically set zIndex
     },
     totalContainer: {
       alignItems: "center",
@@ -260,15 +276,10 @@ const useStyle = () => {
       marginTop: 2,
       marginLeft: -30,
     },
-    recordsContainer: {
-      paddingLeft: 20,
-      paddingTop: -8,
-      backgroundColor: "#A9DFBF",
-      paddingBottom: 16,
-    },
     textRecords: {
-      marginTop: -40,
-      fontSize: 20,
+      flexDirection: 'row',
+      marginTop: 16,
+      fontSize: 17,
       fontWeight: "bold",
       fontFamily: "Gudea",
     },
@@ -294,12 +305,15 @@ const useStyle = () => {
     },
     scrollViewContent: {
       padding: 16,
+      paddingTop: 150, // Ensure space at the top for headerTop
     },
     receiptCard: {
       borderRadius: 15,
       height: 100,
       marginTop: 2,
       marginBottom: 8,
+      position: 'relative',
+      zIndex: 2, // Higher zIndex to ensure it comes in front
     },
     receiptCardHeader: {
       flexDirection: "row",

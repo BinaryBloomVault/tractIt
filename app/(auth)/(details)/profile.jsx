@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#F5F5F5",
-    paddingVertical: 20,
+    paddingVertical: 5,
   },
   profileCard: {
     marginBottom: 16,
