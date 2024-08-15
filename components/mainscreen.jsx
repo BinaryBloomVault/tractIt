@@ -8,6 +8,7 @@ import {
   Pressable,
   useWindowDimensions,
   TouchableOpacity,
+  Animated
 } from "react-native";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
@@ -15,74 +16,95 @@ import Swipeable from "react-native-gesture-handler/Swipeable";
 import { Link, useRouter } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 
-const swipeFromRightOpen = () => {
-  Alert.alert("Swipe from right");
-};
-
 const handleSwipeableOpen = (direction) => {
   if (direction === "right") {
     Alert.alert("Swipe from right");
   }
 };
 
-const RightSwipeActions = () => {
+const handlePaid = () => {
+  Alert.alert('Button paid press');
+};
+
+const handleDelete = () => {
+  Alert.alert('Button delete press');
+};
+
+const RightSwipeActions = ({ progress }) => {
+  const scale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.8],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <>
-      <View
+    <Animated.View
+      style={{
+        flexDirection: "row",
+        height: 90,
+        marginTop: 10,
+      }}
+    >
+      <Animated.View
         style={{
           backgroundColor: "#EA4C4C",
           justifyContent: "center",
           alignItems: "center",
           borderRadius: 15,
-          height: 90,
-          marginTop: 10,
-          marginRight: 10,
+          marginLeft: -20,
+          width: 90,
+          transform: [{ scale }],
         }}
       >
-        <Text
-          style={{
-            color: "#fff",
-            fontFamily: "Gudea-Bold",
-            fontWeight: "600",
-            paddingHorizontal: 20,
-            paddingVertical: 30,
-            fontSize: 14,
-          }}
-        >
-          Delete
-        </Text>
-      </View>
-      <View
+        <Pressable onPress={handleDelete}>
+          <Text
+            style={{
+              color: "#fff",
+              fontFamily: "Gudea-Bold",
+              fontWeight: "600",
+              paddingHorizontal: 20,
+              paddingVertical: 30,
+              fontSize: 14,
+            }}
+          >
+            Delete
+          </Text>
+        </Pressable>
+      </Animated.View>
+      <Animated.View
         style={{
           backgroundColor: "#00BEE5",
           justifyContent: "center",
           alignItems: "center",
           borderRadius: 15,
-          height: 90,
-          marginTop: 10,
+          marginLeft: -18,
+          width: 90,
+          transform: [{ scale }],
         }}
       >
-        <Text
-          style={{
-            color: "#fff",
-            fontFamily: "Gudea-Bold",
-            fontWeight: "600",
-            paddingHorizontal: 20,
-            paddingVertical: 30,
-            fontSize: 16,
-          }}
-        >
-          Paid
-        </Text>
-      </View>
-    </>
+        <Pressable onPress={handlePaid}>
+          <Text
+            style={{
+              color: "#fff",
+              fontFamily: "Gudea-Bold",
+              fontWeight: "600",
+              paddingHorizontal: 20,
+              paddingVertical: 30,
+              fontSize: 16,
+            }}
+          >
+            Paid
+          </Text>
+        </Pressable>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
-  const [headerZIndex, setHeaderZIndex] = useState(0); // New state for header zIndex
+  const [headerZIndex, setHeaderZIndex] = useState(0);
 
   const styles = useStyle(headerZIndex);
   const { localUserData } = useAuthStore((state) => ({
@@ -101,7 +123,6 @@ const Mainscreen = () => {
   const fetchData = () => {
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
-      console.log("sharedReceipts: ", sharedReceipts);
       const receiptsArray = [];
       let totalamount = 0;
       let totalPay = 0;
@@ -154,7 +175,6 @@ const Mainscreen = () => {
   };
 
   useEffect(() => {
-    console.log("localUserData: ", tableData);
     fetchData();
   }, [localUserData]);
 
@@ -168,7 +188,6 @@ const Mainscreen = () => {
     }
   };
 
-  // New handleScroll function to manage zIndex
   const handleScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     if (offsetY > 0) {
@@ -187,26 +206,25 @@ const Mainscreen = () => {
           <Text style={styles.textRecords}>Receipts Records</Text>
         </View>
         <Link href="/profile" asChild>
-          <TouchableOpacity>
-            <Avatar
-              size={50}
-              rounded
-              source={{ uri: "https://via.placeholder.com/150" }}
-              containerStyle={styles.avatar}
-            />
-          </TouchableOpacity>
-        </Link>
+            <TouchableOpacity style={styles.avatarOverlay}>
+              <Avatar
+                size={50}
+                rounded
+                source={{ uri: "https://via.placeholder.com/150" }}
+              />
+            </TouchableOpacity>
+          </Link>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollViewContent}
-        onScroll={handleScroll} // Attach scroll handler
-        scrollEventThrottle={16} // Update frequently
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {tableData.map((item, index) => (
           <Swipeable
             key={index}
-            renderRightActions={RightSwipeActions}
+            renderRightActions={(progress) => <RightSwipeActions progress={progress} />}
             onSwipeableOpen={handleSwipeableOpen}
           >
             <Card containerStyle={styles.receiptCard}>
@@ -243,6 +261,19 @@ const Mainscreen = () => {
             </Card>
           </Swipeable>
         ))}
+
+        {/* Avatar overlay that appears when scrolling */}
+        {headerZIndex === 0 && (
+          <Link href="/profile" asChild>
+            <TouchableOpacity style={styles.avatarOverlay}>
+              <Avatar
+                size={50}
+                rounded
+                source={{ uri: "https://via.placeholder.com/150" }}
+              />
+            </TouchableOpacity>
+          </Link>
+        )}
       </ScrollView>
     </View>
   );
@@ -262,10 +293,10 @@ const useStyle = (headerZIndex) => {
       alignItems: "center",
       padding: 50,
       backgroundColor: "#A9DFBF",
-      position: 'absolute',  // Set position to absolute
-      top: 0,  // Align to top
-      width: deviceWidth,  // Ensure full width
-      zIndex: headerZIndex, // Dynamically set zIndex
+      position: 'absolute',
+      top: 0,
+      width: deviceWidth,
+      zIndex: headerZIndex,
     },
     totalContainer: {
       alignItems: "center",
@@ -295,17 +326,9 @@ const useStyle = (headerZIndex) => {
       fontSize: 20,
       fontWeight: "bold",
     },
-    avatar: {
-      marginRight: -40,
-      marginTop: -20,
-    },
-    header: {
-      flexDirection: "row",
-      paddingVertical: 8,
-    },
     scrollViewContent: {
       padding: 16,
-      paddingTop: 150, // Ensure space at the top for headerTop
+      paddingTop: 150,
     },
     receiptCard: {
       borderRadius: 15,
@@ -313,7 +336,7 @@ const useStyle = (headerZIndex) => {
       marginTop: 2,
       marginBottom: 8,
       position: 'relative',
-      zIndex: 2, // Higher zIndex to ensure it comes in front
+      zIndex: 2,
     },
     receiptCardHeader: {
       flexDirection: "row",
@@ -372,6 +395,12 @@ const useStyle = (headerZIndex) => {
       flexDirection: "row",
       marginTop: 1,
     },
+    avatarOverlay: {
+      position: 'absolute',
+      top: 45,
+      right: 10,
+      zIndex: 10,
+    }
   });
 };
 
