@@ -8,7 +8,7 @@ import {
   Pressable,
   useWindowDimensions,
   TouchableOpacity,
-  Animated
+  Animated,
 } from "react-native";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
@@ -22,19 +22,19 @@ const handleSwipeableOpen = (direction) => {
   }
 };
 
-const handlePaid = () =>{
-  Alert.alert('Button paid press')
-}
+const handlePaid = () => {
+  Alert.alert("Button paid press");
+};
 
-const handleDelete = () =>{
-  Alert.alert('Button delete press')
-}
+const handleDelete = () => {
+  Alert.alert("Button delete press");
+};
 
 const RightSwipeActions = ({ progress }) => {
   const scale = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.8],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   return (
@@ -83,29 +83,30 @@ const RightSwipeActions = ({ progress }) => {
         }}
       >
         <Pressable onPress={handlePaid}>
-        <Text
-          style={{
-            color: "#fff",
-            fontFamily: "Gudea-Bold",
-            fontWeight: "600",
-            paddingHorizontal: 20,
-            paddingVertical: 30,
-            fontSize: 16,
-          }}
-        >
-          Paid
-        </Text>
+          <Text
+            style={{
+              color: "#fff",
+              fontFamily: "Gudea-Bold",
+              fontWeight: "600",
+              paddingHorizontal: 20,
+              paddingVertical: 30,
+              fontSize: 16,
+            }}
+          >
+            Paid
+          </Text>
         </Pressable>
       </Animated.View>
     </Animated.View>
   );
 };
 
-
-const profileAvatar  = () => {
-  return(
-      <Link href="/profile" asChild>
-      <TouchableOpacity style={{position:'absolute', top: 45, right: 10, zIndex: 10 }}>
+const profileAvatar = () => {
+  return (
+    <Link href="/profile" asChild>
+      <TouchableOpacity
+        style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
+      >
         <Avatar
           size={50}
           rounded
@@ -113,8 +114,8 @@ const profileAvatar  = () => {
         />
       </TouchableOpacity>
     </Link>
-  )
-}
+  );
+};
 
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
@@ -158,8 +159,10 @@ const Mainscreen = () => {
               itemsArray.forEach((item) => {
                 Object.entries(receiptData.friends).forEach(
                   ([friendId, friendData]) => {
-                    friendData.originator ? (user = friendData.name) : (user = "Unknown");
-
+                    if (friendData.originator === true) {
+                      user = friendData.name;
+                    }
+                    console.log("friendData: ", receiptData.friends);
                     combinedFriends[friendId] = friendData.name;
                   }
                 );
@@ -174,7 +177,7 @@ const Mainscreen = () => {
             }
           });
           if (title.length > 12) {
-            title = title.slice(0, 12) + '\n' + title.slice(12);
+            title = title.slice(0, 12) + "\n" + title.slice(12);
           }
           receiptsArray.push({
             receiptId: receiptId,
@@ -228,7 +231,7 @@ const Mainscreen = () => {
         {headerZIndex === 1 && profileAvatar()}
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         onScroll={handleScroll} // Attach scroll handler
         scrollEventThrottle={16} // Update frequently
@@ -236,7 +239,9 @@ const Mainscreen = () => {
         {tableData.map((item, index) => (
           <Swipeable
             key={index}
-            renderRightActions={(progress) => <RightSwipeActions progress={progress} />}
+            renderRightActions={(progress) => (
+              <RightSwipeActions progress={progress} />
+            )}
             onSwipeableOpen={handleSwipeableOpen}
           >
             <Card containerStyle={styles.receiptCard}>
@@ -295,9 +300,9 @@ const useStyle = (headerZIndex) => {
       alignItems: "center",
       padding: 50,
       backgroundColor: "#A9DFBF",
-      position: 'absolute',  // Set position to absolute
-      top: 0,  // Align to top
-      width: deviceWidth,  // Ensure full width
+      position: "absolute", // Set position to absolute
+      top: 0, // Align to top
+      width: deviceWidth, // Ensure full width
       zIndex: headerZIndex, // Dynamically set zIndex
     },
     totalContainer: {
@@ -310,7 +315,7 @@ const useStyle = (headerZIndex) => {
       marginLeft: -30,
     },
     textRecords: {
-      flexDirection: 'row',
+      flexDirection: "row",
       marginTop: 16,
       fontSize: 17,
       fontWeight: "bold",
@@ -345,7 +350,7 @@ const useStyle = (headerZIndex) => {
       height: 100,
       marginTop: 2,
       marginBottom: 8,
-      position: 'relative',
+      position: "relative",
       zIndex: 2, // Higher zIndex to ensure it comes in front
     },
     receiptCardHeader: {
