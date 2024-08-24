@@ -101,6 +101,21 @@ const RightSwipeActions = ({ progress }) => {
   );
 };
 
+
+const profileAvatar  = () => {
+  return(
+      <Link href="/profile" asChild>
+      <TouchableOpacity style={{position:'absolute', top: 45, right: 10, zIndex: 10 }}>
+        <Avatar
+          size={50}
+          rounded
+          source={{ uri: "https://via.placeholder.com/150" }}
+        />
+      </TouchableOpacity>
+    </Link>
+  )
+}
+
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
@@ -158,7 +173,9 @@ const Mainscreen = () => {
               });
             }
           });
-
+          if (title.length > 12) {
+            title = title.slice(0, 12) + '\n' + title.slice(12);
+          }
           receiptsArray.push({
             receiptId: receiptId,
             title: title,
@@ -208,16 +225,7 @@ const Mainscreen = () => {
           <Text style={styles.totalAmount}>{totalPayment}</Text>
           <Text style={styles.textRecords}>Receipts Records</Text>
         </View>
-        <Link href="/profile" asChild>
-          <TouchableOpacity>
-            <Avatar
-              size={50}
-              rounded
-              source={{ uri: "https://via.placeholder.com/150" }}
-              containerStyle={styles.avatar}
-            />
-          </TouchableOpacity>
-        </Link>
+        {headerZIndex === 1 && profileAvatar()}
       </View>
 
       <ScrollView 
@@ -265,6 +273,9 @@ const Mainscreen = () => {
             </Card>
           </Swipeable>
         ))}
+
+        {/* Avatar overlay that appears when scrolling */}
+        {headerZIndex === 0 && profileAvatar()}
       </ScrollView>
     </View>
   );
@@ -366,7 +377,7 @@ const useStyle = (headerZIndex) => {
     },
     receiptTitle: {
       fontWeight: "bold",
-      fontSize: 20,
+      fontSize: 18,
       marginLeft: 26,
       marginTop: 18,
     },
