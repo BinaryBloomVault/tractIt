@@ -6,18 +6,15 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  TextInput,
 } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
 import AddButton from "../../../components/button/addButton";
 import { Card, Avatar } from "@rneui/themed";
 import TabButton from "../../../components/button/tabRoundButton";
-import {
-  useRouter,
-  useSegments,
-  useNavigation,
-  useLocalSearchParams,
-  useGlobalSearchParams,
-} from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 import { getDoc, doc } from "firebase/firestore";
 import { firestore } from "../../../config/firebaseConfig";
@@ -27,14 +24,24 @@ import { mmkvStorage } from "../../../zustand/zustand";
 const FriendList = () => {
   const [confirmedFriends, setConfirmedFriends] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState({});
+  const [selectedModalFriends, setSelectedModalFriends] = useState({});
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [titleModalVisible, setTitleModalVisible] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
   const { height: deviceHeight } = useWindowDimensions();
 
   const styles = useStyle();
   const router = useRouter();
 
   const loadUserData = useAuthStore((state) => state.loadUserData);
+  const addGroup = useAuthStore((state) => state.addGroup);
+  const loadGroups = useAuthStore((state) => state.loadGroups);
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
+  const { groups } = useAuthStore((state) => ({
+    groups: state.groups,
+  }));
 
   const { previousScreen, index } = useLocalSearchParams();
 
@@ -42,7 +49,6 @@ const FriendList = () => {
     async (fromFirebase = false) => {
       try {
         const userData = loadUserData();
-        console.log("User", userData);
 
         if (!userData) {
           throw new Error("User data is not available");
@@ -51,8 +57,6 @@ const FriendList = () => {
         let confirmedFriends = [];
 
         if (fromFirebase) {
-          console.log("Fetching from Firebase", fromFirebase);
-          // Fetch from Firebase on refresh
           const userRef = doc(firestore, "users", userData.uid);
           const userDoc = await getDoc(userRef);
 
@@ -103,16 +107,17 @@ const FriendList = () => {
     },
     [loadUserData]
   );
+
   useEffect(() => {
     loadFriendRequests(); // Load from local data initially
-  }, [loadFriendRequests]);
+    loadGroups(); // Load groups from Zustand state
+  }, [loadFriendRequests, loadGroups]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadFriendRequests(true);
     setRefreshing(false);
   }, [loadFriendRequests]);
-  console.log(selectedFriends);
 
   const toggleCheck = (friend) => {
     setSelectedFriends((prevSelectedFriends) => {
@@ -122,45 +127,108 @@ const FriendList = () => {
       } else {
         updatedSelectedFriends[friend.id] = { ...friend, index: index };
       }
+      if (Object.keys(updatedSelectedFriends).length === 0) {
+        setSelectedGroup(null);
+      }
+
       return updatedSelectedFriends;
     });
   };
 
-  const renderFriendItem = (friend) => {
-    if (previousScreen === "writeReceipt") {
-      return (
-        <TouchableOpacity
-          key={friend.id}
-          style={styles.friendItem}
-          onPress={() => toggleCheck(friend)}
-        >
-          <Avatar
-            source={{ uri: "https://via.placeholder.com/50" }}
-            rounded
-            size="medium"
-          />
-          <Text style={styles.friendName}>{friend.name}</Text>
-          <AntDesign
-            name="checkcircle"
-            size={24}
-            color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
-            style={styles.checkIcon}
-          />
-        </TouchableOpacity>
-      );
-    } else {
-      return (
-        <View key={friend.id} style={styles.friendItem}>
-          <Avatar
-            source={{ uri: "https://via.placeholder.com/50" }}
-            rounded
-            size="medium"
-          />
-          <Text style={styles.friendName}>{friend.name}</Text>
-        </View>
-      );
-    }
+  const toggleModalCheck = (friend) => {
+    setSelectedModalFriends((prevSelectedModalFriends) => {
+      const updatedSelectedModalFriends = { ...prevSelectedModalFriends };
+      if (updatedSelectedModalFriends[friend.id]) {
+        delete updatedSelectedModalFriends[friend.id];
+      } else {
+        updatedSelectedModalFriends[friend.id] = { ...friend, index: index };
+      }
+      return updatedSelectedModalFriends;
+    });
   };
+
+  const toggleGroupCheck = (group) => {
+    setSelectedGroup((prevSelectedGroup) => {
+      if (prevSelectedGroup?.id === group.id) {
+        setSelectedFriends({});
+        return null;
+      }
+      const selectedFriendsFromGroup = group.members.reduce((acc, member) => {
+        acc[member.id] = {
+          ...member,
+          ...(index !== null ? { index } : {}),
+        };
+        return acc;
+      }, {});
+
+      setSelectedFriends(selectedFriendsFromGroup);
+      return group;
+    });
+  };
+
+  const resetModalSelections = () => {
+    setSelectedModalFriends({});
+    setSelectedGroup(null);
+  };
+
+  const renderFriendItem = (friend) => (
+    <TouchableOpacity
+      key={friend.id}
+      style={styles.friendItem}
+      onPress={() => toggleCheck(friend)}
+    >
+      <Avatar
+        source={{ uri: "https://via.placeholder.com/50" }}
+        rounded
+        size="medium"
+      />
+      <Text style={styles.friendName}>{friend.name}</Text>
+      <AntDesign
+        name="checkcircle"
+        size={24}
+        color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
+        style={styles.checkIcon}
+      />
+    </TouchableOpacity>
+  );
+
+  const renderModalFriendItem = (friend) => (
+    <TouchableOpacity
+      key={friend.id}
+      style={styles.friendItem}
+      onPress={() => toggleModalCheck(friend)}
+    >
+      <Avatar
+        source={{ uri: "https://via.placeholder.com/50" }}
+        rounded
+        size="medium"
+      />
+      <Text style={styles.friendName}>{friend.name}</Text>
+      <AntDesign
+        name="checkcircle"
+        size={24}
+        color={selectedModalFriends[friend.id] ? "#00BEE5" : "transparent"}
+        style={styles.checkIcon}
+      />
+    </TouchableOpacity>
+  );
+
+  const renderGroupItem = (group) => (
+    <TouchableOpacity
+      key={group.id}
+      style={styles.groupItem}
+      onPress={() => toggleGroupCheck(group)}
+    >
+      <Text style={styles.groupName}>{group.name}</Text>
+      <AntDesign
+        name="checkcircle"
+        size={24}
+        color={selectedGroup?.id === group.id ? "#00BEE5" : "transparent"}
+        style={styles.checkIcon}
+      />
+    </TouchableOpacity>
+  );
+  console.log("selectedFriends", selectedFriends);
 
   const onPressRight = () => {
     if (previousScreen === "writeReceipt") {
@@ -180,6 +248,39 @@ const FriendList = () => {
       router.back();
     }
   };
+
+  const handleAddGroup = () => {
+    setGroupModalVisible(true);
+  };
+
+  const closeGroupModal = () => {
+    setGroupModalVisible(false);
+    resetModalSelections();
+  };
+
+  const openTitleModal = () => {
+    setGroupModalVisible(false);
+    setTitleModalVisible(true);
+  };
+
+  const closeTitleModal = () => {
+    setTitleModalVisible(false);
+    resetModalSelections();
+  };
+
+  const handleCreateGroup = () => {
+    openTitleModal();
+  };
+
+  const handleSaveGroup = () => {
+    const groupMembers = Object.keys(selectedModalFriends).map(
+      (id) => selectedModalFriends[id]
+    );
+    addGroup(groupTitle, groupMembers);
+    closeTitleModal();
+  };
+
+  const isCreateGroupDisabled = Object.keys(selectedModalFriends).length === 0;
 
   return (
     <ScrollView
@@ -213,10 +314,102 @@ const FriendList = () => {
         <Text style={styles.friendList}>Group List</Text>
       </View>
       <Card
-        containerStyle={styles.containerCard(deviceHeight < 813 ? 170 : 180)}
+        containerStyle={styles.containerCardGroup(
+          deviceHeight < 813 ? 170 : 250
+        )}
       >
-        {/* Add your group list content here */}
+        <AddButton
+          title="Add Group"
+          width={100}
+          left={128}
+          fontSize={12}
+          height={30}
+          bcolor={"#00BEE5"}
+          onPress={handleAddGroup}
+        />
+        <ScrollView style={{ marginTop: 8, marginBottom: 16 }}>
+          {groups.map((group) => renderGroupItem(group))}
+        </ScrollView>
       </Card>
+
+      <Modal
+        visible={groupModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeGroupModal}
+      >
+        <TouchableWithoutFeedback onPress={closeGroupModal}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <Card containerStyle={styles.modalCard}>
+                <ScrollView>
+                  {confirmedFriends.map((friend) =>
+                    renderModalFriendItem(friend)
+                  )}
+                </ScrollView>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.createGroupButton,
+                      isCreateGroupDisabled && styles.disabledButton,
+                    ]}
+                    onPress={handleCreateGroup}
+                    disabled={isCreateGroupDisabled}
+                  >
+                    <Text style={styles.createGroupButtonText}>
+                      Create Group
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={closeGroupModal}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal
+        visible={titleModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeTitleModal}
+      >
+        <TouchableWithoutFeedback onPress={closeTitleModal}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <Card containerStyle={styles.modalCard}>
+                <Text style={styles.modalTitle}>Enter Group Title</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Group Title"
+                  value={groupTitle}
+                  onChangeText={setGroupTitle}
+                />
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={styles.createGroupButton}
+                    onPress={handleSaveGroup}
+                  >
+                    <Text style={styles.createGroupButtonText}>Save Group</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={closeTitleModal}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       <TabButton onPressRight={onPressRight} onPressLeft={onPressLeft} />
     </ScrollView>
   );
@@ -261,6 +454,18 @@ const useStyle = () => {
       marginRight: 16,
       marginTop: 16,
     }),
+    containerCardGroup: (height) => ({
+      borderRadius: 10,
+      shadowColor: "#171717",
+      shadowOffset: { width: -0.5, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      height: height,
+      marginLeft: 16,
+      marginRight: 16,
+      marginTop: 16,
+      paddingBottom: 30,
+    }),
     friendItem: {
       flexDirection: "row",
       alignItems: "center",
@@ -275,6 +480,79 @@ const useStyle = () => {
     },
     checkIcon: {
       marginLeft: "auto",
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalCard: {
+      width: "80%",
+      borderRadius: 10,
+      shadowColor: "#171717",
+      shadowOffset: { width: -0.5, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      padding: 20,
+    },
+    buttonContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 16,
+    },
+    createGroupButton: {
+      backgroundColor: "#00BEE5",
+      padding: 10,
+      borderRadius: 10,
+      alignItems: "center",
+      width: "48%",
+    },
+    cancelButton: {
+      backgroundColor: "#E74C3C",
+      padding: 10,
+      borderRadius: 10,
+      alignItems: "center",
+      width: "48%",
+    },
+    disabledButton: {
+      backgroundColor: "#cccccc",
+    },
+    createGroupButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    cancelButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    modalTitle: {
+      fontSize: 24,
+      marginBottom: 16,
+    },
+    input: {
+      height: 40,
+      borderColor: "#ccc",
+      borderWidth: 1,
+      borderRadius: 5,
+      paddingHorizontal: 10,
+      marginBottom: 20,
+      width: "100%",
+    },
+    groupItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "#ddd",
+    },
+    groupName: {
+      fontSize: 18,
+      flex: 1,
+      fontWeight: "bold",
+      color: "#000",
     },
   });
   return styles;

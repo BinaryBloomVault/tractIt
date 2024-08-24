@@ -19,7 +19,6 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
-import * as Crypto from "expo-crypto";
 import { disableNetwork, enableNetwork } from "firebase/firestore";
 
 const mmkv = new MMKV();
@@ -44,6 +43,8 @@ export const useAuthStore = create((set, get) => ({
   notifications: [],
   selectedFriends: {},
   title: "",
+  groups: [],
+  clearGroups: () => set({ groups: [] }),
 
   setTitle: (newTitle) => set({ title: newTitle }),
   setSelectedFriends: (friends) => set({ selectedFriends: friends }),
@@ -378,7 +379,7 @@ export const useAuthStore = create((set, get) => ({
         });
 
         const userData = JSON.parse(userDataString);
-        const receiptId = Crypto.randomUUID();
+        const receiptId = Date.now().toString();
         const receiptData = { friends: friends, [title]: receiptDataArray };
 
         const receiptRef = doc(
@@ -676,6 +677,101 @@ export const useAuthStore = create((set, get) => ({
       set({ searchResults: friends });
     } catch (error) {
       console.error("Error fetching friends:", error);
+    }
+  },
+  // Load groups from MMKV and Firestore
+  loadGroups: () => {
+    const storedGroups = mmkv.getString("groups");
+    const parsedGroups = storedGroups ? JSON.parse(storedGroups) : [];
+    set({ groups: parsedGroups });
+  },
+
+  addGroup: async (groupName, groupMembers) => {
+    try {
+      const newGroup = {
+        id: Date.now().toString(), // Unique ID for the group
+        name: groupName,
+        members: groupMembers,
+      };
+
+      // Filter out undefined values
+      const cleanGroup = JSON.parse(
+        JSON.stringify(newGroup, (key, value) =>
+          value === undefined ? null : value
+        )
+      );
+      console.log("Adding group:", groupMembers);
+
+      const updatedGroups = [...get().groups, cleanGroup];
+      set({ groups: updatedGroups });
+
+      // Save to MMKV storage
+      mmkv.set("groups", JSON.stringify(updatedGroups));
+
+      const userDataString = mmkvStorage.getItem("user_data");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+
+      if (userData) {
+        const userRef = doc(firestore, "users", userData.uid);
+        const groupsCollectionRef = collection(userRef, "groups");
+
+        // Save to Firestore
+        await setDoc(doc(groupsCollectionRef, newGroup.id), cleanGroup);
+      }
+    } catch (error) {
+      console.error("Error saving group to Firestore:", error);
+    }
+  },
+
+  removeGroup: async (groupId) => {
+    try {
+      const updatedGroups = get().groups.filter(
+        (group) => group.id !== groupId
+      );
+      set({ groups: updatedGroups });
+
+      // Save to MMKV storage
+      mmkv.set("groups", JSON.stringify(updatedGroups));
+
+      const userDataString = mmkvStorage.getItem("user_data");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+
+      if (userData) {
+        const userRef = doc(firestore, "users", userData.uid);
+        const groupsCollectionRef = collection(userRef, "groups");
+
+        // Remove from Firestore
+        await setDoc(doc(groupsCollectionRef, groupId), { deleted: true });
+      }
+    } catch (error) {
+      console.error("Error removing group from Firestore:", error);
+    }
+  },
+
+  updateGroup: async (groupId, updatedGroup) => {
+    try {
+      const updatedGroups = get().groups.map((group) =>
+        group.id === groupId ? { ...group, ...updatedGroup } : group
+      );
+      set({ groups: updatedGroups });
+
+      // Save to MMKV storage
+      mmkv.set("groups", JSON.stringify(updatedGroups));
+
+      const userDataString = mmkvStorage.getItem("user_data");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+
+      if (userData) {
+        const userRef = doc(firestore, "users", userData.uid);
+        const groupsCollectionRef = collection(userRef, "groups");
+
+        // Update in Firestore
+        await setDoc(doc(groupsCollectionRef, groupId), updatedGroup, {
+          merge: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating group in Firestore:", error);
     }
   },
 }));

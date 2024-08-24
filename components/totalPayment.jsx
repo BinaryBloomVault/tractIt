@@ -21,26 +21,6 @@ import { useRouter, Link, useLocalSearchParams } from "expo-router";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
-const data = [
-  {
-    items: "Pizza",
-    quantity: "2",
-    price: "20",
-    friends: {},
-  },
-  {
-    items: "Soda",
-    quantity: "5",
-    price: "10",
-    friends: {},
-  },
-  {
-    items: "Burger",
-    quantity: "3",
-    price: "15",
-    friends: {},
-  },
-];
 
 const TotalPayment = ({ title, setTitle }) => {
   const styles = useStyle();
@@ -106,10 +86,9 @@ const TotalPayment = ({ title, setTitle }) => {
 
   useEffect(() => {
     if (selectedFriends && Object.keys(selectedFriends).length > 0) {
-      console.log("Received selected friends:", selectedFriends);
-
       Object.entries(selectedFriends).forEach(([id, friend]) => {
         const receiptIndex = parseInt(friend.index, 10);
+        console.log("Received selected friends:", receiptIndex);
 
         // Update the corresponding receipt in tempPagesRef.current
         if (tempPagesRef.current[receiptIndex]) {
@@ -240,24 +219,6 @@ const TotalPaymentModal = ({
       setPages((prevPages) => {
         const updatedPages = prevPages.map((page, i) =>
           i === index ? { ...page, [field]: value } : page
-        );
-        setTempPagesRef(updatedPages);
-        return updatedPages;
-      });
-    },
-    [setTempPagesRef]
-  );
-
-  const handleFriendUpdate = useCallback(
-    (index, friendId, friendName) => {
-      setPages((prevPages) => {
-        const updatedPages = prevPages.map((page, i) =>
-          i === index
-            ? {
-                ...page,
-                friends: { ...page.friends, [friendId]: friendName },
-              }
-            : page
         );
         setTempPagesRef(updatedPages);
         return updatedPages;
