@@ -139,7 +139,7 @@ const Mainscreen = () => {
   const fetchData = () => {
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
-      console.log("sharedReceipts: ", sharedReceipts);
+      // console.log("sharedReceipts: ", sharedReceipts);
       const receiptsArray = [];
       let totalamount = 0;
       let totalPay = 0;
@@ -162,7 +162,6 @@ const Mainscreen = () => {
                     if (friendData.originator === true) {
                       user = friendData.name;
                     }
-                    console.log("friendData: ", receiptData.friends);
                     combinedFriends[friendId] = friendData.name;
                   }
                 );
@@ -196,7 +195,7 @@ const Mainscreen = () => {
   };
 
   useEffect(() => {
-    console.log("localUserData: ", tableData);
+    // console.log("localUserData: ", tableData);
     fetchData();
   }, [localUserData]);
 

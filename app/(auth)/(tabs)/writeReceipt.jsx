@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput } from "react-native";
-import Receipt from "../../../../components/card/receiptCard";
-import TotalCard from "../../../../components/totalPayment";
-import { useAuthStore } from "../../../../zustand/zustand";
+import Receipt from "../../../components/card/receiptCard";
+import TotalCard from "../../../components/totalPayment";
+import { useAuthStore } from "../../../zustand/zustand";
 
 const AddButton = () => {
   const { title, setTitle } = useAuthStore((state) => ({

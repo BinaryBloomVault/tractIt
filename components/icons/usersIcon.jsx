@@ -68,7 +68,7 @@ const UserIcon = ({ friends }) => {
   const styles = useStyles();
 
   if (!friends || friends.length === 0) {
-    return <Text>Add</Text>;
+    return <Text>No Friends</Text>;
   }
 
   const initials = generateInitials(friends);

@@ -8,7 +8,7 @@ import {
   Pressable,
 } from "react-native";
 import { Avatar, Card } from "@rneui/themed";
-import { useAuthStore } from "../../../../zustand/zustand";
+import { useAuthStore } from "../../../zustand/zustand";
 
 const Notification = () => {
   const [modalVisible, setModalVisible] = useState(false);
