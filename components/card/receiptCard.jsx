@@ -53,6 +53,7 @@ const ReceiptCard = () => {
           color="#F2E3A9"
           font="Gudea-Regular"
           size={20}
+          disabled={false}
         />
       </View>
       <Card.Divider
@@ -75,6 +76,7 @@ const ReceiptCard = () => {
                 color="#A9DFBF"
                 font="Cabin-Regular"
                 size={15}
+                disabled={false}
               />
             </TouchableOpacity>
           )}
@@ -98,6 +100,7 @@ const ReceiptCard = () => {
           color="#00BEE5"
           font="Gudea-Regular"
           size={15}
+          disabled={true}
         />
       </View>
     </Card>

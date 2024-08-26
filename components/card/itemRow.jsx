@@ -2,15 +2,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
 import { useAuthStore } from "../../zustand/zustand"; //
 import UserIcon from "../../components/icons/usersIcon";
-const ItemRow = ({ item, color, font, size, height, index }) => {
+const ItemRow = ({ item, color, font, size, height, index, disabled }) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const setSelectedItemIndex = useAuthStore(
     (state) => state.setSelectedItemIndex
   );
 
   const handlePress = (type) => {
-    // console.log(`Pressed ${type}:`, item);
-    // console.log("Index:", index);
     setSelectedItemIndex(index);
     setModalVisible(true);
   };
@@ -21,25 +19,29 @@ const ItemRow = ({ item, color, font, size, height, index }) => {
     <View style={styles.itemsParent}>
       <TouchableOpacity
         style={styles.items(color)}
-        onPress={() => handlePress("Items")}
+        onPress={disabled ? null : () => handlePress("Items")}
+        activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.items}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.items2, styles.priceSpaceBlock(color)]}
-        onPress={() => handlePress("Quantity")}
+        onPress={disabled ? null : () => handlePress("Quantity")}
+        activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.quantity}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.price, styles.priceSpaceBlock(color)]}
-        onPress={() => handlePress("Price")}
+        onPress={disabled ? null : () => handlePress("Price")}
+        activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.price}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.friends, styles.priceSpaceBlock(color)]}
-        onPress={() => handlePress("Friends")}
+        onPress={disabled ? null : () => handlePress("Friends")}
+        activeOpacity={disabled ? 1 : 0.2}
       >
         <View style={styles.iconsContainer}>
           {isFriendsArray ? (

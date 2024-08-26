@@ -454,10 +454,10 @@ const useStyle = () => {
       height: deviceHeight < 813 ? 32 : 40,
     },
     friendsButton: {
-      backgroundColor: "#A7E2B3",
+      backgroundColor: "#00BEE5",
       paddingHorizontal: 20,
       paddingVertical: 10,
-      borderRadius: 5,
+      borderRadius: 20,
     },
     friendsButtonText: {
       color: "white",
