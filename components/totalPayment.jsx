@@ -18,6 +18,7 @@ import PaymentInfo from "./card/paymentInfo";
 import { useAuthStore } from "../zustand/zustand";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter, Link, useLocalSearchParams } from "expo-router";
+import UserIcon from "../components/icons/usersIcon";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -69,9 +70,10 @@ const TotalPayment = ({ title, setTitle }) => {
     } catch (error) {
       console.error("Error sharing receipts:", error);
     } finally {
-      router.replace("(auth)/(tabs)/landingscreen");
       clearReceipts();
       setTitle("");
+      router.setParams({ previousScreen: "" });
+      router.replace("(auth)/(tabs)/landingscreen");
     }
   };
 
@@ -324,6 +326,9 @@ const TotalPaymentModal = ({
                       >
                         <Text style={styles.friendsButtonText}>Friends</Text>
                       </Link>
+                      <View style={styles.centeredView}>
+                        <UserIcon friends={Object.values(page.friends || {})} />
+                      </View>
                     </View>
                   </View>
                 ))}
@@ -459,6 +464,11 @@ const useStyle = () => {
       fontWeight: "bold",
       fontSize: 16,
       textAlign: "center",
+    },
+    centeredView: {
+      justifyContent: "center",
+      alignItems: "center",
+      flex: 1,
     },
   });
   return styles;

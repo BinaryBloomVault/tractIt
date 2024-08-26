@@ -322,6 +322,7 @@ export const useAuthStore = create((set, get) => ({
           });
         });
 
+        console.log("title", title);
         const newReceiptData = {
           friends: friends,
           [title]: updatedReceiptsArray,
@@ -396,7 +397,6 @@ export const useAuthStore = create((set, get) => ({
             }
           });
 
-          // If userData.uid is not in receipt.friends, add it with specified properties
           if (!receipt.friends[userData.uid]) {
             friends[userData.uid] = {
               name: userData.name,
@@ -419,6 +419,10 @@ export const useAuthStore = create((set, get) => ({
 
         // Create the next incremental receipt ID
         const newReceiptId = `receipt_${lastReceiptId + 1}`;
+        console.log("lastReceiptId", lastReceiptId);
+
+        console.log("newReceiptId", newReceiptId);
+        console.log("title22", title);
 
         // Prepare the receipt data
         const receiptData = { friends: friends, [title]: receiptDataArray };
