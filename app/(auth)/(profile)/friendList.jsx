@@ -109,8 +109,8 @@ const FriendList = () => {
   );
 
   useEffect(() => {
-    loadFriendRequests(); // Load from local data initially
-    loadGroups(); // Load groups from Zustand state
+    loadFriendRequests();
+    loadGroups();
   }, [loadFriendRequests, loadGroups]);
 
   const onRefresh = useCallback(async () => {

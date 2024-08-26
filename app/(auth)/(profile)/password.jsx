@@ -22,7 +22,7 @@ const Password = () => {
   const { authUser, register, logout } = useAuthStore((state) => ({
     authUser: state.authUser,
     register: state.register,
-    logout: state.logout
+    logout: state.logout,
   }));
 
   const [oldPassword, setOldPassword] = useState("");
@@ -38,10 +38,10 @@ const Password = () => {
   const handlePasswordUpdate = async () => {
     if (isUpdating) return; // Prevent multiple executions
     setIsUpdating(true); // Set to true to indicate the process has started
-    
-    if(newPassword.length  < 6) {
-      setValidate(true)
-      setVerification('Password should be at least 6 characters')
+
+    if (newPassword.length < 6) {
+      setValidate(true);
+      setVerification("Password should be at least 6 characters");
       return;
     }
 
@@ -49,7 +49,6 @@ const Password = () => {
       const user = auth.currentUser;
 
       if (user) {
-
         const authEmail = authUser.email;
         if (!authEmail) {
           throw new Error("User is not authenticated!");
@@ -63,13 +62,13 @@ const Password = () => {
           setValidate(true);
           setVerification("Success! Updated password.");
           logout();
-          setIsUpdating(false)
+          setIsUpdating(false);
         }, 3000);
       } else {
         throw new Error("User is not authenticated!");
       }
     } catch (error) {
-      console.error('Error updating password:', error);
+      console.error("Error updating password:", error);
       setValidate(true);
       setVerification("Old password is incorrect.");
       setIsUpdating(false);
@@ -154,7 +153,9 @@ const Password = () => {
         />
       </View>
       <View style={styles.status}>
-          <Text style={{color: (validate) ? "#F97F51" : "#2C2C2C"}}>{(validate) ? verification : ''}</Text>
+        <Text style={{ color: validate ? "#F97F51" : "#2C2C2C" }}>
+          {validate ? verification : ""}
+        </Text>
       </View>
     </View>
   );
@@ -235,8 +236,8 @@ const styles = StyleSheet.create({
   },
   status: {
     marginTop: 24,
-    alignItems: 'center',
-    textAlign: 'center'
+    alignItems: "center",
+    textAlign: "center",
   },
 });
 

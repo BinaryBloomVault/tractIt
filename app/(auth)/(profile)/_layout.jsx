@@ -4,9 +4,9 @@ import { Stack } from "expo-router";
 export default function TabLayout() {
   return (
     <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(profile)" options={{ headerShown: false }} />
 
-      <Stack.Screen name="profile" />
+      <Stack.Screen name=" " />
       <Stack.Screen
         name="friendList"
         options={{

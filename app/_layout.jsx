@@ -50,7 +50,7 @@ export default function RootLayout() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (userData) => {
       if (userData && segments[0] !== "(auth)") {
-        router.replace("(auth)");
+        router.replace("(auth)/(tabs)/landingscreen");
       } else if (!userData && segments[0] === "(auth)") {
         router.replace("/");
       }
@@ -78,7 +78,7 @@ function RootLayoutNav() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)/(details)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ headerShown: false }} />
     </Stack>
   );

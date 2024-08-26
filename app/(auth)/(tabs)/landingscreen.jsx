@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, Pressable, Button } from "react-native";
 import React from "react";
-import Mainscreen from "../../../../components/mainscreen";
+import Mainscreen from "../../../components/mainscreen";
 
-const index = () => {
+const landingscreen = () => {
   return (
     <View style={styles.mainactivity}>
       <Mainscreen />
@@ -20,4 +20,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default index;
+export default landingscreen;
