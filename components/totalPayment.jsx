@@ -60,16 +60,18 @@ const TotalPayment = ({ title, setTitle }) => {
   };
 
   const shareReceipts = async () => {
-    if (previousScreen === "update") {
-      await updateReceipt(title, receipts, uniqued);
+    try {
+      if (previousScreen === "update") {
+        await updateReceipt(title, receipts, uniqued);
+      } else {
+        await addSharedReceipt(title, receipts);
+      }
+    } catch (error) {
+      console.error("Error sharing receipts:", error);
+    } finally {
+      router.replace("(auth)/(tabs)/landingscreen");
       clearReceipts();
       setTitle("");
-      router.replace("/mainscreen");
-    } else {
-      await addSharedReceipt(title, receipts);
-      clearReceipts();
-      setTitle("");
-      router.replace("/mainscreen");
     }
   };
 

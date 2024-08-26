@@ -15,7 +15,10 @@ const addButton = ({
 }) => {
   return (
     <View style={styles.addButtonContainer(bottom, left)}>
-      <Pressable style={styles.addButton(width, height, bcolor)} onPress={onPress}>
+      <Pressable
+        style={styles.addButton(width, height, bcolor)}
+        onPress={onPress}
+      >
         <Text style={styles.addButtonTitle(fontSize)}>{title}</Text>
       </Pressable>
     </View>
