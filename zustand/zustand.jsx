@@ -67,6 +67,21 @@ export const useAuthStore = create((set, get) => ({
     return get().receipts;
   },
 
+  updateReceiptById: (receiptId, updatedReceipts) => {
+    set((state) => {
+      console.log("Updated Receipts after deletion:", updatedReceipts);
+
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const updatedUserData = { ...userData, receipts: updatedReceipts };
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+      }
+
+      return { receipts: updatedReceipts };
+    });
+  },
+
   updateReceiptsWithShared: (receiptId) => {
     const { sharedReceipts } = get();
     const receiptData = sharedReceipts[receiptId];
@@ -321,6 +336,15 @@ export const useAuthStore = create((set, get) => ({
             }
           });
         });
+
+        if (!friends[userUid]) {
+          friends[userUid] = {
+            name: userData.name,
+            payment: 0,
+            paid: true,
+            originator: true,
+          };
+        }
 
         console.log("title", title);
         const newReceiptData = {

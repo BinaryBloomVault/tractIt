@@ -156,16 +156,26 @@ const Mainscreen = () => {
               title = currentTitle;
               combinedItems = combinedItems.concat(itemsArray);
 
-              itemsArray.forEach((item) => {
+              if (combinedItems.length === 0) {
                 Object.entries(receiptData.friends).forEach(
                   ([friendId, friendData]) => {
                     if (friendData.originator === true) {
                       user = friendData.name;
                     }
-                    combinedFriends[friendId] = friendData.name;
                   }
                 );
-              });
+              } else {
+                itemsArray.forEach((item) => {
+                  Object.entries(receiptData.friends).forEach(
+                    ([friendId, friendData]) => {
+                      if (friendData.originator === true) {
+                        user = friendData.name;
+                      }
+                      combinedFriends[friendId] = friendData.name;
+                    }
+                  );
+                });
+              }
             } else if (currentTitle === "friends") {
               Object.entries(itemsArray).forEach(([friendId, friendData]) => {
                 if (friendId === localUserData.uid) {
