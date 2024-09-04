@@ -42,7 +42,9 @@ const FriendList = () => {
   const { groups } = useAuthStore((state) => ({
     groups: state.groups,
   }));
-
+  const setSelectedItemIndex = useAuthStore(
+    (state) => state.setSelectedItemIndex
+  );
   const { previousScreen, index } = useLocalSearchParams();
 
   const loadFriendRequests = useCallback(
@@ -228,11 +230,11 @@ const FriendList = () => {
       />
     </TouchableOpacity>
   );
-  console.log("selectedFriends", selectedFriends);
 
   const onPressRight = () => {
     if (previousScreen === "writeReceipt") {
       useAuthStore.setState({ selectedFriends });
+      setSelectedItemIndex(index);
       setModalVisible(true);
       router.back();
     } else {
