@@ -13,6 +13,7 @@ import {
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import { RectButton } from "react-native-gesture-handler";
 import { Link, useRouter } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 
@@ -28,77 +29,6 @@ const handlePaid = () => {
 
 const handleDelete = () => {
   Alert.alert("Button delete press");
-};
-
-const RightSwipeActions = ({ progress }) => {
-  const scale = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0.8],
-    extrapolate: "clamp",
-  });
-
-  return (
-    <Animated.View
-      style={{
-        flexDirection: "row",
-        height: 90,
-        marginTop: 10,
-      }}
-    >
-      <Animated.View
-        style={{
-          backgroundColor: "#EA4C4C",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: 15,
-          marginLeft: -20,
-          width: 90,
-          transform: [{ scale }],
-        }}
-      >
-        <Pressable onPress={handleDelete}>
-          <Text
-            style={{
-              color: "#fff",
-              fontFamily: "Gudea-Bold",
-              fontWeight: "600",
-              paddingHorizontal: 20,
-              paddingVertical: 30,
-              fontSize: 14,
-            }}
-          >
-            Delete
-          </Text>
-        </Pressable>
-      </Animated.View>
-      <Animated.View
-        style={{
-          backgroundColor: "#00BEE5",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: 15,
-          marginLeft: -18,
-          width: 90,
-          transform: [{ scale }],
-        }}
-      >
-        <Pressable onPress={handlePaid}>
-          <Text
-            style={{
-              color: "#fff",
-              fontFamily: "Gudea-Bold",
-              fontWeight: "600",
-              paddingHorizontal: 20,
-              paddingVertical: 30,
-              fontSize: 16,
-            }}
-          >
-            Paid
-          </Text>
-        </Pressable>
-      </Animated.View>
-    </Animated.View>
-  );
 };
 
 const profileAvatar = () => {
@@ -229,6 +159,29 @@ const Mainscreen = () => {
     }
   };
 
+
+  const RightSwipeActions = ({ progress, dragX }) => {
+    const translateX = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [0, 100],
+      extrapolate: "clamp",
+    });
+  
+    return (
+      <Animated.View
+        style={[styles.actionsContainer, { transform: [{ translateX }] }]}
+      >
+        <RectButton style={styles.paidButton} onPress={handlePaid}>
+          <Text style={styles.actionText}>Paid</Text>
+        </RectButton>
+        <RectButton style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.actionText}>Delete</Text>
+        </RectButton>
+      </Animated.View>
+    );
+  };
+  
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headerTop}>
@@ -248,8 +201,8 @@ const Mainscreen = () => {
         {tableData.map((item, index) => (
           <Swipeable
             key={index}
-            renderRightActions={(progress) => (
-              <RightSwipeActions progress={progress} />
+            renderRightActions={(progress, dragX) => (
+              <RightSwipeActions progress={progress} dragX={dragX} />
             )}
             onSwipeableOpen={handleSwipeableOpen}
           >
@@ -301,7 +254,7 @@ const useStyle = (headerZIndex) => {
   return StyleSheet.create({
     mainContainer: {
       flex: 1,
-      backgroundColor: "#F5F5F5",
+      backgroundColor: "#FFF",
     },
     headerTop: {
       flexDirection: "row",
@@ -360,6 +313,7 @@ const useStyle = (headerZIndex) => {
       marginTop: 2,
       marginBottom: 8,
       position: "relative",
+      backgroundColor: "white",
       zIndex: 2, // Higher zIndex to ensure it comes in front
     },
     receiptCardHeader: {
@@ -418,6 +372,35 @@ const useStyle = (headerZIndex) => {
     friendIcons: {
       flexDirection: "row",
       marginTop: 1,
+    },
+    actionsContainer: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      alignItems: "center",
+      height: 80,
+      marginTop: 15,
+      borderRadius: 5,
+    },
+    paidButton: {
+      backgroundColor: "#00BEE5",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 80,
+      height: '100%', 
+      borderRadius: 5,
+      marginLeft: -12
+    },
+    deleteButton: {
+      backgroundColor: "#EA4C4C",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 80,
+      height: '100%',
+      borderRadius: 5,
+    },
+    actionText: {
+      color: "#FFF",
+      fontWeight: "bold",
     },
   });
 };
