@@ -6,8 +6,9 @@ import {
   Modal,
   TouchableOpacity,
   Image,
+  Text,
 } from "react-native";
-import { Avatar, Button, ListItem, Icon, Card } from "@rneui/themed";
+import { Avatar, Button, Icon, Card } from "@rneui/themed";
 import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 
@@ -20,9 +21,8 @@ const Profile = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [updatePhotoURL, setUpdatePhotoUrl] = useState("");
-  const [userName, setUserName] = useState('')
+  const [userName, setUserName] = useState("");
   const isNotUpdate = "";
-
 
   const defaultAvatarUrl = "https://robohash.org/example1000.png";
 
@@ -60,10 +60,20 @@ const Profile = () => {
 
   useEffect(() => {
     if (localUserData) {
-      setUserName(localUserData.name || 'No Name');
+      setUserName(localUserData.name || "No Name");
     }
   }, [localUserData]);
-  
+
+  const CustomListItem = ({ icon, title, onPress }) => (
+    <TouchableOpacity style={styles.listItem} onPress={onPress}>
+      <View style={styles.iconContainer}>
+        <Icon name={icon} />
+      </View>
+      <View style={styles.listItemContent}>
+        <Text style={styles.listItemTitle}>{title}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -85,66 +95,37 @@ const Profile = () => {
             title="Edit Photo"
             onPress={() => setIsModalVisible(true)}
           />
-          <ListItem.Title style={styles.profileName}>{userName}</ListItem.Title>
-          <ListItem.Subtitle style={styles.profileUsername}>
+          <Text style={styles.profileName}>{userName}</Text>
+          <Text style={styles.profileUsername}>
             {authUser?.email || "No Email"}
-          </ListItem.Subtitle>
+          </Text>
         </View>
       </Card>
 
       <View style={styles.infoContainer}>
         <Link href="/userDetails" asChild>
-          <ListItem bottomDivider>
-            <Icon name="account-circle" />
-            <ListItem.Content>
-              <ListItem.Title>User Details</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
+          <CustomListItem icon="account-circle" title="User Details" />
         </Link>
         <Link href="/billing-details" asChild>
-          <ListItem bottomDivider>
-            <Icon name="credit-card" />
-            <ListItem.Content>
-              <ListItem.Title>Billing Details</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
+          <CustomListItem icon="credit-card" title="Billing Details" />
         </Link>
         <Link href="/password" asChild>
-          <ListItem bottomDivider>
-            <Icon name="lock" />
-            <ListItem.Content>
-              <ListItem.Title>Change Password</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
+          <CustomListItem icon="lock" title="Change Password" />
         </Link>
         <Link href="/friendList" asChild>
-          <ListItem bottomDivider>
-            <Icon name="group" />
-            <ListItem.Content>
-              <ListItem.Title>Friends List</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
+          <CustomListItem icon="group" title="Friends List" />
         </Link>
         <Link href="/coupon" asChild>
-          <ListItem bottomDivider>
-            <Icon name="tag" />
-            <ListItem.Content>
-              <ListItem.Title>Coupon</ListItem.Title>
-            </ListItem.Content>
+          <CustomListItem icon="tag" title="Coupon">
             <Button
               title="Apply"
               type="outline"
               buttonStyle={styles.couponButton}
             />
-          </ListItem>
+          </CustomListItem>
         </Link>
       </View>
 
-      <Button
-        title="Add Friend"
-        buttonStyle={styles.addFriendButton}
-        onPress={() => {}}
-      />
       <Button
         title="Logout"
         buttonStyle={styles.logoutButton}
@@ -257,6 +238,22 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     margin: 10,
+  },
+  listItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  iconContainer: {
+    marginRight: 16,
+  },
+  listItemContent: {
+    flex: 1,
+  },
+  listItemTitle: {
+    fontSize: 16,
   },
 });
 

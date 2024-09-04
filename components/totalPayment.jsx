@@ -298,6 +298,7 @@ const TotalPaymentModal = ({
                         }
                         style={styles.rectangleInput}
                         selectTextOnFocus={true}
+                        keyboardType="number-pad"
                       />
                     </View>
                     <View style={styles.itemsParent}>
@@ -309,6 +310,7 @@ const TotalPaymentModal = ({
                         }
                         style={styles.rectangleInput}
                         selectTextOnFocus={true}
+                        keyboardType="number-pad"
                       />
                     </View>
                     <View style={styles.itemsParent}>
