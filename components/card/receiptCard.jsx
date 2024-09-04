@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -25,20 +25,20 @@ const ReceiptCard = () => {
 
   const swipeableRefs = useRef({});
 
-  const combinedFriends = React.useMemo(() => {
+  const combinedFriends = useMemo(() => {
     return Array.from(
       new Set(receipts.flatMap((item) => Object.values(item.friends || {})))
     );
   }, [receipts]);
 
-  const formattedReceipts = React.useMemo(() => {
+  const formattedReceipts = useMemo(() => {
     return receipts.map((item) => ({
       ...item,
       title: item.items,
     }));
   }, [receipts]);
 
-  const totals = React.useMemo(() => {
+  const totals = useMemo(() => {
     return formattedReceipts.reduce(
       (acc, item) => {
         acc.totalPrice += parseFloat(item.price || 0);

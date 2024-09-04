@@ -150,7 +150,6 @@ const TotalPaymentModal = ({
   const scrollViewRef = useRef(null);
   const windowWidth = useWindowDimensions().width;
 
-  // console.log("Initial: ", initialPages);
   useEffect(() => {
     if (modalVisible && initialPages.length > 0) {
       setPages(initialPages);
@@ -160,10 +159,11 @@ const TotalPaymentModal = ({
 
     if (modalVisible) {
       setTimeout(() => {
-        scrollViewRef.current.scrollToEnd({ animated: true });
+        const scrollOffset = selectedItemIndex * windowWidth;
+        scrollViewRef.current.scrollTo({ x: scrollOffset, animated: true });
       }, 100);
     }
-  }, [modalVisible, initialPages]);
+  }, [modalVisible, selectedItemIndex]);
 
   const addNewPage = () => {
     if (pages.length < 99) {
@@ -175,16 +175,8 @@ const TotalPaymentModal = ({
       });
 
       setTimeout(() => {
-        if (selectedItemIndex !== null && selectedItemIndex !== undefined) {
-          scrollViewRef.current.scrollTo({
-            x: selectedItemIndex * windowWidth,
-            animated: true,
-          });
-          setCurrentPage(selectedItemIndex + 1);
-        } else {
-          scrollViewRef.current.scrollToEnd({ animated: true });
-          setCurrentPage(pages.length + 1);
-        }
+        scrollViewRef.current.scrollToEnd({ animated: true });
+        setCurrentPage(pages.length + 1);
       }, 100);
     }
   };
@@ -212,7 +204,6 @@ const TotalPaymentModal = ({
       addPage(page);
     });
 
-    // console.log("OUT");
     setPages([{}]);
     setCurrentPage(1);
     hideModal();
@@ -344,9 +335,6 @@ const TotalPaymentModal = ({
                   onPress={addNewPage}
                   disabled={pages.length >= 99}
                 />
-                <Text style={styles.paginationText}>
-                  {currentPage}/{pages.length}
-                </Text>
               </View>
             </View>
           </View>
