@@ -349,7 +349,7 @@ export const useAuthStore = create((set, get) => ({
           friends: friends,
           [title]: updatedReceiptsArray,
         };
-
+        batch.set(receiptRef, newReceiptData, { merge: false }); // Use merge to update existing document
         batch.update(receiptRef, newReceiptData);
 
         const updatedSharedReceipts = {
