@@ -29,7 +29,12 @@ const TotalPayment = ({ title, setTitle }) => {
   const modalVisible = useAuthStore((state) => state.modalVisible);
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
+  const setSelectedItemIndex = useAuthStore(
+    (state) => state.setSelectedItemIndex
+  );
   const selectedFriends = useAuthStore((state) => state.selectedFriends);
+  const setSelectedFriends = useAuthStore((state) => state.setSelectedFriends);
+
   const { previousScreen, uniqued } = useLocalSearchParams();
 
   const {
@@ -92,16 +97,19 @@ const TotalPayment = ({ title, setTitle }) => {
     if (selectedFriends && Object.keys(selectedFriends).length > 0) {
       Object.entries(selectedFriends).forEach(([id, friend]) => {
         const receiptIndex = parseInt(friend.index, 10);
-        console.log("Received selected friends:", receiptIndex);
 
-        // Update the corresponding receipt in tempPagesRef.current
         if (tempPagesRef.current[receiptIndex]) {
+          const updatedFriends = Object.entries(selectedFriends).reduce(
+            (acc, [friendId, friendData]) => {
+              acc[friendId] = friendData.name;
+              return acc;
+            },
+            {}
+          );
+
           tempPagesRef.current[receiptIndex] = {
             ...tempPagesRef.current[receiptIndex],
-            friends: {
-              ...tempPagesRef.current[receiptIndex].friends,
-              [id]: friend.name,
-            },
+            friends: updatedFriends,
           };
         }
       });
@@ -129,6 +137,8 @@ const TotalPayment = ({ title, setTitle }) => {
         selectedItemIndex={selectedItemIndex}
         selectedFriends={selectedFriends}
         setTempPagesRef={(newPages) => (tempPagesRef.current = newPages)}
+        setSelectedItemIndex={setSelectedItemIndex}
+        setSelectedFriends={setSelectedFriends}
       />
     </View>
   );
@@ -141,8 +151,10 @@ const TotalPaymentModal = ({
   initialPages,
   clearReceipts,
   selectedItemIndex,
-  selectedFriends,
+  setSelectedItemIndex,
   setTempPagesRef,
+  selectedFriends,
+  setSelectedFriends,
 }) => {
   const styles = useStyle();
   const [pages, setPages] = useState([{}]);
@@ -159,11 +171,20 @@ const TotalPaymentModal = ({
 
     if (modalVisible) {
       setTimeout(() => {
-        const scrollOffset = selectedItemIndex * windowWidth;
-        scrollViewRef.current.scrollTo({ x: scrollOffset, animated: true });
+        if (selectedItemIndex !== null) {
+          // Scroll to the specific index if selectedItemIndex is a valid number
+          const scrollOffset = selectedItemIndex * windowWidth;
+          scrollViewRef.current.scrollTo({ x: scrollOffset, animated: true });
+          console.log("Scrolling to index:", selectedItemIndex);
+        } else {
+          // Default behavior: scroll to the end
+          scrollViewRef.current.scrollToEnd({ animated: true });
+          console.log("Scrolling to 11111:", selectedItemIndex);
+        }
       }, 100);
     }
-  }, [modalVisible, selectedItemIndex]);
+    setSelectedItemIndex(null);
+  }, [modalVisible]);
 
   const addNewPage = () => {
     if (pages.length < 99) {
@@ -221,6 +242,11 @@ const TotalPaymentModal = ({
     },
     [setTempPagesRef]
   );
+
+  const friendsListSelected = (friends) => {
+    setSelectedFriends(friends);
+    hideModal();
+  };
 
   const isButtonDisabled = useCallback(() => {
     return pages.some(
@@ -315,7 +341,7 @@ const TotalPaymentModal = ({
                           },
                         }}
                         style={styles.friendsButton}
-                        onPress={() => hideModal()}
+                        onPress={() => friendsListSelected(page.friends)}
                       >
                         <Text style={styles.friendsButtonText}>Friends</Text>
                       </Link>

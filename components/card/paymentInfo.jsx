@@ -30,7 +30,7 @@ const PaymentInfo = () => {
 
       setPayment(totalPayment);
     }
-  }, [localUserData, receipts]);
+  }, [receipts]);
 
   let cardStyle = styles.smallCard;
   if (payment.toFixed(2) > 1000) {
@@ -60,16 +60,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   smallCard: {
-    width: 150,
+    width: 170,
     height: 80,
   },
   mediumCard: {
     width: 200,
-    height: 100,
+    height: 80,
   },
   largeCard: {
     width: 250,
-    height: 100,
+    height: 80,
   },
   font: {
     justifyContent: "center",

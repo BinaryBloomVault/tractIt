@@ -166,14 +166,13 @@ const Mainscreen = () => {
     }
   };
 
-
-  const RightSwipeActions = ({ progress, dragX, item }) => {
+  const RightSwipeActions = ({ progress, dragX }) => {
     const translateX = dragX.interpolate({
       inputRange: [-100, 0],
       outputRange: [0, 100],
       extrapolate: "clamp",
     });
-  
+
     return (
       <Animated.View
         style={[styles.actionsContainer, { transform: [{ translateX }] }]}
@@ -187,7 +186,6 @@ const Mainscreen = () => {
       </Animated.View>
     );
   };
-  
 
   return (
     <View style={styles.mainContainer}>
@@ -394,16 +392,16 @@ const useStyle = (headerZIndex) => {
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: '100%', 
+      height: "100%",
       borderRadius: 5,
-      marginLeft: -12
+      marginLeft: -12,
     },
     deleteButton: {
       backgroundColor: "#EA4C4C",
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: '100%',
+      height: "100%",
       borderRadius: 5,
     },
     actionText: {

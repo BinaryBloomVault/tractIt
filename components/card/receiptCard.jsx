@@ -64,7 +64,7 @@ const ReceiptCard = () => {
       return !isMatch;
     });
     console.log("Deleted item:", updatedReceipts);
-    updateReceiptById(uniqued, updatedReceipts);
+    updateReceiptById(updatedReceipts);
   };
 
   useEffect(() => {
