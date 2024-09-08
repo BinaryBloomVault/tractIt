@@ -18,6 +18,7 @@ import {
   addDoc,
   updateDoc,
   writeBatch,
+  deleteDoc,
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
 import { disableNetwork, enableNetwork } from "firebase/firestore";
@@ -78,6 +79,35 @@ export const useAuthStore = create((set, get) => ({
 
       return { receipts: updatedReceipts };
     });
+  },
+
+
+  deleteReceiptsWithShared: async (receiptId) => {
+    try {
+      const { sharedReceipts, localUserData } = get();
+      console.log("[DEBUG] get receiptId: ", receiptId)
+
+      const updatedSharedReceipts = { ...sharedReceipts };
+      delete updatedSharedReceipts[receiptId];
+  
+      const updatedUserData = { ...localUserData, sharedReceipts: updatedSharedReceipts };
+  
+      set((state) => ({
+        sharedReceipts: updatedSharedReceipts,
+        localUserData: updatedUserData,
+      }));
+  
+      const userRef = doc(firestore, "users", localUserData.uid);
+      await setDoc(userRef, updatedUserData, { merge: true }); // Use 
+
+      const userRefs = doc(firestore, "users", localUserData.uid);
+      const receiptRef = doc(userRefs, "sharedReceipts", receiptId);
+      await deleteDoc(receiptRef);
+      console.log('[DEBUG] Success removed!')
+
+    } catch (error) {
+      console.error("Error deleting receipt:", error);
+    }
   },
 
   updateReceiptsWithShared: (receiptId) => {
@@ -297,11 +327,11 @@ export const useAuthStore = create((set, get) => ({
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) return;
-
+  
       const userData = JSON.parse(userDataString);
       const userUid = userData.uid;
       const friends = {};
-
+  
       // Initialize batch operation
       const batch = writeBatch(firestore);
       const receiptRef = doc(
@@ -312,15 +342,15 @@ export const useAuthStore = create((set, get) => ({
         uniqued
       );
       const receiptDoc = await getDoc(receiptRef);
-
+  
       if (receiptDoc.exists()) {
         const existingReceiptData = receiptDoc.data();
         const existingFriends = existingReceiptData.friends || {};
-
+  
         updatedReceiptsArray.forEach((updatedReceipt) => {
           const numFriends = Object.keys(updatedReceipt.friends).length;
           const individualPayment = updatedReceipt.price / numFriends;
-
+  
           Object.keys(updatedReceipt.friends).forEach((friendId) => {
             if (friends[friendId]) {
               friends[friendId].payment += individualPayment;
@@ -334,7 +364,7 @@ export const useAuthStore = create((set, get) => ({
             }
           });
         });
-
+  
         if (!friends[userUid]) {
           friends[userUid] = {
             name: userData.name,
@@ -343,7 +373,7 @@ export const useAuthStore = create((set, get) => ({
             originator: true,
           };
         }
-
+  
         console.log("title", title);
         const newReceiptData = {
           friends: friends,
@@ -351,7 +381,7 @@ export const useAuthStore = create((set, get) => ({
         };
         batch.set(receiptRef, newReceiptData, { merge: false }); // Use merge to update existing document
         batch.update(receiptRef, newReceiptData);
-
+  
         const updatedSharedReceipts = {
           ...userData.sharedReceipts,
           [uniqued]: newReceiptData,
@@ -360,16 +390,16 @@ export const useAuthStore = create((set, get) => ({
           ...userData,
           sharedReceipts: updatedSharedReceipts,
         };
-
+  
         mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-
+  
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
-          receipts: [],
+          receipts: [], // Assuming you don't need to update local receipts here
           sharedReceipts: updatedSharedReceipts,
         });
-
+  
         // Prepare friend updates
         const friendUpdates = Object.keys(friends).map(async (friendId) => {
           if (friendId !== userUid) {
@@ -383,9 +413,9 @@ export const useAuthStore = create((set, get) => ({
             batch.set(friendReceiptRef, newReceiptData);
           }
         });
-
+  
         await Promise.all(friendUpdates);
-
+  
         await batch.commit();
       } else {
         throw new Error("Receipt not found");
@@ -702,6 +732,8 @@ export const useAuthStore = create((set, get) => ({
       }
     }
   },
+
+
 
   deleteNotification: async (notificationId) => {
     const userDataString = mmkvStorage.getItem("user_data");
