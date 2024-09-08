@@ -39,12 +39,20 @@ const FriendList = () => {
   const addGroup = useAuthStore((state) => state.addGroup);
   const loadGroups = useAuthStore((state) => state.loadGroups);
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
-  const { groups } = useAuthStore((state) => ({
+  const {
+    groups,
+    selectedFriends: zustandSelectedFriends,
+    setSelectedFriends: setZustandSelectedFriends,
+  } = useAuthStore((state) => ({
+    selectedFriends: state.selectedFriends,
+    setSelectedFriends: state.setSelectedFriends,
     groups: state.groups,
   }));
+
   const setSelectedItemIndex = useAuthStore(
     (state) => state.setSelectedItemIndex
   );
+
   const { previousScreen, index } = useLocalSearchParams();
 
   const loadFriendRequests = useCallback(
@@ -111,6 +119,23 @@ const FriendList = () => {
   );
 
   useEffect(() => {
+    const formattedSelectedFriends = Object.entries(
+      zustandSelectedFriends
+    ).reduce((acc, [id, friendData]) => {
+      if (typeof friendData === "string") {
+        acc[id] = {
+          confirmed: true,
+          id: id,
+          index: index,
+          name: friendData,
+        };
+      } else {
+        acc[id] = friendData;
+      }
+      return acc;
+    }, {});
+
+    setSelectedFriends(formattedSelectedFriends);
     loadFriendRequests();
     loadGroups();
   }, [loadFriendRequests, loadGroups]);
@@ -132,7 +157,7 @@ const FriendList = () => {
       if (Object.keys(updatedSelectedFriends).length === 0) {
         setSelectedGroup(null);
       }
-
+      console.log("updatedSelectedFriends", updatedSelectedFriends);
       return updatedSelectedFriends;
     });
   };
@@ -244,6 +269,7 @@ const FriendList = () => {
 
   const onPressLeft = () => {
     if (previousScreen === "writeReceipt") {
+      setSelectedItemIndex(index);
       setModalVisible(true);
       router.back();
     } else {

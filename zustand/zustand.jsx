@@ -302,6 +302,10 @@ export const useAuthStore = create((set, get) => ({
       const userUid = userData.uid;
       const friends = {};
 
+      if (!Array.isArray(updatedReceiptsArray)) {
+        throw new Error("updatedReceiptsArray is not an array");
+      }
+
       // Initialize batch operation
       const batch = writeBatch(firestore);
       const receiptRef = doc(
@@ -318,10 +322,10 @@ export const useAuthStore = create((set, get) => ({
         const existingFriends = existingReceiptData.friends || {};
 
         updatedReceiptsArray.forEach((updatedReceipt) => {
-          const numFriends = Object.keys(updatedReceipt.friends).length;
+          const numFriends = Object.keys(updatedReceipt.friends || {}).length;
           const individualPayment = updatedReceipt.price / numFriends;
 
-          Object.keys(updatedReceipt.friends).forEach((friendId) => {
+          Object.keys(updatedReceipt.friends || {}).forEach((friendId) => {
             if (friends[friendId]) {
               friends[friendId].payment += individualPayment;
             } else {
@@ -344,7 +348,6 @@ export const useAuthStore = create((set, get) => ({
           };
         }
 
-        console.log("title", title);
         const newReceiptData = {
           friends: friends,
           [title]: updatedReceiptsArray,
@@ -385,7 +388,6 @@ export const useAuthStore = create((set, get) => ({
         });
 
         await Promise.all(friendUpdates);
-
         await batch.commit();
       } else {
         throw new Error("Receipt not found");
