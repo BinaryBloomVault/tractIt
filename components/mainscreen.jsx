@@ -205,8 +205,19 @@ const Mainscreen = () => {
           <Text style={styles.totalAmount}>{totalPayment}</Text>
           <Text style={styles.textRecords}>Receipts Records</Text>
         </View>
-        {headerZIndex === 1 && profileAvatar()}
       </View>
+
+      <Link href="/profile" asChild>
+        <TouchableOpacity
+          style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
+        >
+          <Avatar
+            size={50}
+            rounded
+            source={{ uri: "https://via.placeholder.com/150" }}
+          />
+        </TouchableOpacity>
+      </Link>
 
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
@@ -259,9 +270,6 @@ const Mainscreen = () => {
             </Card>
           </Swipeable>
         ))}
-
-        {/* Avatar overlay that appears when scrolling */}
-        {headerZIndex === 0 && profileAvatar()}
       </ScrollView>
     </View>
   );

@@ -10,6 +10,9 @@ const AddButton = () => {
     setTitle: state.setTitle,
   }));
 
+
+  const [isFocus, setFocus] = useState(false)
+
   return (
     <View style={styles.mainactivity}>
       <View style={styles.header}>
@@ -17,11 +20,15 @@ const AddButton = () => {
           style={styles.titleInput}
           placeholder="Enter Title"
           value={title}
-          onChangeText={setTitle}
+          onChangeText={(text) => setTitle(text)}
+          onFocus={() => setFocus(true)}
+          onBlur={() => {
+            setFocus(false);
+          }}
         />
       </View>
       <Receipt />
-      <TotalCard title={title} setTitle={setTitle} />
+      <TotalCard title={title} setTitle={setTitle} isFocused={isFocus} />
     </View>
   );
 };
