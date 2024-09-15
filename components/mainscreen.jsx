@@ -14,7 +14,7 @@ import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { RectButton } from "react-native-gesture-handler";
-import { Link, useRouter } from "expo-router";
+import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 
 const handleSwipeableOpen = (direction, items) => {
@@ -26,7 +26,6 @@ const handleSwipeableOpen = (direction, items) => {
 const handlePaid = () => {
   Alert.alert("Button paid press");
 };
-
 
 const profileAvatar = () => {
   return (
@@ -53,17 +52,26 @@ const Mainscreen = () => {
   const { localUserData } = useAuthStore((state) => ({
     localUserData: state.localUserData,
   }));
-  const { sharedReceipts } = useAuthStore((state) => ({
-    sharedReceipts: state.sharedReceipts,
-  }));
-  const { updateReceiptsWithShared, updateTitle } = useAuthStore();
-  const { receipts } = useAuthStore((state) => ({
-    receipts: state.receipts,
-  }));
 
+  const { updateReceiptsWithShared, updateTitle } = useAuthStore();
   const { deleteReceiptsWithShared } = useAuthStore();
 
   const router = useRouter();
+  const { receiptId } = useGlobalSearchParams();
+
+  useEffect(() => {
+    fetchData();
+
+    console.log("receiptId", receiptId);
+    if (receiptId) {
+      const matchingItem = tableData.find(
+        (item) => item.receiptId === receiptId
+      );
+      if (matchingItem) {
+        handleCardPress(matchingItem);
+      }
+    }
+  }, [receiptId]);
 
   const fetchData = () => {
     if (localUserData && localUserData.sharedReceipts) {
@@ -150,11 +158,10 @@ const Mainscreen = () => {
 
   //please help to delete this to my firestore
   const handleDelete = (item) => {
-    console.log("[DEBUG] Button delete press ",item);
-     if (item.receiptId) {
-       deleteReceiptsWithShared(item.receiptId);
-     }
-  }
+    if (item.receiptId) {
+      deleteReceiptsWithShared(item.receiptId);
+    }
+  };
 
   // New handleScroll function to manage zIndex
   const handleScroll = (event) => {
@@ -180,7 +187,10 @@ const Mainscreen = () => {
         <RectButton style={styles.paidButton} onPress={handlePaid}>
           <Text style={styles.actionText}>Paid</Text>
         </RectButton>
-        <RectButton style={styles.deleteButton} onPress={() => handleDelete(item)}>
+        <RectButton
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item)}
+        >
           <Text style={styles.actionText}>Delete</Text>
         </RectButton>
       </Animated.View>
@@ -207,10 +217,13 @@ const Mainscreen = () => {
           <Swipeable
             key={index}
             renderRightActions={(progress, dragX) => (
-              <RightSwipeActions progress={progress} dragX={dragX}  item={item}/>
+              <RightSwipeActions
+                progress={progress}
+                dragX={dragX}
+                item={item}
+              />
             )}
             onSwipeableOpen={handleSwipeableOpen(item)}
-            
           >
             <Card containerStyle={styles.receiptCard}>
               <Link

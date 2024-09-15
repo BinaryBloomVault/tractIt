@@ -11,8 +11,7 @@ import {
 import { Card } from "@rneui/themed";
 import ItemRow from "./itemRow";
 import { useAuthStore } from "../../zustand/zustand";
-import Swipeable from "react-native-gesture-handler/Swipeable";
-import { RectButton } from "react-native-gesture-handler";
+import { Swipeable, RectButton } from "react-native-gesture-handler";
 import { useLocalSearchParams } from "expo-router";
 
 const ReceiptCard = () => {
@@ -24,6 +23,7 @@ const ReceiptCard = () => {
   const { uniqued } = useLocalSearchParams();
 
   const swipeableRefs = useRef({});
+  const swipeableRow = useRef(null);
 
   const combinedFriends = useMemo(() => {
     return Array.from(
@@ -75,10 +75,18 @@ const ReceiptCard = () => {
     });
   }, [receipts]);
 
-  const renderRightActions = (progress, dragX, item, index) => {
-    const translateX = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100],
+  const handleSwipeableOpen = (ref) => {
+    if (swipeableRow.current && swipeableRow.current !== ref) {
+      swipeableRow.current.close();
+    }
+    swipeableRow.current = ref;
+  };
+
+  const renderRightActions = (progress, dragX, item) => {
+    const width = 80;
+    const translateX = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [width, 0],
       extrapolate: "clamp",
     });
 
@@ -122,10 +130,19 @@ const ReceiptCard = () => {
             <Swipeable
               ref={(ref) => {
                 swipeableRefs.current[index] = ref;
+                if (ref) {
+                  handleSwipeableOpen(ref);
+                }
               }}
-              renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, item, index)
+              onSwipeableWillOpen={() =>
+                handleSwipeableOpen(swipeableRefs.current[index])
               }
+              renderRightActions={(progress, dragX) =>
+                renderRightActions(progress, dragX, item)
+              }
+              friction={2}
+              rightThreshold={40}
+              overshootRight={false}
             >
               <TouchableOpacity
                 style={styles.middle}
@@ -207,12 +224,12 @@ const useStyle = () => {
     deleteButton: {
       justifyContent: "center",
       alignItems: "center",
-      width: 100,
-      height: "100%",
+      width: 80,
     },
     deleteButtonText: {
       color: "white",
       fontWeight: "bold",
+      fontSize: 16,
     },
   });
   return styles;
