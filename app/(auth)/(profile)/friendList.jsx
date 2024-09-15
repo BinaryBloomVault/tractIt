@@ -9,8 +9,10 @@ import {
   Modal,
   TouchableWithoutFeedback,
   TextInput,
+  Animated,
+  FlatList,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import AddButton from "../../../components/button/addButton";
 import { Card, Avatar } from "@rneui/themed";
 import TabButton from "../../../components/button/tabRoundButton";
@@ -20,6 +22,8 @@ import { getDoc, doc } from "firebase/firestore";
 import { firestore } from "../../../config/firebaseConfig";
 import { AntDesign } from "@expo/vector-icons";
 import { mmkvStorage } from "../../../zustand/zustand";
+import { RectButton } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 
 const FriendList = () => {
   const [confirmedFriends, setConfirmedFriends] = useState([]);
@@ -30,11 +34,16 @@ const FriendList = () => {
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [titleModalVisible, setTitleModalVisible] = useState(false);
   const [groupTitle, setGroupTitle] = useState("");
+  const [editGroupModalVisible, setEditGroupModalVisible] = useState(false);
+  const [currentGroupToEdit, setCurrentGroupToEdit] = useState(null);
+  const [editGroupMembers, setEditGroupMembers] = useState({});
+
   const { height: deviceHeight } = useWindowDimensions();
 
   const styles = useStyle();
   const router = useRouter();
 
+  const saveEditedGroup = useAuthStore((state) => state.saveEditedGroup);
   const loadUserData = useAuthStore((state) => state.loadUserData);
   const addGroup = useAuthStore((state) => state.addGroup);
   const loadGroups = useAuthStore((state) => state.loadGroups);
@@ -48,12 +57,47 @@ const FriendList = () => {
     setSelectedFriends: state.setSelectedFriends,
     groups: state.groups,
   }));
+  const deleteFriend = useAuthStore((state) => state.deleteFriend);
+  const deleteGroup = useAuthStore((state) => state.deleteGroup);
 
   const setSelectedItemIndex = useAuthStore(
     (state) => state.setSelectedItemIndex
   );
 
   const { previousScreen, index } = useLocalSearchParams();
+  const swipeableRow = useRef(null);
+
+  // Function to open edit modal
+  const openEditGroupModal = (group) => {
+    // Pre-select current group members
+    const initialMembers = {};
+    group.members.forEach((member) => {
+      initialMembers[member.id] = member;
+    });
+    setEditGroupMembers(initialMembers);
+    setCurrentGroupToEdit(group);
+    setEditGroupModalVisible(true);
+  };
+
+  // Function to close edit modal
+  const closeEditGroupModal = () => {
+    setEditGroupModalVisible(false);
+    setCurrentGroupToEdit(null);
+    setEditGroupMembers({});
+  };
+
+  // Function to toggle friend selection in edit modal
+  const toggleEditGroupMember = (friend) => {
+    setEditGroupMembers((prevMembers) => {
+      const updatedMembers = { ...prevMembers };
+      if (updatedMembers[friend.id]) {
+        delete updatedMembers[friend.id];
+      } else {
+        updatedMembers[friend.id] = friend;
+      }
+      return updatedMembers;
+    });
+  };
 
   const loadFriendRequests = useCallback(
     async (fromFirebase = false) => {
@@ -118,9 +162,44 @@ const FriendList = () => {
     [loadUserData]
   );
 
+  const onDelete = (friend) => {
+    // Remove from confirmedFriends state
+    setConfirmedFriends((prevConfirmedFriends) =>
+      prevConfirmedFriends.filter((f) => f.id !== friend.id)
+    );
+
+    // Call deleteFriend action from Zustand store
+    deleteFriend(friend.id);
+  };
+
+  const onDeleteGroup = async (group) => {
+    try {
+      await deleteGroup(group.id);
+    } catch (error) {
+      console.error("Error deleting group:", error);
+    }
+  };
+
+  const renderRightActions = (progress, dragX, item) => {
+    const width = 80; // Width of the delete button
+    const translateX = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [width, 0],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View style={{ width, transform: [{ translateX }] }}>
+        <RectButton style={styles.deleteButton} onPress={() => onDelete(item)}>
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </RectButton>
+      </Animated.View>
+    );
+  };
+
   useEffect(() => {
     const formattedSelectedFriends = Object.entries(
-      zustandSelectedFriends
+      zustandSelectedFriends || {}
     ).reduce((acc, [id, friendData]) => {
       if (typeof friendData === "string") {
         acc[id] = {
@@ -197,27 +276,80 @@ const FriendList = () => {
     setSelectedModalFriends({});
     setSelectedGroup(null);
   };
+  const renderGroupRightActions = (progress, dragX, group) => {
+    const width = 80; // Width of the delete button
+    const translateX = progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [width, 0],
+      extrapolate: "clamp",
+    });
 
-  const renderFriendItem = (friend) => (
-    <TouchableOpacity
-      key={friend.id}
-      style={styles.friendItem}
-      onPress={() => toggleCheck(friend)}
-    >
-      <Avatar
-        source={{ uri: "https://via.placeholder.com/50" }}
-        rounded
-        size="medium"
-      />
-      <Text style={styles.friendName}>{friend.name}</Text>
-      <AntDesign
-        name="checkcircle"
-        size={24}
-        color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
-        style={styles.checkIcon}
-      />
-    </TouchableOpacity>
-  );
+    return (
+      <Animated.View style={{ width, transform: [{ translateX }] }}>
+        <RectButton
+          style={styles.deleteButton}
+          onPress={() => onDeleteGroup(group)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </RectButton>
+      </Animated.View>
+    );
+  };
+
+  const FriendItem = ({ friend, index }) => {
+    const isSwipeEnabled = previousScreen !== "writeReceipt" && index !== 0;
+    const swipeableRef = useRef(null);
+
+    const closeSwipeable = () => {
+      if (
+        swipeableRow.current &&
+        swipeableRow.current !== swipeableRef.current
+      ) {
+        swipeableRow.current.close();
+      }
+      swipeableRow.current = swipeableRef.current;
+    };
+
+    const FriendItemContent = (
+      <TouchableOpacity
+        style={styles.friendItem}
+        onPress={() => toggleCheck(friend)}
+      >
+        <Avatar
+          source={{ uri: "https://via.placeholder.com/50" }}
+          rounded
+          size="medium"
+        />
+        <Text style={styles.friendName}>{friend.name}</Text>
+        <AntDesign
+          name="checkcircle"
+          size={24}
+          color={selectedFriends[friend.id] ? "#00BEE5" : "transparent"}
+          style={styles.checkIcon}
+        />
+      </TouchableOpacity>
+    );
+
+    if (isSwipeEnabled) {
+      return (
+        <Swipeable
+          key={friend.id}
+          ref={swipeableRef}
+          onSwipeableWillOpen={closeSwipeable}
+          renderRightActions={(progress, dragX) =>
+            renderRightActions(progress, dragX, friend)
+          }
+          friction={2}
+          rightThreshold={40}
+          overshootRight={false}
+        >
+          {FriendItemContent}
+        </Swipeable>
+      );
+    } else {
+      return <View key={friend.id}>{FriendItemContent}</View>;
+    }
+  };
 
   const renderModalFriendItem = (friend) => (
     <TouchableOpacity
@@ -240,22 +372,50 @@ const FriendList = () => {
     </TouchableOpacity>
   );
 
-  const renderGroupItem = (group) => (
-    <TouchableOpacity
-      key={group.id}
-      style={styles.groupItem}
-      onPress={() => toggleGroupCheck(group)}
-    >
-      <Text style={styles.groupName}>{group.name}</Text>
-      <AntDesign
-        name="checkcircle"
-        size={24}
-        color={selectedGroup?.id === group.id ? "#00BEE5" : "transparent"}
-        style={styles.checkIcon}
-      />
-    </TouchableOpacity>
-  );
+  const GroupItem = ({ group, index }) => {
+    const swipeableRef = useRef(null);
 
+    const closeSwipeable = () => {
+      if (
+        swipeableRow.current &&
+        swipeableRow.current !== swipeableRef.current
+      ) {
+        swipeableRow.current.close();
+      }
+      swipeableRow.current = swipeableRef.current;
+    };
+
+    const GroupItemContent = (
+      <TouchableOpacity
+        style={styles.groupItem}
+        onPress={() => toggleGroupCheck(group)}
+      >
+        <Text style={styles.groupName}>{group.name}</Text>
+        <AntDesign
+          name="checkcircle"
+          size={24}
+          color={selectedGroup?.id === group.id ? "#00BEE5" : "transparent"}
+          style={styles.checkIcon}
+        />
+      </TouchableOpacity>
+    );
+
+    return (
+      <Swipeable
+        key={group.id}
+        ref={swipeableRef}
+        onSwipeableWillOpen={closeSwipeable}
+        renderRightActions={(progress, dragX) =>
+          renderGroupRightActions(progress, dragX, group)
+        }
+        friction={2}
+        rightThreshold={40}
+        overshootRight={false}
+      >
+        {GroupItemContent}
+      </Swipeable>
+    );
+  };
   const onPressRight = () => {
     if (previousScreen === "writeReceipt") {
       useAuthStore.setState({ selectedFriends });
@@ -308,7 +468,31 @@ const FriendList = () => {
     closeTitleModal();
   };
 
-  const isCreateGroupDisabled = Object.keys(selectedModalFriends).length === 0;
+  const handleSaveEditedGroup = async () => {
+    if (currentGroupToEdit) {
+      const updatedMembers = Object.values(editGroupMembers);
+
+      // Create updated group object
+      const updatedGroup = {
+        ...currentGroupToEdit,
+        members: updatedMembers,
+      };
+
+      try {
+        // Call the Zustand action
+        await saveEditedGroup(updatedGroup);
+
+        // Close modal
+        closeEditGroupModal();
+      } catch (error) {
+        console.error("Error saving edited group:", error);
+        // Handle error (e.g., show a message to the user)
+      }
+    }
+  };
+
+  const isCreateGroupDisabled =
+    Object.keys(selectedModalFriends || {}).length === 0;
 
   return (
     <ScrollView
@@ -335,7 +519,9 @@ const FriendList = () => {
         containerStyle={styles.containerCard(deviceHeight < 813 ? 230 : 280)}
       >
         <ScrollView>
-          {confirmedFriends.map((friend) => renderFriendItem(friend))}
+          {confirmedFriends.map((friend, index) => (
+            <FriendItem key={friend.id} friend={friend} index={index} />
+          ))}
         </ScrollView>
       </Card>
       <View style={styles.friendListParent(24)}>
@@ -356,7 +542,9 @@ const FriendList = () => {
           onPress={handleAddGroup}
         />
         <ScrollView style={{ marginTop: 8, marginBottom: 16 }}>
-          {groups.map((group) => renderGroupItem(group))}
+          {groups.map((group, index) => (
+            <GroupItem key={group.id} group={group} index={index} />
+          ))}
         </ScrollView>
       </Card>
 
@@ -495,11 +683,13 @@ const useStyle = () => {
       paddingBottom: 30,
     }),
     friendItem: {
+      backgroundColor: "#fff",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderColor: "#f0f0f0",
       flexDirection: "row",
       alignItems: "center",
-      padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#ddd",
     },
     friendName: {
       fontSize: 18,
@@ -581,6 +771,18 @@ const useStyle = () => {
       flex: 1,
       fontWeight: "bold",
       color: "#000",
+    },
+    deleteButton: {
+      flex: 1,
+      backgroundColor: "#FF3B30",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 80, // Set the width to match the animation
+    },
+    deleteButtonText: {
+      color: "#fff",
+      fontWeight: "600",
+      fontSize: 16,
     },
   });
   return styles;

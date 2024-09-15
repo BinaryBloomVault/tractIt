@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Avatar, Card } from "@rneui/themed";
 import { useAuthStore } from "../../../zustand/zustand";
+import { useRouter } from "expo-router";
 
 const Notification = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,12 +22,18 @@ const Notification = () => {
     (state) => state.cancelFriendRequest
   );
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
+  const router = useRouter();
 
   const handleConfirm = async () => {
     if (selectedNotification) {
       const { userId, id: notificationId } = selectedNotification;
-      await confirmFriendRequest(userId);
-      await deleteNotification(notificationId);
+
+      const success = await confirmFriendRequest(userId);
+      if (success) {
+        await deleteNotification(userId);
+      } else {
+        console.error("Failed to confirm friend request");
+      }
     }
     setModalVisible(false);
     setSelectedNotification(null);
@@ -35,20 +42,35 @@ const Notification = () => {
   const handleCancel = async () => {
     if (selectedNotification) {
       const { userId, id: notificationId } = selectedNotification;
-      await cancelFriendRequest(userId);
-      await deleteNotification(notificationId);
+
+      const success = await cancelFriendRequest(userId);
+      if (success) {
+        await deleteNotification(userId);
+      } else {
+        console.error("Failed to cancel friend request");
+      }
     }
     setModalVisible(false);
     setSelectedNotification(null);
   };
 
+  const handleNotificationPress = async (item) => {
+    if (item.message.includes("included you in a receipt")) {
+      router.push({
+        pathname: "(auth)/(tabs)/writeReceipt",
+        params: { receiptId: item.newReceiptId },
+      });
+      if (item.userId) {
+        await deleteNotification(item.userId);
+      }
+    } else {
+      setSelectedNotification(item);
+      setModalVisible(true);
+    }
+  };
+
   const renderNotificationItem = ({ item }) => (
-    <Pressable
-      onPress={() => {
-        setSelectedNotification(item);
-        setModalVisible(true);
-      }}
-    >
+    <Pressable onPress={() => handleNotificationPress(item)}>
       <Card containerStyle={styles.notificationItem}>
         <View style={styles.notificationContent}>
           <Avatar

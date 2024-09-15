@@ -67,6 +67,15 @@ export const useAuthStore = create((set, get) => ({
   getReceipts: () => {
     return get().receipts;
   },
+  loadUserData: () => {
+    const userDataString = mmkvStorage.getItem("user_data");
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      set({ localUserData: userData });
+      return userData;
+    }
+    return null;
+  },
 
   updateReceiptById: (updatedReceipts) => {
     set((state) => {
@@ -81,30 +90,31 @@ export const useAuthStore = create((set, get) => ({
     });
   },
 
-
   deleteReceiptsWithShared: async (receiptId) => {
     try {
       const { sharedReceipts, localUserData } = get();
-      console.log("[DEBUG] get receiptId: ", receiptId)
+      console.log("[DEBUG] get receiptId: ", receiptId);
 
       const updatedSharedReceipts = { ...sharedReceipts };
       delete updatedSharedReceipts[receiptId];
-  
-      const updatedUserData = { ...localUserData, sharedReceipts: updatedSharedReceipts };
-  
+
+      const updatedUserData = {
+        ...localUserData,
+        sharedReceipts: updatedSharedReceipts,
+      };
+
       set((state) => ({
         sharedReceipts: updatedSharedReceipts,
         localUserData: updatedUserData,
       }));
-  
+
       const userRef = doc(firestore, "users", localUserData.uid);
-      await setDoc(userRef, updatedUserData, { merge: true }); // Use 
+      await setDoc(userRef, updatedUserData, { merge: true });
 
       const userRefs = doc(firestore, "users", localUserData.uid);
       const receiptRef = doc(userRefs, "sharedReceipts", receiptId);
       await deleteDoc(receiptRef);
-      console.log('[DEBUG] Success removed!')
-
+      console.log("[DEBUG] Success removed!");
     } catch (error) {
       console.error("Error deleting receipt:", error);
     }
@@ -129,16 +139,6 @@ export const useAuthStore = create((set, get) => ({
 
   updateTitle: (newTitle) => {
     set({ title: newTitle });
-  },
-
-  loadUserData: () => {
-    const userDataString = mmkvStorage.getItem("user_data");
-    if (userDataString) {
-      const userData = JSON.parse(userDataString);
-      set({ localUserData: userData });
-      return userData;
-    }
-    return null;
   },
 
   login: async (email, password) => {
@@ -287,6 +287,121 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  deleteGroup: async (groupId) => {
+    try {
+      // Remove the group from Firestore
+      const { localUserData } = get();
+      const userRefs = doc(firestore, "users", localUserData.uid);
+      const receiptRef = doc(userRefs, "groups", groupId);
+      await deleteDoc(receiptRef);
+
+      // Update local state
+      set((state) => {
+        const updatedGroups = state.groups.filter(
+          (group) => group.id !== groupId
+        );
+
+        // Update local storage
+        const userDataString = mmkvStorage.getItem("user_data");
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          const updatedUserData = { ...userData, groups: updatedGroups };
+          mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+        }
+
+        return { groups: updatedGroups };
+      });
+    } catch (error) {
+      console.error("Error deleting group:", error);
+    }
+  },
+
+  deleteFriend: async (friendId) => {
+    try {
+      const { localUserData, groups } = get();
+
+      if (localUserData) {
+        const currentUserId = localUserData.uid;
+
+        const updatedFriendRequests = (
+          localUserData.friendRequest || []
+        ).filter((f) => f.id !== friendId);
+
+        const updatedGroups = groups.map((group) => {
+          const updatedMembers = group.members.filter(
+            (member) => member.id !== friendId
+          );
+          return { ...group, members: updatedMembers };
+        });
+
+        const updatedUserData = {
+          ...localUserData,
+          friendRequest: updatedFriendRequests,
+          groups: updatedGroups,
+        };
+
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+
+        set({ localUserData: updatedUserData, groups: updatedGroups });
+
+        const userRef = doc(firestore, "users", currentUserId);
+
+        await updateDoc(userRef, { friendRequests: updatedFriendRequests });
+
+        const userGroupsCollectionRef = collection(userRef, "groups");
+
+        for (const group of updatedGroups) {
+          const groupRef = doc(userGroupsCollectionRef, group.id);
+          await updateDoc(groupRef, { members: group.members });
+        }
+
+        const friendUserRef = doc(firestore, "users", friendId);
+        const friendDoc = await getDoc(friendUserRef);
+
+        if (friendDoc.exists()) {
+          const friendData = friendDoc.data();
+          const friendFriendRequests = friendData.friendRequests || [];
+
+          const updatedFriendFriendRequests = friendFriendRequests.filter(
+            (f) => f.id !== currentUserId
+          );
+
+          await updateDoc(friendUserRef, {
+            friendRequests: updatedFriendFriendRequests,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting friend:", error);
+    }
+  },
+
+  saveEditedGroup: async (updatedGroup) => {
+    try {
+      set((state) => {
+        const updatedGroups = state.groups.map((group) =>
+          group.id === updatedGroup.id ? updatedGroup : group
+        );
+
+        const userDataString = mmkvStorage.getItem("user_data");
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          const updatedUserData = { ...userData, groups: updatedGroups };
+          mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+        }
+
+        return { groups: updatedGroups };
+      });
+
+      const { localUserData } = get();
+      const userRef = doc(firestore, "users", localUserData.uid);
+      const groupRef = doc(userRef, "groups", updatedGroup.id);
+      await updateDoc(groupRef, { members: updatedGroup.members });
+    } catch (error) {
+      console.error("Error saving edited group:", error);
+    }
+  },
+
   removeReceipt: async (title, receiptId) => {
     try {
       const token = await get().authToken;
@@ -327,7 +442,6 @@ export const useAuthStore = create((set, get) => ({
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) return;
-  
       const userData = JSON.parse(userDataString);
       const userUid = userData.uid;
       const friends = {};
@@ -346,15 +460,12 @@ export const useAuthStore = create((set, get) => ({
         uniqued
       );
       const receiptDoc = await getDoc(receiptRef);
-  
       if (receiptDoc.exists()) {
         const existingReceiptData = receiptDoc.data();
         const existingFriends = existingReceiptData.friends || {};
-  
         updatedReceiptsArray.forEach((updatedReceipt) => {
           const numFriends = Object.keys(updatedReceipt.friends || {}).length;
           const individualPayment = updatedReceipt.price / numFriends;
-          
           Object.keys(updatedReceipt.friends || {}).forEach((friendId) => {
             if (friends[friendId]) {
               friends[friendId].payment += individualPayment;
@@ -368,7 +479,6 @@ export const useAuthStore = create((set, get) => ({
             }
           });
         });
-  
         if (!friends[userUid]) {
           friends[userUid] = {
             name: userData.name,
@@ -377,14 +487,13 @@ export const useAuthStore = create((set, get) => ({
             originator: true,
           };
         }
-  
         const newReceiptData = {
           friends: friends,
           [title]: updatedReceiptsArray,
         };
         batch.set(receiptRef, newReceiptData, { merge: false }); // Use merge to update existing document
         batch.update(receiptRef, newReceiptData);
-  
+
         const updatedSharedReceipts = {
           ...userData.sharedReceipts,
           [uniqued]: newReceiptData,
@@ -393,16 +502,16 @@ export const useAuthStore = create((set, get) => ({
           ...userData,
           sharedReceipts: updatedSharedReceipts,
         };
-  
+
         mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-  
+
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
           receipts: [], // Assuming you don't need to update local receipts here
           sharedReceipts: updatedSharedReceipts,
         });
-  
+
         // Prepare friend updates
         const friendUpdates = Object.keys(friends).map(async (friendId) => {
           if (friendId !== userUid) {
@@ -416,7 +525,7 @@ export const useAuthStore = create((set, get) => ({
             batch.set(friendReceiptRef, newReceiptData);
           }
         });
-  
+
         await Promise.all(friendUpdates);
         await batch.commit();
       } else {
@@ -529,6 +638,7 @@ export const useAuthStore = create((set, get) => ({
               const newNotification = {
                 message: `${userData.name} included you in a receipt`,
                 userId: userData.uid,
+                newReceiptId: newReceiptId,
               };
               const updatedNotifications = [
                 ...(friendUserData.notifications || []),
@@ -641,43 +751,58 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const userData = JSON.parse(userDataString);
-      const userRef = doc(firestore, "users", userData.uid);
 
+      const userRef = doc(firestore, "users", userData.uid);
       const userFriendRequests = userData.friendRequest || [];
 
-      // Update the current user's friend requests
+      // Update current user's friend requests
       const updatedFriendRequests = userFriendRequests.map((request) =>
         request.id === friendId ? { ...request, confirmed: true } : request
       );
-      console.log("Updated friend requests:", updatedFriendRequests);
 
-      // Update the current user's Firestore document
-      await updateDoc(userRef, {
-        friendRequests: updatedFriendRequests,
-      });
+      try {
+        await updateDoc(userRef, { friendRequests: updatedFriendRequests });
+      } catch (error) {
+        console.error(
+          "Error updating user friend requests in Firestore:",
+          error
+        );
+        throw new Error("Failed to update user friend requests in Firestore");
+      }
 
+      // Update local state
       const updatedUser = {
         ...userData,
         friendRequests: updatedFriendRequests,
       };
 
-      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-      set({
-        localUserData: updatedUser,
-        friendRequests: updatedUser.friendRequests,
-      });
-
-      // Update the friend's friend requests to mark the request from the current user as confirmed
-      const friendRef = doc(firestore, "users", friendId);
-      const friendDoc = await getDoc(friendRef);
-
-      if (!friendDoc.exists()) {
-        throw new Error("Friend document does not exist");
+      // Update local storage
+      try {
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+      } catch (error) {
+        throw new Error("Failed to update local storage");
       }
 
-      const friendData = friendDoc.data();
-      const friendFriendRequests = friendData.friendRequests || [];
+      // Update Zustand state
+      try {
+        set({
+          localUserData: updatedUser,
+          friendRequests: updatedUser.friendRequests,
+        });
+      } catch (error) {
+        throw new Error("Failed to update Zustand state");
+      }
 
+      // Fetch friend's document
+      const friendRef = doc(firestore, "users", friendId);
+      const friendDoc = await getDoc(friendRef);
+      if (!friendDoc.exists()) {
+        console.error(`Friend document with ID ${friendId} does not exist.`);
+        throw new Error("Friend document does not exist");
+      }
+      const friendData = friendDoc.data();
+
+      const friendFriendRequests = friendData.friendRequests || [];
       const updatedFriendRequestsForFriend = friendFriendRequests.map(
         (request) =>
           request.id === userData.uid
@@ -685,11 +810,19 @@ export const useAuthStore = create((set, get) => ({
             : request
       );
 
-      await updateDoc(friendRef, {
-        friendRequests: updatedFriendRequestsForFriend,
-      });
+      try {
+        await updateDoc(friendRef, {
+          friendRequests: updatedFriendRequestsForFriend,
+        });
+      } catch (error) {
+        throw new Error(
+          "Failed to update friend's friend requests in Firestore"
+        );
+      }
+      return true;
     } catch (error) {
       console.error("Error confirming friend request:", error);
+      throw new Error("Failed to confirm friend request");
     }
   },
 
@@ -735,16 +868,28 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-
-
   deleteNotification: async (notificationId) => {
     const userDataString = mmkvStorage.getItem("user_data");
     if (userDataString) {
       const userData = JSON.parse(userDataString);
       const userRef = doc(firestore, "users", userData.uid);
 
+      console.log("Current notifications:", userData.notifications);
+      console.log("Current notificationId:", notificationId);
+
       const updatedNotifications = (userData.notifications || []).filter(
-        (notification) => notification.id !== notificationId
+        (notification) => {
+          return !(
+            notification.userId === notificationId &&
+            (notification.message.includes("wants to add you") ||
+              notification.message.includes("included you in a receipt"))
+          );
+        }
+      );
+
+      console.log(
+        "Updated notifications after deletion:",
+        updatedNotifications
       );
 
       await updateDoc(userRef, {
@@ -758,8 +903,11 @@ export const useAuthStore = create((set, get) => ({
 
       mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
       set({ localUserData: updatedUser, notifications: updatedNotifications });
+    } else {
+      console.error("User data not found in storage");
     }
   },
+
   searchFriendsByName: async (name) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
