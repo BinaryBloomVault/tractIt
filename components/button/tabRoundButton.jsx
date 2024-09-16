@@ -4,7 +4,7 @@ import { Button } from "@rneui/base";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons"; // Import icons
 
-const tabRoundButton = ({ onPressRight, onPressLeft }) => {
+const tabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
   return (
     <View
       style={{
@@ -50,6 +50,7 @@ const tabRoundButton = ({ onPressRight, onPressLeft }) => {
           padding: 20,
         }}
         onPress={onPressRight}
+        disabled={isEnabled}
       />
     </View>
   );

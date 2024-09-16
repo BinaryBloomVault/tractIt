@@ -23,7 +23,7 @@ import UserIcon from "../components/icons/usersIcon";
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
-const TotalPayment = ({ title, setTitle }) => {
+const TotalPayment = ({ title, setTitle, isFocused }) => {
   const styles = useStyle();
   const router = useRouter();
   const modalVisible = useAuthStore((state) => state.modalVisible);
@@ -127,7 +127,7 @@ const TotalPayment = ({ title, setTitle }) => {
         height={40}
         bcolor={"#00BEE5"}
       />
-      <TabButton onPressLeft={handleGoBack} onPressRight={shareReceipts} />
+      <TabButton onPressLeft={handleGoBack} onPressRight={shareReceipts} isEnabled={isFocused ? true : false}/>
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
