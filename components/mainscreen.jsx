@@ -46,9 +46,8 @@ const profileAvatar = () => {
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
-  const [headerZIndex, setHeaderZIndex] = useState(0); // New state for header zIndex
 
-  const styles = useStyle(headerZIndex);
+  const styles = useStyle();
   const { localUserData } = useAuthStore((state) => ({
     localUserData: state.localUserData,
   }));
@@ -163,20 +162,10 @@ const Mainscreen = () => {
     }
   };
 
-  // New handleScroll function to manage zIndex
-  const handleScroll = (event) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    if (offsetY > 0) {
-      setHeaderZIndex(1); // Bring header to front when scrolling
-    } else {
-      setHeaderZIndex(0); // Send header to back when at top
-    }
-  };
-
-  const RightSwipeActions = ({ progress, dragX }) => {
+  const RightSwipeActions = ({ progress, dragX, item}) => {
     const translateX = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [0, 100],
+      inputRange: [-150, 0],
+      outputRange: [0, 150],
       extrapolate: "clamp",
     });
 
@@ -221,7 +210,6 @@ const Mainscreen = () => {
 
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
-        onScroll={handleScroll} // Attach scroll handler
         scrollEventThrottle={16} // Update frequently
       >
         {tableData.map((item, index) => (
@@ -275,7 +263,7 @@ const Mainscreen = () => {
   );
 };
 
-const useStyle = (headerZIndex) => {
+const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
 
   return StyleSheet.create({
@@ -287,12 +275,11 @@ const useStyle = (headerZIndex) => {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: 50,
+      padding: 40,
       backgroundColor: "#A9DFBF",
-      position: "absolute", // Set position to absolute
+      position: "sticky", // Set position to sticky
       top: 0, // Align to top
       width: deviceWidth, // Ensure full width
-      zIndex: headerZIndex, // Dynamically set zIndex
     },
     totalContainer: {
       alignItems: "center",
@@ -332,16 +319,16 @@ const useStyle = (headerZIndex) => {
     },
     scrollViewContent: {
       padding: 16,
-      paddingTop: 150, // Ensure space at the top for headerTop
+      paddingTop: 0, // Ensure space at the top for headerTop
     },
     receiptCard: {
-      borderRadius: 15,
+      borderRadius: 2,
       height: 100,
       marginTop: 2,
       marginBottom: 8,
+      marginRight: 0,
       position: "relative",
-      backgroundColor: "white",
-      zIndex: 2, // Higher zIndex to ensure it comes in front
+      backgroundColor: "#FFF",
     },
     receiptCardHeader: {
       flexDirection: "row",
@@ -404,8 +391,9 @@ const useStyle = (headerZIndex) => {
       flexDirection: "row",
       justifyContent: "flex-end",
       alignItems: "center",
-      height: 80,
-      marginTop: 15,
+      height: 100,
+      marginTop: 2,
+      marginLeft: 1,
       borderRadius: 5,
     },
     paidButton: {
@@ -413,9 +401,8 @@ const useStyle = (headerZIndex) => {
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: "100%",
-      borderRadius: 5,
-      marginLeft: -12,
+      height: 100,
+      borderRadius: 2,
     },
     deleteButton: {
       backgroundColor: "#EA4C4C",
@@ -423,7 +410,8 @@ const useStyle = (headerZIndex) => {
       alignItems: "center",
       width: 80,
       height: "100%",
-      borderRadius: 5,
+      borderRadius: 2,
+      marginRight: 2,
     },
     actionText: {
       color: "#FFF",
