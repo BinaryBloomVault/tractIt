@@ -868,6 +868,10 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  paidNotification: async() => {
+    console.log("Will create state management on this one!")
+  },
+
   deleteNotification: async (notificationId) => {
     const userDataString = mmkvStorage.getItem("user_data");
     if (userDataString) {
