@@ -121,6 +121,7 @@ const Password = () => {
             styles.inputShadowBox,
             styles.passwordContainer,
           ]}
+
         >
           <TextInput
             style={{ flex: 1 }}
@@ -162,14 +163,11 @@ const Password = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+
   mainscreen: {
-    flex: 1,
     width: "100%",
     alignItems: "center",
-    paddingBottom: 20,
+    backgroundColor: "#FFF",
     justifyContent: "center",
   },
   inputShadowBox: {
@@ -213,12 +211,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 19,
     paddingVertical: 14,
+    borderColor:"#F3F3F3",
+    borderWidth: 1
   },
   inputFormItem: {
     alignItems: "center",
     paddingHorizontal: 19,
     paddingVertical: 14,
     marginTop: 8,
+    borderColor:"#F3F3F3",
+    borderWidth: 1
   },
   passwordContainer: {
     flexDirection: "row",
