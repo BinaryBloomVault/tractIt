@@ -22,26 +22,36 @@ const Notification = () => {
     (state) => state.cancelFriendRequest
   );
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
+  const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus); // Updated to use state management for paid status
   const router = useRouter();
 
   const handleConfirm = async () => {
     if (selectedNotification) {
-      const { userId, id: notificationId } = selectedNotification;
+      const { userId, type, receiptId, friendId } = selectedNotification;
 
-      const success = await confirmFriendRequest(userId);
-      if (success) {
-        await deleteNotification(userId);
-      } else {
-        console.error("Failed to confirm friend request");
+      if (type === "paid") {
+        // Call the updatePaidStatus function and pass the receiptId and friendId
+        const approve = true;
+        await updatePaidStatus(receiptId, friendId);
+        console.log("[DEBUG] Paid notification handled");
+      } else if (type === "friend") {
+        const success = await cancelFriendRequest(userId);
+        console.log("[DEBUG] Friend request notification handled");
+        if (success) {
+          await deleteNotification(userId);
+        } else {
+          console.error("Failed to cancel friend request");
+        }
       }
     }
+
     setModalVisible(false);
     setSelectedNotification(null);
   };
 
   const handleCancel = async () => {
     if (selectedNotification) {
-      const { userId, id: notificationId } = selectedNotification;
+      const { userId } = selectedNotification;
 
       const success = await cancelFriendRequest(userId);
       if (success) {
@@ -106,7 +116,7 @@ const Notification = () => {
           <View style={styles.modalContainer}>
             <View style={styles.modalView}>
               <Text style={styles.modalText}>
-                Do you want to confirm or cancel this friend request?
+                Do you want to confirm or cancel?
               </Text>
               <View style={styles.buttonContainer}>
                 <Pressable
@@ -142,7 +152,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-
   notificationItem: {
     marginLeft: 0,
     marginRight: 0,

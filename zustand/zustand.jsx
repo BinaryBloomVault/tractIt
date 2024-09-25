@@ -141,6 +141,34 @@ export const useAuthStore = create((set, get) => ({
     set({ title: newTitle });
   },
 
+  isPaidEnabled: (receiptId, newPaidStatus) => {
+    set((state) => {
+      const { sharedReceipts, localUserData } = state;
+  
+      // Find the relevant receipt and update its `paid` field
+      const updatedSharedReceipts = {
+        ...sharedReceipts,
+        [receiptId]: {
+          ...sharedReceipts[receiptId],
+          paid: newPaidStatus,
+        },
+      };
+  
+      const updatedUserData = {
+        ...localUserData,
+        sharedReceipts: updatedSharedReceipts,
+      };
+  
+      // Update local state
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+  
+      return {
+        sharedReceipts: updatedSharedReceipts,
+        localUserData: updatedUserData,
+      };
+    });
+  },
+
   login: async (email, password) => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
@@ -438,7 +466,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  updateReceipt: async (title, updatedReceiptsArray, uniqued) => {
+  updateReceipt: async (title, updatedReceiptsArray, uniqued, isPaid) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) return;
@@ -473,7 +501,7 @@ export const useAuthStore = create((set, get) => ({
               friends[friendId] = {
                 name: updatedReceipt.friends[friendId],
                 payment: individualPayment,
-                paid: false,
+                paid: isPaid,
                 originator: existingFriends[friendId]?.originator || false,
               };
             }
@@ -483,7 +511,7 @@ export const useAuthStore = create((set, get) => ({
           friends[userUid] = {
             name: userData.name,
             payment: 0,
-            paid: true,
+            paid: isPaid,
             originator: true,
           };
         }
@@ -564,7 +592,7 @@ export const useAuthStore = create((set, get) => ({
             friends[userData.uid] = {
               name: userData.name,
               payment: 0,
-              paid: true,
+              paid: false,
               originator: true,
             };
           }
@@ -637,6 +665,7 @@ export const useAuthStore = create((set, get) => ({
               const friendUserData = friendDoc.data();
               const newNotification = {
                 message: `${userData.name} included you in a receipt`,
+                type: "friend",
                 userId: userData.uid,
                 newReceiptId: newReceiptId,
               };
@@ -741,6 +770,7 @@ export const useAuthStore = create((set, get) => ({
       console.error("Error adding friend request:", error);
     }
   },
+
 
   confirmFriendRequest: async (friendId) => {
     console.log("Confirming friend request with ID:", friendId);
@@ -868,8 +898,72 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  paidNotification: async() => {
-    console.log("Will create state management on this one!")
+   updatePaidStatus: async (receiptId, friendId) => {
+    try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId
+        );
+        const receiptDoc = await getDoc(receiptRef);
+  
+        if (receiptDoc.exists()) {
+          const receiptData = receiptDoc.data();
+          const friendData = receiptData.friends[friendId];
+  
+          // Update the 'paid' status
+          friendData.paid = true;
+  
+          // Save updated receipt data
+          await updateDoc(receiptRef, {
+            [`friends.${friendId}`]: friendData,
+          });
+  
+          // Notify the originator that the friend has paid
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId && originatorId !== friendId) {
+            const originatorRef = doc(firestore, "users", originatorId);
+            const originatorDoc = await getDoc(originatorRef);
+  
+            if (originatorDoc.exists()) {
+              const originatorUserData = originatorDoc.data();
+              const newNotification = {
+                message: `${friendData.name} has paid their portion of the receipt.`,
+                type: "paid",
+                receiptId: receiptId,
+                friendId: friendId,
+              };
+  
+              const updatedNotifications = [
+                ...(originatorUserData.notifications || []),
+                newNotification,
+              ];
+  
+              await updateDoc(originatorRef, {
+                notifications: updatedNotifications,
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating paid status:", error);
+    }
+  },
+  markAsPaid: async (receiptId, friendId) => {
+    try {
+      // Call the function to update paid status and send a notification
+      await updatePaidStatus(receiptId, friendId);
+    } catch (error) {
+      console.error("Error marking receipt as paid:", error);
+    }
   },
 
   deleteNotification: async (notificationId) => {
