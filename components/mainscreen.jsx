@@ -161,14 +161,9 @@ const Mainscreen = () => {
 
   const handlePaid = async (item) => {
     if (item.receiptId) {
-      const friendId = localUserData.uid; // Assuming localUserData.uid is the current user’s ID
+      const friendId = localUserData.uid;
       try {
-        const success = await updatePaidStatus(item.receiptId, friendId); // Pass both receiptId and friendId
-        if (success) {
-          console.log("[DEBUG] Paid status updated successfully for receipt:", item.receiptId, "and friend:", friendId);
-        } else {
-          console.error("[DEBUG] Failed to update paid status for receipt:", item.receiptId, "and friend:", friendId);
-        }
+        await updatePaidStatus(item.receiptId, friendId); // Pass both receiptId and friendId
       } catch (error) {
         console.error("[DEBUG] Error updating paid status:", error);
       }

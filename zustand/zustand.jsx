@@ -752,6 +752,7 @@ export const useAuthStore = create((set, get) => ({
           // Add notification for the other user
           const newNotification = {
             message: `${userData.name} wants to add you`,
+            type: "friend",
             userId: userData.uid,
           };
           const updatedNotifications = [
@@ -957,12 +958,64 @@ export const useAuthStore = create((set, get) => ({
       console.error("Error updating paid status:", error);
     }
   },
-  markAsPaid: async (receiptId, friendId) => {
+
+  cancelPaidRequest: async (receiptId, friendId) => {
     try {
-      // Call the function to update paid status and send a notification
-      await updatePaidStatus(receiptId, friendId);
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId
+        );
+        const receiptDoc = await getDoc(receiptRef);
+  
+        if (receiptDoc.exists()) {
+          const receiptData = receiptDoc.data();
+          const friendData = receiptData.friends[friendId];
+  
+          // Update the 'paid' status
+          friendData.paid = false;
+  
+          // Save updated receipt data
+          await updateDoc(receiptRef, {
+            [`friends.${friendId}`]: friendData,
+          });
+  
+          // Notify the originator that the friend has paid
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId && originatorId !== friendId) {
+            const originatorRef = doc(firestore, "users", originatorId);
+            const originatorDoc = await getDoc(originatorRef);
+  
+            if (originatorDoc.exists()) {
+              const originatorUserData = originatorDoc.data();
+              const newNotification = {
+                message: `${friendData.name} has decline their portion of the receipt.`,
+                type: "paid",
+                receiptId: receiptId,
+                friendId: friendId,
+              };
+  
+              const updatedNotifications = [
+                ...(originatorUserData.notifications || []),
+                newNotification,
+              ];
+  
+              await updateDoc(originatorRef, {
+                notifications: updatedNotifications,
+              });
+            }
+          }
+        }
+      }
     } catch (error) {
-      console.error("Error marking receipt as paid:", error);
+      console.error("Error updating paid status:", error);
     }
   },
 
