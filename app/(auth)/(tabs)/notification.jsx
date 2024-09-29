@@ -21,34 +21,57 @@ const Notification = () => {
   const cancelFriendRequest = useAuthStore(
     (state) => state.cancelFriendRequest
   );
+  const cancelPaidRequest = useAuthStore(
+    (state) => state.cancelPaidRequest
+  )
+
+
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
+  const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus); // Updated to use state management for paid status
+  const paidStatus = useAuthStore((state) => state.getPaidReceipts)
   const router = useRouter();
 
   const handleConfirm = async () => {
     if (selectedNotification) {
-      const { userId, id: notificationId } = selectedNotification;
-
-      const success = await confirmFriendRequest(userId);
-      if (success) {
-        await deleteNotification(userId);
-      } else {
-        console.error("Failed to confirm friend request");
+      const { userId, type, receiptId, friendId } = selectedNotification;
+      if (type === "paid") {
+        if (paidStatus) {
+          //console.error("Paid Request:", paidStatus);
+          await updatePaidStatus(receiptId, friendId, true);
+          await deleteNotification(userId);
+          // } else {
+          //   //On investigation why always falls here
+          //   console.error("Failed to cancel friend request");
+          // }
+        }
+      } else if (type === "friend") {
+        const success = await confirmFriendRequest(userId);
+        if (success) {
+          await deleteNotification(userId);
+        } else {
+          console.error("Failed to cancel friend request");
+        }
       }
     }
+
     setModalVisible(false);
     setSelectedNotification(null);
   };
 
   const handleCancel = async () => {
     if (selectedNotification) {
-      const { userId, id: notificationId } = selectedNotification;
-
+      const { userId, type, receiptId, friendId } = selectedNotification;
+      //On progress
+      // if(type === "cancelPaid") {
+      //   await cancelPaidRequest(receiptId, friendId)
+      // } else {
       const success = await cancelFriendRequest(userId);
       if (success) {
         await deleteNotification(userId);
       } else {
         console.error("Failed to cancel friend request");
       }
+
     }
     setModalVisible(false);
     setSelectedNotification(null);
@@ -106,7 +129,7 @@ const Notification = () => {
           <View style={styles.modalContainer}>
             <View style={styles.modalView}>
               <Text style={styles.modalText}>
-                Do you want to confirm or cancel this friend request?
+                Do you want to confirm or cancel?
               </Text>
               <View style={styles.buttonContainer}>
                 <Pressable
@@ -142,7 +165,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
-
   notificationItem: {
     marginLeft: 0,
     marginRight: 0,

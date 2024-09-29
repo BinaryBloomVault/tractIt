@@ -23,26 +23,6 @@ const handleSwipeableOpen = (direction, items) => {
   }
 };
 
-const handlePaid = () => {
-  Alert.alert("Button paid press");
-};
-
-const profileAvatar = () => {
-  return (
-    <Link href="/profile" asChild>
-      <TouchableOpacity
-        style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
-      >
-        <Avatar
-          size={50}
-          rounded
-          source={{ uri: "https://via.placeholder.com/150" }}
-        />
-      </TouchableOpacity>
-    </Link>
-  );
-};
-
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
@@ -53,7 +33,7 @@ const Mainscreen = () => {
   }));
 
   const { updateReceiptsWithShared, updateTitle } = useAuthStore();
-  const { deleteReceiptsWithShared } = useAuthStore();
+  const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } = useAuthStore();
 
   const router = useRouter();
   const { receiptId } = useGlobalSearchParams();
@@ -155,12 +135,28 @@ const Mainscreen = () => {
     }
   };
 
-  //please help to delete this to my firestore
   const handleDelete = (item) => {
     if (item.receiptId) {
       deleteReceiptsWithShared(item.receiptId);
     }
   };
+
+
+  const handlePaid = async (item) => {
+    if (item.receiptId) {
+      const friendId = localUserData.uid;
+      try {
+        const paidApproval = true
+        setPaidReceipts(paidApproval)
+        await updatePaidStatus(item.receiptId, friendId, false); // Pass both receiptId and friendId
+        
+      } catch (error) {
+        console.error("[DEBUG] Error updating paid status:", error);
+      }
+    }
+  };
+  
+  
 
   const RightSwipeActions = ({ progress, dragX, item}) => {
     const translateX = dragX.interpolate({
@@ -173,7 +169,7 @@ const Mainscreen = () => {
       <Animated.View
         style={[styles.actionsContainer, { transform: [{ translateX }] }]}
       >
-        <RectButton style={styles.paidButton} onPress={handlePaid}>
+        <RectButton style={styles.paidButton} onPress={() => handlePaid(item)}>
           <Text style={styles.actionText}>Paid</Text>
         </RectButton>
         <RectButton

@@ -38,6 +38,7 @@ export const useAuthStore = create((set, get) => ({
   selectedItemIndex: null,
   isOffline: true,
   receipts: [],
+  PaidStatus: false,
   sharedReceipts: {},
   modalVisible: false,
   searchResults: [],
@@ -62,6 +63,16 @@ export const useAuthStore = create((set, get) => ({
     set(() => ({
       receipts: [],
     }));
+  },
+
+  setPaidReceipts: (paidStatus) => {
+    set((state) => ({
+      PaidStatus: paidStatus
+    }))
+  },
+
+  getPaidReceipts: () => {
+    return get().PaidStatus;
   },
 
   getReceipts: () => {
@@ -139,6 +150,34 @@ export const useAuthStore = create((set, get) => ({
 
   updateTitle: (newTitle) => {
     set({ title: newTitle });
+  },
+
+  isPaidEnabled: (receiptId, newPaidStatus) => {
+    set((state) => {
+      const { sharedReceipts, localUserData } = state;
+  
+      // Find the relevant receipt and update its `paid` field
+      const updatedSharedReceipts = {
+        ...sharedReceipts,
+        [receiptId]: {
+          ...sharedReceipts[receiptId],
+          paid: newPaidStatus,
+        },
+      };
+  
+      const updatedUserData = {
+        ...localUserData,
+        sharedReceipts: updatedSharedReceipts,
+      };
+  
+      // Update local state
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+  
+      return {
+        sharedReceipts: updatedSharedReceipts,
+        localUserData: updatedUserData,
+      };
+    });
   },
 
   login: async (email, password) => {
@@ -438,7 +477,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  updateReceipt: async (title, updatedReceiptsArray, uniqued) => {
+  updateReceipt: async (title, updatedReceiptsArray, uniqued, isPaid) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) return;
@@ -473,7 +512,7 @@ export const useAuthStore = create((set, get) => ({
               friends[friendId] = {
                 name: updatedReceipt.friends[friendId],
                 payment: individualPayment,
-                paid: false,
+                paid: isPaid,
                 originator: existingFriends[friendId]?.originator || false,
               };
             }
@@ -483,7 +522,7 @@ export const useAuthStore = create((set, get) => ({
           friends[userUid] = {
             name: userData.name,
             payment: 0,
-            paid: true,
+            paid: isPaid,
             originator: true,
           };
         }
@@ -564,7 +603,7 @@ export const useAuthStore = create((set, get) => ({
             friends[userData.uid] = {
               name: userData.name,
               payment: 0,
-              paid: true,
+              paid: false,
               originator: true,
             };
           }
@@ -637,6 +676,7 @@ export const useAuthStore = create((set, get) => ({
               const friendUserData = friendDoc.data();
               const newNotification = {
                 message: `${userData.name} included you in a receipt`,
+                type: "friend",
                 userId: userData.uid,
                 newReceiptId: newReceiptId,
               };
@@ -723,6 +763,7 @@ export const useAuthStore = create((set, get) => ({
           // Add notification for the other user
           const newNotification = {
             message: `${userData.name} wants to add you`,
+            type: "friend",
             userId: userData.uid,
           };
           const updatedNotifications = [
@@ -741,6 +782,7 @@ export const useAuthStore = create((set, get) => ({
       console.error("Error adding friend request:", error);
     }
   },
+
 
   confirmFriendRequest: async (friendId) => {
     console.log("Confirming friend request with ID:", friendId);
@@ -868,6 +910,156 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+   updatePaidStatus: async (receiptId, friendId, paidRequest) => {
+    try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId
+        );
+        const receiptDoc = await getDoc(receiptRef);
+  
+        if (receiptDoc.exists()) {
+          const receiptData = receiptDoc.data();
+          const friendData = receiptData.friends[friendId];
+            
+          if(paidRequest) {
+            // Update the 'paid' status
+            friendData.paid = true;
+            // Save updated receipt data
+            await updateDoc(receiptRef, {
+              [`friends.${friendId}`]: friendData,
+            });
+            const paidDone = false
+            setPaidReceipts(paidDone)
+          }
+  
+          // Notify the originator that the friend has paid
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId && originatorId !== friendId) {
+            const originatorRef = doc(firestore, "users", originatorId);
+            const originatorDoc = await getDoc(originatorRef);
+  
+            if (originatorDoc.exists()) {
+              const originatorUserData = originatorDoc.data();
+              const newNotification = {
+                message: `${friendData.name} has paid their portion of the receipt.`,
+                type: "paid",
+                receiptId: receiptId,
+                friendId: friendId,
+              };
+  
+              const updatedNotifications = [
+                ...(originatorUserData.notifications || []),
+                newNotification,
+              ];
+  
+              await updateDoc(originatorRef, {
+                notifications: updatedNotifications,
+              });
+            }
+          } 
+        }
+        return true
+      }
+    } catch (error) {
+      console.error("Error updating paid status:", error);
+      return false;
+    }
+  },
+
+  cancelPaidRequest: async (receiptId, friendId) => {
+    try {
+      // Get the current user's data
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+  
+        // Reference to the specific shared receipt in Firestore
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId
+        );
+        const receiptDoc = await getDoc(receiptRef);
+  
+        if (receiptDoc.exists()) {
+          const receiptData = receiptDoc.data();
+          const friendData = receiptData.friends[friendId];
+  
+          // Cancel the 'paid' status if it's unpaid
+          if (!friendData.paid) {
+            // Remove the friend from the shared receipt (or adjust status as needed)
+            delete receiptData.friends[friendId];
+  
+            // Update the receipt in Firestore
+            await updateDoc(receiptRef, {
+              friends: receiptData.friends,
+            });
+  
+            // Update local state and storage
+            const updatedReceipts = userData.receipts.map((receipt) => 
+              receipt.id === receiptId ? { ...receipt, friends: receiptData.friends } : receipt
+            );
+  
+            const updatedUserData = {
+              ...userData,
+              receipts: updatedReceipts,
+            };
+  
+            mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+            set({
+              localUserData: updatedUserData,
+              receipts: updatedReceipts,
+            });
+          }
+  
+          // Notify the originator of the cancellation
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId && originatorId !== friendId) {
+            const originatorRef = doc(firestore, "users", originatorId);
+            const originatorDoc = await getDoc(originatorRef);
+  
+            if (originatorDoc.exists()) {
+              const originatorUserData = originatorDoc.data();
+              const newNotification = {
+                message: `${friendData.name} has cancelled their payment for the receipt.`,
+                type: "cancelPaid",
+                receiptId: receiptId,
+                friendId: friendId,
+              };
+  
+              const updatedNotifications = [
+                ...(originatorUserData.notifications || []),
+                newNotification,
+              ];
+  
+              // Update the originator's notifications in Firestore
+              await updateDoc(originatorRef, {
+                notifications: updatedNotifications,
+              });
+            }
+          }
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error("Error cancelling paid request:", error);
+      return false;
+    }
+  },
+  
   deleteNotification: async (notificationId) => {
     const userDataString = mmkvStorage.getItem("user_data");
     if (userDataString) {
