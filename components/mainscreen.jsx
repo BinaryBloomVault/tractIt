@@ -23,23 +23,6 @@ const handleSwipeableOpen = (direction, items) => {
   }
 };
 
-
-const profileAvatar = () => {
-  return (
-    <Link href="/profile" asChild>
-      <TouchableOpacity
-        style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
-      >
-        <Avatar
-          size={50}
-          rounded
-          source={{ uri: "https://via.placeholder.com/150" }}
-        />
-      </TouchableOpacity>
-    </Link>
-  );
-};
-
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
@@ -50,7 +33,7 @@ const Mainscreen = () => {
   }));
 
   const { updateReceiptsWithShared, updateTitle } = useAuthStore();
-  const { deleteReceiptsWithShared, updatePaidStatus } = useAuthStore();
+  const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } = useAuthStore();
 
   const router = useRouter();
   const { receiptId } = useGlobalSearchParams();
@@ -163,7 +146,10 @@ const Mainscreen = () => {
     if (item.receiptId) {
       const friendId = localUserData.uid;
       try {
-        await updatePaidStatus(item.receiptId, friendId); // Pass both receiptId and friendId
+        const paidApproval = true
+        setPaidReceipts(paidApproval)
+        await updatePaidStatus(item.receiptId, friendId, false); // Pass both receiptId and friendId
+        
       } catch (error) {
         console.error("[DEBUG] Error updating paid status:", error);
       }
