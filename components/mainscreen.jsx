@@ -41,7 +41,6 @@ const Mainscreen = () => {
   useEffect(() => {
     fetchData();
 
-    console.log("receiptId", receiptId);
     if (receiptId) {
       const matchingItem = tableData.find(
         (item) => item.receiptId === receiptId
