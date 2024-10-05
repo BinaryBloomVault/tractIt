@@ -16,12 +16,15 @@ import { useLocalSearchParams } from "expo-router";
 
 const ReceiptCard = () => {
   const styles = useStyle();
-  const { receipts, updateReceiptById } = useAuthStore((state) => ({
-    receipts: state.receipts,
-    updateReceiptById: state.updateReceiptById,
-  }));
-  const { uniqued } = useLocalSearchParams();
+  const { receipts, updateReceiptById, localUserData } = useAuthStore(
+    (state) => ({
+      receipts: state.receipts,
+      updateReceiptById: state.updateReceiptById,
+      localUserData: state.localUserData,
+    })
+  );
 
+  const userId = useAuthStore((state) => state.localUserData?.uid);
   const swipeableRefs = useRef({});
   const swipeableRow = useRef(null);
 
@@ -90,11 +93,31 @@ const ReceiptCard = () => {
       extrapolate: "clamp",
     });
 
+    const isUserInFriends =
+      item.friends && Object.keys(item.friends).includes(userId);
+
+    const containerWidth = isUserInFriends ? 160 : 80;
+
     return (
       <Animated.View
-        style={[styles.deleteBox, { transform: [{ translateX }] }]}
+        style={[
+          styles.actionsContainer,
+          { width: containerWidth, transform: [{ translateX }] },
+        ]}
       >
-        <RectButton style={styles.deleteButton} onPress={() => onDelete(item)}>
+        {isUserInFriends && (
+          <RectButton
+            style={styles.paidButton}
+            onPress={() => console.log("Paid pressed!")}
+          >
+            <Text style={styles.paidButtonText}>Paid</Text>
+          </RectButton>
+        )}
+
+        <RectButton
+          style={[styles.deleteButton]}
+          onPress={() => onDelete(item)}
+        >
           <Text style={styles.deleteButtonText}>Delete</Text>
         </RectButton>
       </Animated.View>
@@ -196,6 +219,8 @@ const useStyle = () => {
     middle: {
       flexDirection: "row",
       marginTop: 8,
+      alignItems: "center",
+      justifyContent: "space-between",
     },
     container: {
       borderRadius: 10,
@@ -212,19 +237,34 @@ const useStyle = () => {
       height: deviceHeight < 813 ? 322 : 375,
       overflow: "scroll",
     },
-    deleteBox: {
-      top: 8,
+    actionsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      height: 35,
+      marginTop: 8,
+    },
+    paidButton: {
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "#00BEE5",
+      width: 80,
+      height: 35,
+      borderRadius: 10,
+    },
+    paidButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    deleteButton: {
+      marginLeft: 4,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: "#FF3B30",
-      borderRadius: 5,
       height: 35,
-      width: 100,
-    },
-    deleteButton: {
-      justifyContent: "center",
-      alignItems: "center",
       width: 80,
+      borderRadius: 10,
     },
     deleteButtonText: {
       color: "white",

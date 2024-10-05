@@ -132,7 +132,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   updateReceiptsWithShared: (receiptId) => {
-    const { sharedReceipts } = get();
+    const { sharedReceipts, receipts } = get();
     const receiptData = sharedReceipts[receiptId];
 
     if (receiptData) {
@@ -141,9 +141,17 @@ export const useAuthStore = create((set, get) => ({
         .flatMap(([, value]) => (Array.isArray(value) ? value : []));
 
       if (tryDataArray.length > 0) {
-        set((state) => ({
-          receipts: [...state.receipts, ...tryDataArray],
-        }));
+        const uniqueItems = tryDataArray.filter((newItem) => {
+          return !receipts.some(
+            (existingItem) => existingItem.id === newItem.id
+          );
+        });
+
+        if (uniqueItems.length > 0) {
+          set((state) => ({
+            receipts: [...state.receipts, ...uniqueItems],
+          }));
+        }
       }
     }
   },

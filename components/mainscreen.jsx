@@ -33,7 +33,8 @@ const Mainscreen = () => {
   }));
 
   const { updateReceiptsWithShared, updateTitle } = useAuthStore();
-  const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } = useAuthStore();
+  const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } =
+    useAuthStore();
 
   const router = useRouter();
   const { receiptId } = useGlobalSearchParams();
@@ -140,24 +141,20 @@ const Mainscreen = () => {
     }
   };
 
-
   const handlePaid = async (item) => {
     if (item.receiptId) {
       const friendId = localUserData.uid;
       try {
-        const paidApproval = true
-        setPaidReceipts(paidApproval)
+        const paidApproval = true;
+        setPaidReceipts(paidApproval);
         await updatePaidStatus(item.receiptId, friendId, false); // Pass both receiptId and friendId
-        
       } catch (error) {
         console.error("[DEBUG] Error updating paid status:", error);
       }
     }
   };
-  
-  
 
-  const RightSwipeActions = ({ progress, dragX, item}) => {
+  const RightSwipeActions = ({ progress, dragX, item }) => {
     const translateX = dragX.interpolate({
       inputRange: [-150, 0],
       outputRange: [0, 150],
@@ -317,10 +314,9 @@ const useStyle = () => {
       paddingTop: 0, // Ensure space at the top for headerTop
     },
     receiptCard: {
-      borderRadius: 2,
-      height: 100,
-      marginTop: 2,
-      marginBottom: 8,
+      borderRadius: 15,
+      height: 110,
+      marginLeft: 0,
       marginRight: 0,
       position: "relative",
       backgroundColor: "#FFF",
@@ -335,8 +331,11 @@ const useStyle = () => {
       backgroundColor: "#A9DFBF",
       padding: 4,
       borderRadius: 4,
-      color: "#FFF",
+      color: "gray",
+      fontWeight: "bold",
       fontFamily: "Gudea",
+      paddingLeft: 10,
+      paddingRight: 10,
     },
     receiptCardBody: {
       flexDirection: "row",
@@ -347,10 +346,11 @@ const useStyle = () => {
       alignItems: "center",
     },
     txtSettle: {
+      fontWeight: "bold",
       padding: 6,
       color: "#b9b0b0",
       marginTop: -30,
-      marginRight: 101,
+      marginRight: 105,
     },
     receiptTitle: {
       fontWeight: "bold",
@@ -377,6 +377,7 @@ const useStyle = () => {
       marginRight: 120,
       color: "#b9b0b0",
       fontFamily: "Gudea",
+      fontWeight: "bold",
     },
     friendIcons: {
       flexDirection: "row",
@@ -386,8 +387,8 @@ const useStyle = () => {
       flexDirection: "row",
       justifyContent: "flex-end",
       alignItems: "center",
-      height: 100,
-      marginTop: 2,
+      height: 110,
+      marginTop: 15,
       marginLeft: 1,
       borderRadius: 5,
     },
@@ -396,8 +397,9 @@ const useStyle = () => {
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: 100,
-      borderRadius: 2,
+      height: 110,
+      borderTopLeftRadius: 15,
+      borderBottomLeftRadius: 15,
     },
     deleteButton: {
       backgroundColor: "#EA4C4C",
@@ -405,7 +407,8 @@ const useStyle = () => {
       alignItems: "center",
       width: 80,
       height: "100%",
-      borderRadius: 2,
+      borderBottomRightRadius: 15,
+      borderTopRightRadius: 15,
       marginRight: 2,
     },
     actionText: {
