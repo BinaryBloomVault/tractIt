@@ -21,14 +21,11 @@ const Notification = () => {
   const cancelFriendRequest = useAuthStore(
     (state) => state.cancelFriendRequest
   );
-  const cancelPaidRequest = useAuthStore(
-    (state) => state.cancelPaidRequest
-  )
-
+  const cancelPaidRequest = useAuthStore((state) => state.cancelPaidRequest);
 
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
   const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus); // Updated to use state management for paid status
-  const paidStatus = useAuthStore((state) => state.getPaidReceipts)
+  const paidStatus = useAuthStore((state) => state.getPaidReceipts);
   const router = useRouter();
 
   const handleConfirm = async () => {
@@ -71,7 +68,6 @@ const Notification = () => {
       } else {
         console.error("Failed to cancel friend request");
       }
-
     }
     setModalVisible(false);
     setSelectedNotification(null);
@@ -81,7 +77,11 @@ const Notification = () => {
     if (item.message.includes("included you in a receipt")) {
       router.push({
         pathname: "(auth)/(tabs)/writeReceipt",
-        params: { receiptId: item.newReceiptId },
+        params: {
+          uniqued: item.newReceiptId,
+          receiptId: item.newReceiptId,
+          previousScreen: "update",
+        },
       });
       if (item.userId) {
         await deleteNotification(item.userId);
