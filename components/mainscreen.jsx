@@ -67,6 +67,8 @@ const Mainscreen = () => {
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
+          let userPaid = false
+          let settledPayments = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
             if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
@@ -87,6 +89,12 @@ const Mainscreen = () => {
                     ([friendId, friendData]) => {
                       if (friendData.originator === true) {
                         user = friendData.name;
+                      }
+                      if (friendData.paid === true) {
+                        settledPayments = {
+                          friendName: friendData.name,
+                          paidStatus: friendData.paid
+                        };
                       }
                       combinedFriends[friendId] = friendData.name;
                     }
@@ -110,6 +118,7 @@ const Mainscreen = () => {
             title: title,
             name: user,
             price: totalamount.toFixed(2),
+            friendPaidStatus: settledPayments,
             friends: combinedFriends,
             items: combinedItems,
           });
@@ -243,7 +252,11 @@ const Mainscreen = () => {
                       <Text style={styles.receiptAmount}>{item.price}</Text>
                       <View style={styles.horizontalLine} />
                       <Text style={styles.txtFriends}>Friends</Text>
-                      <UserIcon friends={Object.values(item.friends)} />
+                      <UserIcon
+                        friends={Object.values(item.friends)}
+                        paidFriends={item.friendPaidStatus} 
+                      />
+
                     </View>
                   </View>
                 </Pressable>
