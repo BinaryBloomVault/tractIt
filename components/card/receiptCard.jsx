@@ -27,6 +27,7 @@ const ReceiptCard = () => {
   const userId = useAuthStore((state) => state.localUserData?.uid);
   const swipeableRefs = useRef({});
   const swipeableRow = useRef(null);
+  const { originatorId } = useLocalSearchParams();
 
   const combinedFriends = useMemo(() => {
     return Array.from(
@@ -52,10 +53,6 @@ const ReceiptCard = () => {
     );
   }, [formattedReceipts]);
 
-  const handleItemPress = (item) => {
-    console.log("Pressed item:", item);
-  };
-
   const onDelete = (item) => {
     const updatedReceipts = receipts.filter((receipt) => {
       const isMatch =
@@ -66,7 +63,6 @@ const ReceiptCard = () => {
 
       return !isMatch;
     });
-    console.log("Deleted item:", updatedReceipts);
     updateReceiptById(updatedReceipts);
   };
 
@@ -137,7 +133,7 @@ const ReceiptCard = () => {
           color="#F2E3A9"
           font="Gudea-Regular"
           size={20}
-          disabled={false}
+          disabled={true}
         />
       </View>
       <Card.Divider
@@ -167,17 +163,14 @@ const ReceiptCard = () => {
               rightThreshold={40}
               overshootRight={false}
             >
-              <TouchableOpacity
-                style={styles.middle}
-                onPress={() => handleItemPress(item)}
-              >
+              <TouchableOpacity style={styles.middle}>
                 <ItemRow
                   item={item}
                   index={index}
                   color="#A9DFBF"
                   font="Cabin-Regular"
                   size={15}
-                  disabled={false}
+                  disabled={originatorId !== userId}
                 />
               </TouchableOpacity>
             </Swipeable>

@@ -34,8 +34,9 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
   );
   const selectedFriends = useAuthStore((state) => state.selectedFriends);
   const setSelectedFriends = useAuthStore((state) => state.setSelectedFriends);
+  const userId = useAuthStore((state) => state.localUserData?.uid);
 
-  const { previousScreen, uniqued } = useLocalSearchParams();
+  const { previousScreen, uniqued, originatorId } = useLocalSearchParams();
 
   const {
     addReceipts,
@@ -120,14 +121,18 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
     <View style={styles.container}>
       <PaymentInfo />
       <AddButton
-        onPress={showModal}
+        onPress={originatorId !== userId ? hideModal : showModal}
         title="Add"
         width={120}
         fontSize={25}
         height={40}
         bcolor={"#00BEE5"}
       />
-      <TabButton onPressLeft={handleGoBack} onPressRight={shareReceipts} isEnabled={isFocused ? true : false}/>
+      <TabButton
+        onPressLeft={handleGoBack}
+        onPressRight={shareReceipts}
+        isEnabled={isFocused ? true : false}
+      />
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
@@ -172,14 +177,10 @@ const TotalPaymentModal = ({
     if (modalVisible) {
       setTimeout(() => {
         if (selectedItemIndex !== null) {
-          // Scroll to the specific index if selectedItemIndex is a valid number
           const scrollOffset = selectedItemIndex * windowWidth;
           scrollViewRef.current.scrollTo({ x: scrollOffset, animated: true });
-          console.log("Scrolling to index:", selectedItemIndex);
         } else {
-          // Default behavior: scroll to the end
           scrollViewRef.current.scrollToEnd({ animated: true });
-          console.log("Scrolling to 11111:", selectedItemIndex);
         }
       }, 100);
     }
@@ -467,6 +468,7 @@ const useStyle = () => {
       borderColor: "#888",
       borderWidth: 1,
       width: "70%",
+      paddingLeft: 8,
       height: deviceHeight < 813 ? 32 : 40,
     },
     friendsButton: {

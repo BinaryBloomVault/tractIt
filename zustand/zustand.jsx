@@ -21,7 +21,6 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
-import { disableNetwork, enableNetwork } from "firebase/firestore";
 
 const mmkv = new MMKV();
 
@@ -485,20 +484,26 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  updateReceipt: async (title, updatedReceiptsArray, uniqued, isPaid) => {
+  updateReceipt: async (title, updatedReceiptsArray, uniqued) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) return;
+
       const userData = JSON.parse(userDataString);
       const userUid = userData.uid;
-      const friends = {};
+
+      if (!userUid || !uniqued) {
+        throw new Error(
+          `Invalid userUid or uniqued value: userUid=${userUid}, uniqued=${uniqued}`
+        );
+      }
 
       if (!Array.isArray(updatedReceiptsArray)) {
         throw new Error("updatedReceiptsArray is not an array");
       }
 
-      // Initialize batch operation
       const batch = writeBatch(firestore);
+
       const receiptRef = doc(
         firestore,
         "users",
@@ -506,26 +511,46 @@ export const useAuthStore = create((set, get) => ({
         "sharedReceipts",
         uniqued
       );
-      const receiptDoc = await getDoc(receiptRef);
-      if (receiptDoc.exists()) {
+
+      try {
+        const receiptDoc = await getDoc(receiptRef);
+
+        if (!receiptDoc.exists()) {
+          throw new Error("Receipt not found");
+        }
+
         const existingReceiptData = receiptDoc.data();
+        if (!existingReceiptData) {
+          throw new Error("Receipt document data is missing or invalid.");
+        }
+
         const existingFriends = existingReceiptData.friends || {};
-        updatedReceiptsArray.forEach((updatedReceipt) => {
-          const numFriends = Object.keys(updatedReceipt.friends || {}).length;
-          const individualPayment = updatedReceipt.price / numFriends;
-          Object.keys(updatedReceipt.friends || {}).forEach((friendId) => {
-            if (friends[friendId]) {
-              friends[friendId].payment += individualPayment;
-            } else {
-              friends[friendId] = {
-                name: updatedReceipt.friends[friendId],
-                payment: individualPayment,
-                paid: isPaid,
-                originator: existingFriends[friendId]?.originator || false,
-              };
-            }
-          });
+
+        const friends = {};
+        updatedReceiptsArray.forEach((updatedReceipt, index) => {
+          if (updatedReceipt && updatedReceipt.friends) {
+            const numFriends = Object.keys(updatedReceipt.friends || {}).length;
+            const individualPayment = updatedReceipt.price / numFriends;
+
+            Object.keys(updatedReceipt.friends).forEach((friendId) => {
+              if (friends[friendId]) {
+                friends[friendId].payment += individualPayment;
+              } else {
+                friends[friendId] = {
+                  name: updatedReceipt.friends[friendId],
+                  payment: individualPayment,
+                  originator: existingFriends[friendId]?.originator || false,
+                };
+              }
+            });
+          } else {
+            console.warn(
+              "Updated receipt or friends is undefined:",
+              updatedReceipt
+            );
+          }
         });
+
         if (!friends[userUid]) {
           friends[userUid] = {
             name: userData.name,
@@ -534,12 +559,13 @@ export const useAuthStore = create((set, get) => ({
             originator: true,
           };
         }
+
         const newReceiptData = {
           friends: friends,
           [title]: updatedReceiptsArray,
         };
-        batch.set(receiptRef, newReceiptData, { merge: false }); // Use merge to update existing document
-        batch.update(receiptRef, newReceiptData);
+
+        batch.set(receiptRef, newReceiptData, { merge: true });
 
         const updatedSharedReceipts = {
           ...userData.sharedReceipts,
@@ -555,11 +581,10 @@ export const useAuthStore = create((set, get) => ({
         set({
           authUser: updatedUser,
           localUserData: updatedUser,
-          receipts: [], // Assuming you don't need to update local receipts here
+          receipts: [],
           sharedReceipts: updatedSharedReceipts,
         });
 
-        // Prepare friend updates
         const friendUpdates = Object.keys(friends).map(async (friendId) => {
           if (friendId !== userUid) {
             const friendReceiptRef = doc(
@@ -569,14 +594,14 @@ export const useAuthStore = create((set, get) => ({
               "sharedReceipts",
               uniqued
             );
-            batch.set(friendReceiptRef, newReceiptData);
+            batch.set(friendReceiptRef, newReceiptData, { merge: true });
           }
         });
 
         await Promise.all(friendUpdates);
         await batch.commit();
-      } else {
-        throw new Error("Receipt not found");
+      } catch (error) {
+        throw error;
       }
     } catch (error) {
       console.error("Error updating receipt:", error);
@@ -1080,9 +1105,7 @@ export const useAuthStore = create((set, get) => ({
 
       const updatedNotifications = (userData.notifications || []).filter(
         (notification) => {
-          return !(
-            notification.userId === notificationId 
-          );
+          return !(notification.userId === notificationId);
         }
       );
 

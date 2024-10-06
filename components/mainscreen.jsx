@@ -42,7 +42,6 @@ const Mainscreen = () => {
   useEffect(() => {
     fetchData();
 
-    console.log("receiptId", receiptId);
     if (receiptId) {
       const matchingItem = tableData.find(
         (item) => item.receiptId === receiptId
@@ -64,6 +63,7 @@ const Mainscreen = () => {
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
           let user = "";
+          let originatorId = "";
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
@@ -89,6 +89,7 @@ const Mainscreen = () => {
                     ([friendId, friendData]) => {
                       if (friendData.originator === true) {
                         user = friendData.name;
+                        originatorId = friendId;
                       }
                       if (friendData.paid === true) {
                         settledPayments = {
@@ -121,6 +122,7 @@ const Mainscreen = () => {
             friendPaidStatus: settledPayments,
             friends: combinedFriends,
             items: combinedItems,
+            originatorId: originatorId,
           });
         }
       });
@@ -131,7 +133,6 @@ const Mainscreen = () => {
   };
 
   useEffect(() => {
-    // console.log("localUserData: ", tableData);
     fetchData();
   }, [localUserData]);
 
@@ -234,6 +235,7 @@ const Mainscreen = () => {
                   params: {
                     previousScreen: "update",
                     uniqued: item.receiptId,
+                    originatorId: item.originatorId,
                   },
                 }}
                 onPress={() => handleCardPress(item)}
