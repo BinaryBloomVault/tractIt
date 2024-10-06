@@ -555,6 +555,7 @@ export const useAuthStore = create((set, get) => ({
           friends[userUid] = {
             name: userData.name,
             payment: 0,
+            paid: true, //directly mark as paid once this is the originator of the receipts
             originator: true,
           };
         }
