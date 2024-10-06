@@ -21,7 +21,6 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { firestore } from "../config/firebaseConfig";
-import { disableNetwork, enableNetwork } from "firebase/firestore";
 
 const mmkv = new MMKV();
 

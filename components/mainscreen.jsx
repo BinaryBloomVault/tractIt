@@ -63,6 +63,7 @@ const Mainscreen = () => {
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
           let user = "";
+          let originatorId = "";
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
@@ -86,6 +87,7 @@ const Mainscreen = () => {
                     ([friendId, friendData]) => {
                       if (friendData.originator === true) {
                         user = friendData.name;
+                        originatorId = friendId;
                       }
                       combinedFriends[friendId] = friendData.name;
                     }
@@ -111,6 +113,7 @@ const Mainscreen = () => {
             price: totalamount.toFixed(2),
             friends: combinedFriends,
             items: combinedItems,
+            originatorId: originatorId,
           });
         }
       });
@@ -121,7 +124,6 @@ const Mainscreen = () => {
   };
 
   useEffect(() => {
-    // console.log("localUserData: ", tableData);
     fetchData();
   }, [localUserData]);
 
@@ -224,6 +226,7 @@ const Mainscreen = () => {
                   params: {
                     previousScreen: "update",
                     uniqued: item.receiptId,
+                    originatorId: item.originatorId,
                   },
                 }}
                 onPress={() => handleCardPress(item)}

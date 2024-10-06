@@ -3,15 +3,17 @@ import { View, Text, StyleSheet, TextInput } from "react-native";
 import Receipt from "../../../components/card/receiptCard";
 import TotalCard from "../../../components/totalPayment";
 import { useAuthStore } from "../../../zustand/zustand";
-
+import { useLocalSearchParams } from "expo-router";
 const AddButton = () => {
   const { title, setTitle } = useAuthStore((state) => ({
     title: state.title,
     setTitle: state.setTitle,
   }));
+  const userId = useAuthStore((state) => state.localUserData?.uid);
 
+  const { originatorId } = useLocalSearchParams();
 
-  const [isFocus, setFocus] = useState(false)
+  const [isFocus, setFocus] = useState(false);
 
   return (
     <View style={styles.mainactivity}>
@@ -25,6 +27,7 @@ const AddButton = () => {
           onBlur={() => {
             setFocus(false);
           }}
+          editable={originatorId === userId}
         />
       </View>
       <Receipt />

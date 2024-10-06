@@ -2,9 +2,15 @@ import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, router } from "expo-router";
-import { Text, StyleSheet, Pressable, View } from "react-native";
+import { Tabs, useRouter } from "expo-router";
+import { useAuthStore } from "../../../zustand/zustand";
+import { TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
+
 export default function TabLayout() {
+  const router = useRouter();
+  const userId = useAuthStore((state) => state.localUserData?.uid);
+  const screenWidth = Dimensions.get("window").width;
+
   return (
     <Tabs>
       <Tabs.Screen
@@ -24,13 +30,34 @@ export default function TabLayout() {
       <Tabs.Screen
         name="writeReceipt"
         options={{
-          tabBarStyle: { display: "none" },
           tabBarLabel: "",
           headerShown: false,
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={30} name="plus-circle" color={color} />
+          tabBarStyle: { display: "none" },
+          tabBarButton: (props) => (
+            <View
+              style={[
+                styles.tabBarButtonContainer,
+                {
+                  width: screenWidth / 3,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                {...props}
+                style={styles.plusButton}
+                onPress={() =>
+                  router.push({
+                    pathname: "/writeReceipt",
+                    params: {
+                      originatorId: userId,
+                    },
+                  })
+                }
+              >
+                <FontAwesome size={45} name="plus-circle" color={props.color} />
+              </TouchableOpacity>
+            </View>
           ),
-          headerShown: false,
         }}
       />
       <Tabs.Screen
@@ -46,3 +73,18 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarButtonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 55,
+  },
+  plusButton: {
+    position: "absolute",
+    bottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    border: "blue",
+  },
+});

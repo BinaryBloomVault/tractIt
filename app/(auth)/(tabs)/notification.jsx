@@ -80,6 +80,7 @@ const Notification = () => {
         params: {
           uniqued: item.newReceiptId,
           receiptId: item.newReceiptId,
+          originatorId: item.userId,
           previousScreen: "update",
         },
       });
