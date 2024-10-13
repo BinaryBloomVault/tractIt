@@ -25,6 +25,7 @@ const Notification = () => {
 
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
   const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus); // Updated to use state management for paid status
+  const rejectedPaidStatus = useAuthStore((state) => state.rejectedPaidStatus);
   const paidStatus = useAuthStore((state) => state.getPaidReceipts);
   const router = useRouter();
 
@@ -33,13 +34,8 @@ const Notification = () => {
       const { userId, type, receiptId, friendId } = selectedNotification;
       if (type === "paid") {
         if (paidStatus) {
-          //console.error("Paid Request:", paidStatus);
           await updatePaidStatus(receiptId, friendId, true);
           await deleteNotification(userId);
-          // } else {
-          //   //On investigation why always falls here
-          //   console.error("Failed to cancel friend request");
-          // }
         }
       } else if (type === "friend") {
         const success = await confirmFriendRequest(userId);
@@ -58,15 +54,15 @@ const Notification = () => {
   const handleCancel = async () => {
     if (selectedNotification) {
       const { userId, type, receiptId, friendId } = selectedNotification;
-      //On progress
-      // if(type === "cancelPaid") {
-      //   await cancelPaidRequest(receiptId, friendId)
-      // } else {
-      const success = await cancelFriendRequest(userId);
-      if (success) {
+      if(type === "paid") {
+        await rejectedPaidStatus(receiptId, friendId)
         await deleteNotification(userId);
       } else {
-        console.error("Failed to cancel friend request");
+        const success = await cancelFriendRequest(userId);
+        if (success)
+          await deleteNotification(userId);
+        else 
+          console.error("Failed to cancel friend request");
       }
     }
     setModalVisible(false);

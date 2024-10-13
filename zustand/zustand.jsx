@@ -38,6 +38,8 @@ export const useAuthStore = create((set, get) => ({
   isOffline: true,
   receipts: [],
   PaidStatus: false,
+  _receiptId: "",
+  _friendId: "",
   sharedReceipts: {},
   modalVisible: false,
   searchResults: [],
@@ -67,6 +69,18 @@ export const useAuthStore = create((set, get) => ({
   setPaidReceipts: (paidStatus) => {
     set((state) => ({
       PaidStatus: paidStatus,
+    }));
+  },
+
+  _setFriendId: (id) => {
+    set((state) => ({
+      _friendId: id, // Corrected syntax
+    }));
+  },
+
+  _setReceiptId: (id) => {
+    set((state) => ({
+      _receiptId: id, // Corrected syntax
     }));
   },
 
@@ -960,6 +974,9 @@ export const useAuthStore = create((set, get) => ({
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
 
+          get()._setFriendId(friendId); // Directly set the friendId
+          get()._setReceiptId(receiptId); // Directly set the receiptId
+
           if (paidRequest) {
             // Update the 'paid' status
             friendData.paid = true;
@@ -968,6 +985,7 @@ export const useAuthStore = create((set, get) => ({
               [`friends.${friendId}`]: friendData,
             });
             const paidDone = false;
+            const setPaidReceipts = get().setPaidReceipts
             setPaidReceipts(paidDone);
           }
 
@@ -999,13 +1017,75 @@ export const useAuthStore = create((set, get) => ({
             }
           }
         }
-        return true;
       }
     } catch (error) {
       console.error("Error updating paid status:", error);
-      return false;
     }
   },
+
+  rejectedPaidStatus: async (receiptId, friendId) => {
+    try {
+      // const { _receiptId, _friendId } = get(); // Retrieve receiptId and friendId from state
+  
+      // if (!_receiptId || !_friendId) {
+      //   throw new Error("Missing receiptId or friendId.");
+      // }
+      console.error("Pass here!!!")
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const receiptRef = doc(
+          firestore,
+          "users",
+          userData.uid,
+          "sharedReceipts",
+          receiptId // Use the receiptId from state
+        );
+        const receiptDoc = await getDoc(receiptRef);
+  
+        if (receiptDoc.exists()) {
+          const receiptData = receiptDoc.data();
+          const friendData = receiptData.friends[friendId];
+  
+          await updateDoc(receiptRef, {
+            [`friends.${friendId}`]: friendData,
+          });
+  
+          // Notify the friend about the rejection
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId && originatorId !== friendId) {
+            const friendReceiptRef = doc(firestore, "users", friendId);
+            const friendDoc = await getDoc(friendReceiptRef);
+  
+            if (friendDoc.exists()) {
+              const originatorUserData = friendDoc.data();
+              const newNotification = {
+                message: "Your paid request rejected by the originator.",
+                type: "paid",
+                receiptId: receiptId,
+                friendId: friendId,
+              };
+  
+              const updatedNotifications = [
+                ...(originatorUserData.notifications || []),
+                newNotification,
+              ];
+              //console.error("notification ",newNotification)
+              // Update notifications in Firestore
+              await updateDoc(friendReceiptRef, {
+                notifications: updatedNotifications,
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating rejected paid status:", error);
+    }
+  },
+  
 
   cancelPaidRequest: async (receiptId, friendId) => {
     try {
