@@ -16,13 +16,10 @@ import { useLocalSearchParams } from "expo-router";
 
 const ReceiptCard = () => {
   const styles = useStyle();
-  const { receipts, updateReceiptById, localUserData } = useAuthStore(
-    (state) => ({
-      receipts: state.receipts,
-      updateReceiptById: state.updateReceiptById,
-      localUserData: state.localUserData,
-    })
-  );
+  const { receipts, updateReceiptById } = useAuthStore((state) => ({
+    receipts: state.receipts,
+    updateReceiptById: state.updateReceiptById,
+  }));
 
   const userId = useAuthStore((state) => state.localUserData?.uid);
   const swipeableRefs = useRef({});
@@ -63,6 +60,7 @@ const ReceiptCard = () => {
 
       return !isMatch;
     });
+    console.log(updatedReceipts);
     updateReceiptById(updatedReceipts);
   };
 

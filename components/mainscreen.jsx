@@ -67,7 +67,7 @@ const Mainscreen = () => {
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
-          let userPaid = false
+          let userPaid = false;
           let settledPayments = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
@@ -94,10 +94,10 @@ const Mainscreen = () => {
                       if (friendData.paid === true) {
                         settledPayments = {
                           friendName: friendData.name,
-                          paidStatus: friendData.paid
+                          paidStatus: friendData.paid,
                         };
                       }
-                      combinedFriends[friendId] = friendData.name;
+                      combinedFriends[friendId] = friendData;
                     }
                   );
                 });
@@ -134,6 +134,7 @@ const Mainscreen = () => {
 
   useEffect(() => {
     fetchData();
+    console.log("receiptsArray: ", tableData);
   }, [localUserData]);
 
   const handleCardPress = (item) => {
@@ -255,10 +256,11 @@ const Mainscreen = () => {
                       <View style={styles.horizontalLine} />
                       <Text style={styles.txtFriends}>Friends</Text>
                       <UserIcon
-                        friends={Object.values(item.friends)}
-                        paidFriends={item.friendPaidStatus} 
+                        friends={Object.values(item.friends).map(
+                          (friend) => friend.name
+                        )}
+                        paidFriends={item.friendPaidStatus}
                       />
-
                     </View>
                   </View>
                 </Pressable>

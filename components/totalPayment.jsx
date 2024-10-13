@@ -102,7 +102,10 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
         if (tempPagesRef.current[receiptIndex]) {
           const updatedFriends = Object.entries(selectedFriends).reduce(
             (acc, [friendId, friendData]) => {
-              acc[friendId] = friendData.name;
+              acc[friendId] = {
+                name: friendData.name,
+                paid: false,
+              };
               return acc;
             },
             {}
@@ -347,7 +350,11 @@ const TotalPaymentModal = ({
                         <Text style={styles.friendsButtonText}>Friends</Text>
                       </Link>
                       <View style={styles.centeredView}>
-                        <UserIcon friends={Object.values(page.friends || {})} />
+                        <UserIcon
+                          friends={Object.values(page.friends || {}).map(
+                            (friend) => friend.name
+                          )}
+                        />
                       </View>
                     </View>
                   </View>

@@ -12,8 +12,10 @@ const ItemRow = ({ item, color, font, size, height, index, disabled }) => {
     setSelectedItemIndex(index);
     setModalVisible(true);
   };
-  const friendNames = item.friends ? Object.values(item.friends) : [];
-  const isFriendsArray = friendNames.join("") === "Friends";
+  const friendNames = item.friends
+    ? Object.values(item.friends || {}).map((friend) => friend.name)
+    : [];
+  const isFriendsArray = item.friends === "Friends";
 
   return (
     <View style={styles.itemsParent}>
