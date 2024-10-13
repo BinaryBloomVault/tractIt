@@ -527,19 +527,22 @@ export const useAuthStore = create((set, get) => ({
         const existingFriends = existingReceiptData.friends || {};
 
         const friends = {};
-        updatedReceiptsArray.forEach((updatedReceipt, index) => {
+        updatedReceiptsArray.forEach((updatedReceipt) => {
           if (updatedReceipt && updatedReceipt.friends) {
-            const numFriends = Object.keys(updatedReceipt.friends || {}).length;
+            const numFriends = Object.keys(updatedReceipt.friends).length;
             const individualPayment = updatedReceipt.price / numFriends;
 
             Object.keys(updatedReceipt.friends).forEach((friendId) => {
+              const friendData = updatedReceipt.friends[friendId];
+
               if (friends[friendId]) {
                 friends[friendId].payment += individualPayment;
               } else {
                 friends[friendId] = {
-                  name: updatedReceipt.friends[friendId],
+                  name: friendData.name,
                   payment: individualPayment,
                   originator: existingFriends[friendId]?.originator || false,
+                  paid: friendData.paid,
                 };
               }
             });
@@ -620,11 +623,13 @@ export const useAuthStore = create((set, get) => ({
           const individualPayment = receipt.price / numFriends;
 
           Object.keys(receipt.friends).forEach((friendId) => {
+            const friendData = receipt.friends[friendId];
+
             if (friends[friendId]) {
               friends[friendId].payment += individualPayment;
             } else {
               friends[friendId] = {
-                name: receipt.friends[friendId],
+                name: friendData.name,
                 payment: individualPayment,
                 paid: false,
                 originator: friendId === userData.uid,
@@ -654,10 +659,6 @@ export const useAuthStore = create((set, get) => ({
 
         // Create the next incremental receipt ID
         const newReceiptId = `receipt_${lastReceiptId + 1}`;
-        console.log("lastReceiptId", lastReceiptId);
-
-        console.log("newReceiptId", newReceiptId);
-        console.log("title22", title);
 
         // Prepare the receipt data
         const receiptData = { friends: friends, [title]: receiptDataArray };
