@@ -127,6 +127,8 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
         fontSize={25}
         height={40}
         bcolor={"#00BEE5"}
+        position={"relative"}
+        top={screenHeight * 0.15}
       />
       <TabButton
         onPressLeft={handleGoBack}

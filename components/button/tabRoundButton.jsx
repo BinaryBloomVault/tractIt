@@ -1,9 +1,11 @@
-import { View, Text, Platform } from "react-native";
+import { View, Text, Platform, Dimensions } from "react-native";
 import React from "react";
 import { Button } from "@rneui/base";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons"; // Import icons
 
+const screenHeight = Dimensions.get("window").height;
+const contentHeight = screenHeight * 0.15
 const tabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
   return (
     <View
@@ -12,7 +14,8 @@ const tabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
         flexDirection: "row",
         justifyContent: "space-between",
         paddingHorizontal: 30,
-        position: "absolute",
+        position: "relative",
+        top: contentHeight,
         bottom: 0,
         width: "100%",
       }}
@@ -31,6 +34,7 @@ const tabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
           shadowOpacity: 0.2,
           shadowRadius: 5,
           padding: 20,
+          position: "relative",
         }}
         onPress={onPressLeft}
       />
@@ -48,6 +52,7 @@ const tabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
           shadowOpacity: 0.2,
           shadowRadius: 5,
           padding: 20,
+          position: "relative",
         }}
         onPress={onPressRight}
         disabled={isEnabled}

@@ -12,11 +12,13 @@ const addButton = ({
   left,
   height,
   bcolor,
+  position,
+  top,
 }) => {
   return (
     <View style={styles.addButtonContainer(bottom, left)}>
       <Pressable
-        style={styles.addButton(width, height, bcolor)}
+        style={styles.addButton(width, height, bcolor, position, top)}
         onPress={onPress}
       >
         <Text style={styles.addButtonTitle(fontSize)}>{title}</Text>
@@ -32,7 +34,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   }),
-  addButton: (width, height, bcolor) => ({
+  addButton: (width, height, bcolor, position, top) => ({
     backgroundColor: bcolor,
     borderColor: "transparent",
     borderRadius: 30,
@@ -42,6 +44,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     width: width,
     height: height,
+    position: position,
+    top: top,
     alignItems: "center",
     justifyContent: "center",
   }),

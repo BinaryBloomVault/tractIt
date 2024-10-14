@@ -38,8 +38,6 @@ export const useAuthStore = create((set, get) => ({
   isOffline: true,
   receipts: [],
   PaidStatus: false,
-  _receiptId: "",
-  _friendId: "",
   sharedReceipts: {},
   modalVisible: false,
   searchResults: [],
@@ -69,18 +67,6 @@ export const useAuthStore = create((set, get) => ({
   setPaidReceipts: (paidStatus) => {
     set((state) => ({
       PaidStatus: paidStatus,
-    }));
-  },
-
-  _setFriendId: (id) => {
-    set((state) => ({
-      _friendId: id, // Corrected syntax
-    }));
-  },
-
-  _setReceiptId: (id) => {
-    set((state) => ({
-      _receiptId: id, // Corrected syntax
     }));
   },
 
@@ -1025,12 +1011,7 @@ export const useAuthStore = create((set, get) => ({
 
   rejectedPaidStatus: async (receiptId, friendId) => {
     try {
-      // const { _receiptId, _friendId } = get(); // Retrieve receiptId and friendId from state
-  
-      // if (!_receiptId || !_friendId) {
-      //   throw new Error("Missing receiptId or friendId.");
-      // }
-      console.error("Pass here!!!")
+   
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const userData = JSON.parse(userDataString);
@@ -1039,7 +1020,7 @@ export const useAuthStore = create((set, get) => ({
           "users",
           userData.uid,
           "sharedReceipts",
-          receiptId // Use the receiptId from state
+          receiptId
         );
         const receiptDoc = await getDoc(receiptRef);
   
