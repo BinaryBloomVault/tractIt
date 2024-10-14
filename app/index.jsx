@@ -16,13 +16,14 @@ import { useAuthStore } from "../zustand/zustand";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-const index = () => {
+const Index = () => {
   const { login } = useAuthStore((state) => ({
     login: state.login,
   }));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hideShow, setHideShow] = useState(true);
+  const [wrongPass, setWrongPass] = useState(false);
 
   const passHideShow = () => {
     setHideShow(!hideShow);
@@ -30,10 +31,11 @@ const index = () => {
 
   const handleCredentials = async () => {
     try {
-      await login(email, password);
+      const success = await login(email, password);
+      if(!success)
+          setWrongPass(true)
     } catch (error) {
       console.error("Error logging in:", error);
-      Alert("Invalid username/password!");
     }
   };
 
@@ -46,6 +48,10 @@ const index = () => {
           source={require(`../assets/images/friends.png`)}
         />
         <Text style={styles.welcomeBack}>Welcome</Text>
+
+        {wrongPass && (
+          <Text style={styles.errorText}>Incorrect username/password</Text>
+        )}
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -136,7 +142,7 @@ const styles = StyleSheet.create({
     fontFamily: "Gudea-Bold",
     fontWeight: "700",
     paddingLeft: 19,
-    paddingRight: 45, // Add space for the icon
+    paddingRight: 45,
   },
   resetTypo: {
     color: "#00bee5",
@@ -234,6 +240,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     justifyContent: "center",
   },
+  errorText: {
+    color: "#CA0404",
+    fontWeight: "bold",
+    marginTop: 10,
+  },
 });
 
-export default index;
+export default Index;

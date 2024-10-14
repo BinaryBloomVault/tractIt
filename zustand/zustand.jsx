@@ -959,10 +959,6 @@ export const useAuthStore = create((set, get) => ({
         if (receiptDoc.exists()) {
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
-
-          get()._setFriendId(friendId); // Directly set the friendId
-          get()._setReceiptId(receiptId); // Directly set the receiptId
-
           if (paidRequest) {
             // Update the 'paid' status
             friendData.paid = true;

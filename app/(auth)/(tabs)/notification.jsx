@@ -36,6 +36,8 @@ const Notification = () => {
         if (paidStatus) {
           await updatePaidStatus(receiptId, friendId, true);
           await deleteNotification(userId);
+        } else {
+          await deleteNotification(userId);
         }
       } else if (type === "friend") {
         const success = await confirmFriendRequest(userId);
