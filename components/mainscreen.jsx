@@ -76,6 +76,7 @@ const Mainscreen = () => {
 					let title = '';
 					let combinedItems = [];
 					let settledPayments = {};
+					let myFriends = {};
 
 					Object.entries(receiptData).forEach(
 						([currentTitle, itemsArray]) => {
@@ -108,6 +109,11 @@ const Mainscreen = () => {
 														paidStatus: friendData.paid,
 													};
 												}
+												const getFriends = {
+													name: friendData.name,
+													paid: friendData.paid,
+												};
+												myFriends = getFriends;
 												combinedFriends[friendId] = friendData;
 											},
 										);
@@ -132,6 +138,7 @@ const Mainscreen = () => {
 						receiptId: receiptId,
 						title: title,
 						name: user,
+						myfriend: myFriends,
 						price: totalamount.toFixed(2),
 						friendPaidStatus: settledPayments,
 						friends: combinedFriends,
@@ -211,7 +218,7 @@ const Mainscreen = () => {
 		return paidStatus ? (
 			<Feather name='check-circle' size={24} color='green' />
 		) : (
-			<Feather name='alert-circle' size={24} color='orange' />
+			<Feather name='clock' size={24} color='orange' />
 		);
 	};
 
@@ -316,7 +323,6 @@ const Mainscreen = () => {
 										</Pressable>
 									</Link>
 
-									{/* Modal for showing payment status */}
 									<Modal
 										animationType='slide'
 										transparent={true}
@@ -327,46 +333,51 @@ const Mainscreen = () => {
 									>
 										<View style={styles.modalOverlay}>
 											<View style={styles.modalContent}>
-												<Text style={styles.modalText}>
-													Settled Payments
-												</Text>
-												{item.friendPaidStatus?.paidStatus && (
-													<>
-														<View style={styles.modalHeader}>
+												<ScrollView
+													contentContainerStyle={
+														styles.modalScrollContent
+													}
+												>
+													<Text style={styles.modalTitle}>
+														Settled Payments
+													</Text>
+
+													{/* Loop through all friends and display their name and paid status */}
+													{Object.values(
+														selectedFriend?.friends || {},
+													).map((friend, index) => (
+														<View
+															key={index}
+															style={styles.modalHeader}
+														>
 															{/* Align renderIcon, name, and status in a row */}
 															<View style={styles.row}>
-																{renderIcon(
-																	item.friendPaidStatus
-																		.paidStatus,
-																)}
+																{renderIcon(friend.paid)}
 																<Text style={styles.modalText}>
-																	{
-																		item.friendPaidStatus
-																			?.friendName
-																	}
+																	{friend.name}
 																</Text>
 																<Text
 																	style={styles.modalStatus}
 																>
-																	{item.friendPaidStatus
-																		.paidStatus
+																	{friend.paid
 																		? 'Paid'
 																		: 'Pending'}
 																</Text>
 															</View>
 														</View>
-													</>
-												)}
-												<Pressable
-													style={styles.closeButton}
-													onPress={() =>
-														setModalVisible(!modalVisible)
-													}
-												>
-													<Text style={styles.closeButtonText}>
-														Close
-													</Text>
-												</Pressable>
+													))}
+
+													<Pressable
+														style={styles.closeButton}
+														onPress={() =>
+															setModalVisible(!modalVisible)
+														}
+													>
+														<Text style={styles.closeButtonText}>
+															Close
+														</Text>
+													</Pressable>
+												</ScrollView>
 											</View>
 										</View>
 									</Modal>
@@ -436,7 +447,7 @@ const useStyle = () => {
 		},
 		scrollViewContent: {
 			padding: 16,
-			paddingTop: 0, // Ensure space at the top for headerTop
+			paddingTop: 0,
 		},
 		receiptCard: {
 			borderRadius: 15,
@@ -540,46 +551,50 @@ const useStyle = () => {
 			color: '#FFF',
 			fontWeight: 'bold',
 		},
-		modalHeader: {
-			padding: 20,
-		},
-		row: {
-			flexDirection: 'row', // Align items in a row
-			alignItems: 'center', // Vertically center items
-			justifyContent: 'flex-start', // Align left
-			backgroundColor: '#F3F3F3',
-		},
-		modalText: {
-			fontSize: 20,
-			fontWeight: 'bold',
-			marginLeft: 10, // Add some space between the icon and text
-		},
-		modalStatus: {
-			fontSize: 20,
-			color: 'gray',
-			marginLeft: 10, // Space between name and status
-		},
-		modalContent: {
-			backgroundColor: '#F3F3F3',
-			padding: 80,
-			borderRadius: 10,
-		},
 		modalOverlay: {
 			flex: 1,
 			justifyContent: 'center',
 			alignItems: 'center',
+			backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		},
+		modalContent: {
+			width: deviceWidth * 0.8,
+			maxHeight: deviceHeight * 0.8,
+			backgroundColor: 'white',
+			borderRadius: 10,
+			padding: 20,
+		},
+		modalScrollContent: {
+			paddingBottom: 20,
+		},
+		modalTitle: {
+			fontSize: 20,
+			fontWeight: 'bold',
+			marginBottom: 20,
+		},
+		row: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			marginBottom: 10,
+		},
+		modalText: {
+			marginLeft: 10,
+			fontSize: 16,
+		},
+		modalStatus: {
+			marginLeft: 'auto',
+			fontSize: 16,
 		},
 		closeButton: {
 			marginTop: 20,
-			padding: 10,
 			backgroundColor: '#2196F3',
+			padding: 10,
 			borderRadius: 5,
 			alignItems: 'center',
 		},
 		closeButtonText: {
 			color: 'white',
 			fontSize: 16,
-			fontWeight: 'bold',
 		},
 	});
 };
