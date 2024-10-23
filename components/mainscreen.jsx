@@ -76,7 +76,6 @@ const Mainscreen = () => {
           let title = '';
           let combinedItems = [];
           let settledPayments = {};
-          let myFriends = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
             if (currentTitle !== 'friends' && Array.isArray(itemsArray)) {
@@ -105,11 +104,6 @@ const Mainscreen = () => {
                           paidStatus: friendData.paid,
                         };
                       }
-                      const getFriends = {
-                        name: friendData.name,
-                        paid: friendData.paid,
-                      };
-                      myFriends = getFriends;
                       combinedFriends[friendId] = friendData;
                     },
                   );
@@ -131,7 +125,6 @@ const Mainscreen = () => {
             receiptId: receiptId,
             title: title,
             name: user,
-            myfriend: myFriends,
             price: totalamount.toFixed(2),
             friendPaidStatus: settledPayments,
             friends: combinedFriends,
@@ -296,7 +289,12 @@ const Mainscreen = () => {
                             friends={Object.values(item.friends).map(
                               (friend) => friend.name,
                             )}
-                            paidFriends={item.friendPaidStatus}
+                            paidFriends={Object.entries(item.friends).map(
+                              ([id, friend]) => ({
+                                name: friend.name,
+                                paid: friend.paid,
+                              }),
+                            )}
                           />
                         </View>
                       </View>
