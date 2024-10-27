@@ -8,7 +8,7 @@ import {
   Platform,
   Keyboard,
   useWindowDimensions,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import SignIn from "../components/button/addButton";
 import { useAuthStore } from "../zustand/zustand";
@@ -26,12 +26,39 @@ const Register = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const windowHeight = useWindowDimensions().height;
 
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+  const safeTextRegex = /^[a-zA-Z0-9\s.,?!'()&*\"\-]*$/;
+
+  const securityEmailText = (text) => {
+    const isValid = emailRegex.test(text);
+    return isValid;
+  };
+
+  const securityPassText = (text) => {
+    const isValid = passwordRegex.test(text);
+    return isValid;
+  };
+
+  const securityText = (text) => {
+    const isValid = safeTextRegex.test(text);
+    return isValid;
+  };
+
   const passHideShow = () => {
     setHideShow(!hideShow);
   };
 
   const handleRegister = async () => {
     try {
+      if (
+        !securityEmailText(email) ||
+        !securityPassText(pass) ||
+        !securityText(name)
+      ) {
+        console.error("Invalid format!!");
+        return;
+      }
       await register(email, password, name);
     } catch (error) {
       console.error("Error registering:", error);
@@ -56,7 +83,13 @@ const Register = () => {
           value={email}
           onChangeText={setEmail}
         />
-        <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+        <View
+          style={[
+            styles.inputFormItem,
+            styles.inputShadowBox,
+            styles.passwordContainer,
+          ]}
+        >
           <TextInput
             style={{ flex: 1 }}
             placeholder="New password"

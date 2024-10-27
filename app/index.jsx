@@ -20,10 +20,24 @@ const Index = () => {
   const { login } = useAuthStore((state) => ({
     login: state.login,
   }));
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hideShow, setHideShow] = useState(true);
   const [wrongPass, setWrongPass] = useState(false);
+
+  const securityEmailText = (text) => {
+    const isValid = emailRegex.test(text);
+    return isValid;
+  };
+
+  const securityPassText = (text) => {
+    const isValid = passwordRegex.test(text);
+    return isValid;
+  };
 
   const passHideShow = () => {
     setHideShow(!hideShow);
@@ -31,9 +45,14 @@ const Index = () => {
 
   const handleCredentials = async () => {
     try {
+      // Validate both email and password
+      if (!securityEmailText(email) || !securityPassText(password)) {
+        console.error("Invalid email or password format");
+        return;
+      }
+
       const success = await login(email, password);
-      if(!success)
-          setWrongPass(true)
+      if (!success) setWrongPass(true);
     } catch (error) {
       console.error("Error logging in:", error);
     }
