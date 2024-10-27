@@ -142,7 +142,7 @@ export const useAuthStore = create((set, get) => ({
       if (tryDataArray.length > 0) {
         const uniqueItems = tryDataArray.filter((newItem) => {
           return !receipts.some(
-            (existingItem) => existingItem.id === newItem.id
+            (existingItem) => existingItem.id === newItem.id,
           );
         });
 
@@ -209,10 +209,10 @@ export const useAuthStore = create((set, get) => ({
 
         const sharedReceiptsCollectionRef = collection(
           userRef,
-          "sharedReceipts"
+          "sharedReceipts",
         );
         const sharedReceiptsSnapshot = await getDocs(
-          sharedReceiptsCollectionRef
+          sharedReceiptsCollectionRef,
         );
         sharedReceiptsSnapshot.forEach((doc) => {
           sharedReceipts[doc.id] = doc.data();
@@ -279,7 +279,7 @@ export const useAuthStore = create((set, get) => ({
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const userRef = doc(firestore, "users", user.uid);
       const token = await user.getIdToken();
@@ -344,7 +344,7 @@ export const useAuthStore = create((set, get) => ({
       // Update local state
       set((state) => {
         const updatedGroups = state.groups.filter(
-          (group) => group.id !== groupId
+          (group) => group.id !== groupId,
         );
 
         // Update local storage
@@ -375,7 +375,7 @@ export const useAuthStore = create((set, get) => ({
 
         const updatedGroups = groups.map((group) => {
           const updatedMembers = group.members.filter(
-            (member) => member.id !== friendId
+            (member) => member.id !== friendId,
           );
           return { ...group, members: updatedMembers };
         });
@@ -409,7 +409,7 @@ export const useAuthStore = create((set, get) => ({
           const friendFriendRequests = friendData.friendRequests || [];
 
           const updatedFriendFriendRequests = friendFriendRequests.filter(
-            (f) => f.id !== currentUserId
+            (f) => f.id !== currentUserId,
           );
 
           await updateDoc(friendUserRef, {
@@ -426,7 +426,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       set((state) => {
         const updatedGroups = state.groups.map((group) =>
-          group.id === updatedGroup.id ? updatedGroup : group
+          group.id === updatedGroup.id ? updatedGroup : group,
         );
 
         const userDataString = mmkvStorage.getItem("user_data");
@@ -453,7 +453,7 @@ export const useAuthStore = create((set, get) => ({
       const token = await get().authToken;
       const userData = await get().localUserData;
       const newReceiptList = get().receipts[title].filter(
-        (receipt) => receipt.id !== receiptId
+        (receipt) => receipt.id !== receiptId,
       );
       mmkvStorage.setItem(
         "user_data",
@@ -463,7 +463,7 @@ export const useAuthStore = create((set, get) => ({
             ...userData.sharedReceipts,
             [title]: newReceiptList,
           },
-        })
+        }),
       );
       set({
         localUserData: {
@@ -494,7 +494,7 @@ export const useAuthStore = create((set, get) => ({
 
       if (!userUid || !uniqued) {
         throw new Error(
-          `Invalid userUid or uniqued value: userUid=${userUid}, uniqued=${uniqued}`
+          `Invalid userUid or uniqued value: userUid=${userUid}, uniqued=${uniqued}`,
         );
       }
 
@@ -509,7 +509,7 @@ export const useAuthStore = create((set, get) => ({
         "users",
         userUid,
         "sharedReceipts",
-        uniqued
+        uniqued,
       );
 
       try {
@@ -549,7 +549,7 @@ export const useAuthStore = create((set, get) => ({
           } else {
             console.warn(
               "Updated receipt or friends is undefined:",
-              updatedReceipt
+              updatedReceipt,
             );
           }
         });
@@ -595,7 +595,7 @@ export const useAuthStore = create((set, get) => ({
               "users",
               friendId,
               "sharedReceipts",
-              uniqued
+              uniqued,
             );
             batch.set(friendReceiptRef, newReceiptData, { merge: true });
           }
@@ -654,7 +654,7 @@ export const useAuthStore = create((set, get) => ({
             const numericId = parseInt(currentId.replace("receipt_", ""), 10);
             return numericId > maxId ? numericId : maxId;
           },
-          0
+          0,
         );
 
         // Create the next incremental receipt ID
@@ -669,7 +669,7 @@ export const useAuthStore = create((set, get) => ({
           "users",
           userData.uid,
           "sharedReceipts",
-          newReceiptId
+          newReceiptId,
         );
         await setDoc(receiptRef, receiptData);
 
@@ -701,7 +701,7 @@ export const useAuthStore = create((set, get) => ({
               "users",
               friendId,
               "sharedReceipts",
-              newReceiptId
+              newReceiptId,
             );
             await setDoc(friendReceiptRef, receiptData);
 
@@ -743,7 +743,7 @@ export const useAuthStore = create((set, get) => ({
         // Check if the friend request already exists
         const existingRequests = userData.friendRequests || [];
         const duplicateRequest = existingRequests.find(
-          (request) => request.id === friendId
+          (request) => request.id === friendId,
         );
         if (duplicateRequest) {
           console.log("Friend request already exists");
@@ -832,7 +832,7 @@ export const useAuthStore = create((set, get) => ({
 
       // Update current user's friend requests
       const updatedFriendRequests = userFriendRequests.map((request) =>
-        request.id === friendId ? { ...request, confirmed: true } : request
+        request.id === friendId ? { ...request, confirmed: true } : request,
       );
 
       try {
@@ -840,7 +840,7 @@ export const useAuthStore = create((set, get) => ({
       } catch (error) {
         console.error(
           "Error updating user friend requests in Firestore:",
-          error
+          error,
         );
         throw new Error("Failed to update user friend requests in Firestore");
       }
@@ -882,7 +882,7 @@ export const useAuthStore = create((set, get) => ({
         (request) =>
           request.id === userData.uid
             ? { ...request, confirmed: true }
-            : request
+            : request,
       );
 
       try {
@@ -891,7 +891,7 @@ export const useAuthStore = create((set, get) => ({
         });
       } catch (error) {
         throw new Error(
-          "Failed to update friend's friend requests in Firestore"
+          "Failed to update friend's friend requests in Firestore",
         );
       }
       return true;
@@ -908,7 +908,7 @@ export const useAuthStore = create((set, get) => ({
       const userRef = doc(firestore, "users", userData.uid);
 
       const updatedFriendRequests = (userData.friendRequests || []).filter(
-        (request) => request.id !== friendId
+        (request) => request.id !== friendId,
       );
 
       await updateDoc(userRef, {
@@ -934,7 +934,7 @@ export const useAuthStore = create((set, get) => ({
         const updatedFriendData = {
           ...friendData,
           friendRequests: (friendData.friendRequests || []).filter(
-            (request) => request.id !== userData.uid
+            (request) => request.id !== userData.uid,
           ),
         };
 
@@ -953,7 +953,7 @@ export const useAuthStore = create((set, get) => ({
           "users",
           userData.uid,
           "sharedReceipts",
-          receiptId
+          receiptId,
         );
         const receiptDoc = await getDoc(receiptRef);
 
@@ -961,20 +961,46 @@ export const useAuthStore = create((set, get) => ({
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
           if (paidRequest) {
-            // Update the 'paid' status
+            // Update the 'paid' status for the specific friend
             friendData.paid = true;
-            // Save updated receipt data
+
+            // Save updated receipt data for the originator
             await updateDoc(receiptRef, {
               [`friends.${friendId}`]: friendData,
             });
+
+            // Update the 'paid' status in each friend's shared receipt
+            await Promise.all(
+              Object.keys(receiptData.friends).map(async (id) => {
+                const friendReceiptRef = doc(
+                  firestore,
+                  "users",
+                  id,
+                  "sharedReceipts",
+                  receiptId,
+                );
+                const friendReceiptDoc = await getDoc(friendReceiptRef);
+
+                if (friendReceiptDoc.exists()) {
+                  const friendReceiptData = friendReceiptDoc.data();
+                  friendReceiptData.friends[friendId].paid = true;
+
+                  await updateDoc(friendReceiptRef, {
+                    [`friends.${friendId}`]:
+                      friendReceiptData.friends[friendId],
+                  });
+                }
+              }),
+            );
+
             const paidDone = false;
-            const setPaidReceipts = get().setPaidReceipts
+            const setPaidReceipts = get().setPaidReceipts;
             setPaidReceipts(paidDone);
           }
 
           // Notify the originator that the friend has paid
           const originatorId = Object.keys(receiptData.friends).find(
-            (id) => receiptData.friends[id].originator === true
+            (id) => receiptData.friends[id].originator === true,
           );
           if (originatorId && originatorId !== friendId) {
             const originatorRef = doc(firestore, "users", originatorId);
@@ -1008,7 +1034,6 @@ export const useAuthStore = create((set, get) => ({
 
   rejectedPaidStatus: async (receiptId, friendId) => {
     try {
-   
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
         const userData = JSON.parse(userDataString);
@@ -1017,26 +1042,26 @@ export const useAuthStore = create((set, get) => ({
           "users",
           userData.uid,
           "sharedReceipts",
-          receiptId
+          receiptId,
         );
         const receiptDoc = await getDoc(receiptRef);
-  
+
         if (receiptDoc.exists()) {
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
-  
+
           await updateDoc(receiptRef, {
             [`friends.${friendId}`]: friendData,
           });
-  
+
           // Notify the friend about the rejection
           const originatorId = Object.keys(receiptData.friends).find(
-            (id) => receiptData.friends[id].originator === true
+            (id) => receiptData.friends[id].originator === true,
           );
           if (originatorId && originatorId !== friendId) {
             const friendReceiptRef = doc(firestore, "users", friendId);
             const friendDoc = await getDoc(friendReceiptRef);
-  
+
             if (friendDoc.exists()) {
               const originatorUserData = friendDoc.data();
               const newNotification = {
@@ -1045,7 +1070,7 @@ export const useAuthStore = create((set, get) => ({
                 receiptId: receiptId,
                 friendId: friendId,
               };
-  
+
               const updatedNotifications = [
                 ...(originatorUserData.notifications || []),
                 newNotification,
@@ -1063,7 +1088,6 @@ export const useAuthStore = create((set, get) => ({
       console.error("Error updating rejected paid status:", error);
     }
   },
-  
 
   cancelPaidRequest: async (receiptId, friendId) => {
     try {
@@ -1078,7 +1102,7 @@ export const useAuthStore = create((set, get) => ({
           "users",
           userData.uid,
           "sharedReceipts",
-          receiptId
+          receiptId,
         );
         const receiptDoc = await getDoc(receiptRef);
 
@@ -1100,7 +1124,7 @@ export const useAuthStore = create((set, get) => ({
             const updatedReceipts = userData.receipts.map((receipt) =>
               receipt.id === receiptId
                 ? { ...receipt, friends: receiptData.friends }
-                : receipt
+                : receipt,
             );
 
             const updatedUserData = {
@@ -1117,7 +1141,7 @@ export const useAuthStore = create((set, get) => ({
 
           // Notify the originator of the cancellation
           const originatorId = Object.keys(receiptData.friends).find(
-            (id) => receiptData.friends[id].originator === true
+            (id) => receiptData.friends[id].originator === true,
           );
           if (originatorId && originatorId !== friendId) {
             const originatorRef = doc(firestore, "users", originatorId);
@@ -1164,12 +1188,12 @@ export const useAuthStore = create((set, get) => ({
       const updatedNotifications = (userData.notifications || []).filter(
         (notification) => {
           return !(notification.userId === notificationId);
-        }
+        },
       );
 
       console.log(
         "Updated notifications after deletion:",
-        updatedNotifications
+        updatedNotifications,
       );
 
       await updateDoc(userRef, {
@@ -1195,7 +1219,7 @@ export const useAuthStore = create((set, get) => ({
 
       const q = query(
         collection(firestore, "users"),
-        where("name", "==", name)
+        where("name", "==", name),
       );
       const querySnapshot = await getDocs(q);
       const friends = [];
@@ -1234,8 +1258,8 @@ export const useAuthStore = create((set, get) => ({
       // Filter out undefined values
       const cleanGroup = JSON.parse(
         JSON.stringify(newGroup, (key, value) =>
-          value === undefined ? null : value
-        )
+          value === undefined ? null : value,
+        ),
       );
       console.log("Adding group:", groupMembers);
 
@@ -1263,7 +1287,7 @@ export const useAuthStore = create((set, get) => ({
   removeGroup: async (groupId) => {
     try {
       const updatedGroups = get().groups.filter(
-        (group) => group.id !== groupId
+        (group) => group.id !== groupId,
       );
       set({ groups: updatedGroups });
 
@@ -1288,7 +1312,7 @@ export const useAuthStore = create((set, get) => ({
   updateGroup: async (groupId, updatedGroup) => {
     try {
       const updatedGroups = get().groups.map((group) =>
-        group.id === groupId ? { ...group, ...updatedGroup } : group
+        group.id === groupId ? { ...group, ...updatedGroup } : group,
       );
       set({ groups: updatedGroups });
 
