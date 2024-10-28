@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,23 +9,33 @@ import {
   useWindowDimensions,
   TouchableOpacity,
   Animated,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { RectButton } from "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  RectButton,
+} from "react-native-gesture-handler";
 import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
+import { Feather } from "@expo/vector-icons";
 
 const handleSwipeableOpen = (direction, items) => {
   if (direction === "right") {
-    Alert.alert("Swipe from right");
+    // Alert.alert('Swipe from right');
   }
 };
 
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const styles = useStyle();
   const { localUserData } = useAuthStore((state) => ({
@@ -44,7 +54,7 @@ const Mainscreen = () => {
 
     if (receiptId) {
       const matchingItem = tableData.find(
-        (item) => item.receiptId === receiptId
+        (item) => item.receiptId === receiptId,
       );
       if (matchingItem) {
         handleCardPress(matchingItem);
@@ -53,6 +63,7 @@ const Mainscreen = () => {
   }, [receiptId]);
 
   const fetchData = () => {
+    setLoading(true);
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
       // console.log("sharedReceipts: ", sharedReceipts);
@@ -67,7 +78,6 @@ const Mainscreen = () => {
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
-          let userPaid = false;
           let settledPayments = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
@@ -81,7 +91,7 @@ const Mainscreen = () => {
                     if (friendData.originator === true) {
                       user = friendData.name;
                     }
-                  }
+                  },
                 );
               } else {
                 itemsArray.forEach((item) => {
@@ -98,7 +108,7 @@ const Mainscreen = () => {
                         };
                       }
                       combinedFriends[friendId] = friendData;
-                    }
+                    },
                   );
                 });
               }
@@ -129,6 +139,7 @@ const Mainscreen = () => {
 
       setTotalPayment(totalPay.toFixed(2));
       setTableData(receiptsArray);
+      setLoading(false);
     }
   };
 
@@ -136,6 +147,15 @@ const Mainscreen = () => {
     fetchData();
     console.log("receiptsArray: ", tableData);
   }, [localUserData]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#F4D35E" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   const handleCardPress = (item) => {
     if (item.receiptId) {
@@ -190,6 +210,14 @@ const Mainscreen = () => {
     );
   };
 
+  const renderIcon = (paidStatus) => {
+    return paidStatus ? (
+      <Feather name="check-circle" size={24} color="green" />
+    ) : (
+      <Feather name="clock" size={24} color="orange" />
+    );
+  };
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.headerTop}>
@@ -216,58 +244,126 @@ const Mainscreen = () => {
         contentContainerStyle={styles.scrollViewContent}
         scrollEventThrottle={16} // Update frequently
       >
-        {tableData.map((item, index) => (
-          <Swipeable
-            key={index}
-            renderRightActions={(progress, dragX) => (
-              <RightSwipeActions
-                progress={progress}
-                dragX={dragX}
-                item={item}
-              />
-            )}
-            onSwipeableOpen={handleSwipeableOpen(item)}
-          >
-            <Card containerStyle={styles.receiptCard}>
-              <Link
-                push
-                href={{
-                  pathname: "/writeReceipt",
-                  params: {
-                    previousScreen: "update",
-                    uniqued: item.receiptId,
-                    originatorId: item.originatorId,
-                  },
-                }}
-                onPress={() => handleCardPress(item)}
-                asChild
+        {tableData.map((item, index) => {
+          const singleTap = Gesture.Tap().onEnd(() => {
+            updateReceiptsWithShared(item.receiptId);
+            updateTitle(item.title);
+            console.log("On single tap");
+          });
+
+          const longPress = Gesture.LongPress().onEnd((event) => {
+            setSelectedFriend(item); // Set the friend data for the modal
+            setModalVisible(true); // Show the modal
+            console.log("On long press tap");
+            //}
+          });
+
+          return (
+            <Swipeable
+              renderRightActions={(progress, dragX) => (
+                <RightSwipeActions
+                  progress={progress}
+                  dragX={dragX}
+                  item={item}
+                />
+              )}
+              onSwipeableOpen={handleSwipeableOpen(item)} // Pass direction and item
+            >
+              <GestureDetector
+                gesture={Gesture.Exclusive(singleTap, longPress)}
               >
-                <Pressable>
-                  <View style={styles.receiptCardHeader}>
-                    <Text style={styles.receiptUser}>{item.name}</Text>
-                    <Text style={styles.txtSettle}>Settle Up</Text>
-                  </View>
-                  <View style={styles.receiptCardBody}>
-                    <View style={styles.receiptDetails}>
-                      <Text style={styles.receiptTitle}>{item.title}</Text>
+                <Card containerStyle={styles.receiptCard}>
+                  <Link
+                    push
+                    href={{
+                      pathname: "/writeReceipt",
+                      params: {
+                        previousScreen: "update",
+                        uniqued: item.receiptId,
+                        originatorId: item.originatorId,
+                      },
+                    }}
+                    asChild
+                  >
+                    <Pressable>
+                      <View style={styles.receiptCardHeader}>
+                        <Text style={styles.receiptUser}>{item.name}</Text>
+                        <Text style={styles.txtSettle}>Settle Up</Text>
+                      </View>
+                      <View style={styles.receiptCardBody}>
+                        <View style={styles.receiptDetails}>
+                          <Text style={styles.receiptTitle}>{item.title}</Text>
+                        </View>
+                        <View style={styles.receiptDetails}>
+                          <Text style={styles.receiptAmount}>{item.price}</Text>
+                          <View style={styles.horizontalLine} />
+                          <Text style={styles.txtFriends}>Friends</Text>
+                          <UserIcon
+                            friends={Object.values(item.friends).map(
+                              (friend) => friend.name,
+                            )}
+                            paidFriends={Object.entries(item.friends).map(
+                              ([id, friend]) => ({
+                                name: friend.name,
+                                paid: friend.paid,
+                              }),
+                            )}
+                          />
+                        </View>
+                      </View>
+                    </Pressable>
+                  </Link>
+
+                  <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => {
+                      setModalVisible(!modalVisible);
+                    }}
+                  >
+                    <View style={styles.modalOverlay}>
+                      <View style={styles.modalContent}>
+                        <ScrollView
+                          contentContainerStyle={styles.modalScrollContent}
+                        >
+                          <Text style={styles.modalTitle}>
+                            Settled Payments
+                          </Text>
+
+                          {/* Loop through all friends and display their name and paid status */}
+                          {Object.values(selectedFriend?.friends || {}).map(
+                            (friend, index) => (
+                              <View key={index} style={styles.modalHeader}>
+                                {/* Align renderIcon, name, and status in a row */}
+                                <View style={styles.row}>
+                                  {renderIcon(friend.paid)}
+                                  <Text style={styles.modalText}>
+                                    {friend.name}
+                                  </Text>
+                                  <Text style={styles.modalStatus}>
+                                    {friend.paid ? "Paid" : "Pending"}
+                                  </Text>
+                                </View>
+                              </View>
+                            ),
+                          )}
+
+                          <Pressable
+                            style={styles.closeButton}
+                            onPress={() => setModalVisible(!modalVisible)}
+                          >
+                            <Text style={styles.closeButtonText}>Close</Text>
+                          </Pressable>
+                        </ScrollView>
+                      </View>
                     </View>
-                    <View style={styles.receiptDetails}>
-                      <Text style={styles.receiptAmount}>{item.price}</Text>
-                      <View style={styles.horizontalLine} />
-                      <Text style={styles.txtFriends}>Friends</Text>
-                      <UserIcon
-                        friends={Object.values(item.friends).map(
-                          (friend) => friend.name
-                        )}
-                        paidFriends={item.friendPaidStatus}
-                      />
-                    </View>
-                  </View>
-                </Pressable>
-              </Link>
-            </Card>
-          </Swipeable>
-        ))}
+                  </Modal>
+                </Card>
+              </GestureDetector>
+            </Swipeable>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -329,7 +425,7 @@ const useStyle = () => {
     },
     scrollViewContent: {
       padding: 16,
-      paddingTop: 0, // Ensure space at the top for headerTop
+      paddingTop: 0,
     },
     receiptCard: {
       borderRadius: 15,
@@ -432,6 +528,63 @@ const useStyle = () => {
     actionText: {
       color: "#FFF",
       fontWeight: "bold",
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+      width: deviceWidth * 0.8,
+      maxHeight: deviceHeight * 0.8,
+      backgroundColor: "white",
+      borderRadius: 10,
+      padding: 20,
+    },
+    modalScrollContent: {
+      paddingBottom: 20,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 20,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    modalText: {
+      marginLeft: 10,
+      fontSize: 16,
+    },
+    modalStatus: {
+      marginLeft: "auto",
+      fontSize: 16,
+    },
+    closeButton: {
+      marginTop: 20,
+      backgroundColor: "#2196F3",
+      padding: 10,
+      borderRadius: 5,
+      alignItems: "center",
+    },
+    closeButtonText: {
+      color: "white",
+      fontSize: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "#FFF",
+    },
+    loadingText: {
+      marginTop: 10,
+      fontSize: 16,
+      fontWeight: "bold",
+      color: "#000",
     },
   });
 };

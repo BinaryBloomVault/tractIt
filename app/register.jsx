@@ -8,7 +8,7 @@ import {
   Platform,
   Keyboard,
   useWindowDimensions,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import SignIn from "../components/button/addButton";
 import { useAuthStore } from "../zustand/zustand";
@@ -26,12 +26,23 @@ const Register = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const windowHeight = useWindowDimensions().height;
 
+  const testInputs = /^[^<>&/=]*$/;
+
+  const securityTest = (text) => {
+    const isValid = testInputs.test(text);
+    return isValid;
+  };
+
   const passHideShow = () => {
     setHideShow(!hideShow);
   };
 
   const handleRegister = async () => {
     try {
+      if (!securityTest(email) || !securityTest(pass) || !securityTest(name)) {
+        console.error("Invalid format!!");
+        return;
+      }
       await register(email, password, name);
     } catch (error) {
       console.error("Error registering:", error);
@@ -56,7 +67,13 @@ const Register = () => {
           value={email}
           onChangeText={setEmail}
         />
-        <View style={[styles.inputFormItem, styles.inputShadowBox, styles.passwordContainer]}>
+        <View
+          style={[
+            styles.inputFormItem,
+            styles.inputShadowBox,
+            styles.passwordContainer,
+          ]}
+        >
           <TextInput
             style={{ flex: 1 }}
             placeholder="New password"
