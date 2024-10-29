@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,21 +10,22 @@ import {
   TouchableOpacity,
   Animated,
   Modal,
-} from 'react-native';
-import { Card, Avatar } from '@rneui/themed';
-import { useAuthStore } from '../zustand/zustand';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+  ActivityIndicator,
+} from "react-native";
+import { Card, Avatar } from "@rneui/themed";
+import { useAuthStore } from "../zustand/zustand";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import {
   Gesture,
   GestureDetector,
   RectButton,
-} from 'react-native-gesture-handler';
-import { Link, useRouter, useGlobalSearchParams } from 'expo-router';
-import UserIcon from './icons/usersIcon';
-import { Feather } from '@expo/vector-icons';
+} from "react-native-gesture-handler";
+import { Link, useRouter, useGlobalSearchParams } from "expo-router";
+import UserIcon from "./icons/usersIcon";
+import { Feather } from "@expo/vector-icons";
 
 const handleSwipeableOpen = (direction, items) => {
-  if (direction === 'right') {
+  if (direction === "right") {
     // Alert.alert('Swipe from right');
   }
 };
@@ -34,6 +35,7 @@ const Mainscreen = () => {
   const [totalPayment, setTotalPayment] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const styles = useStyle();
   const { localUserData } = useAuthStore((state) => ({
@@ -61,6 +63,7 @@ const Mainscreen = () => {
   }, [receiptId]);
 
   const fetchData = () => {
+    setLoading(true);
     if (localUserData && localUserData.sharedReceipts) {
       const sharedReceipts = localUserData.sharedReceipts;
       // console.log("sharedReceipts: ", sharedReceipts);
@@ -70,15 +73,15 @@ const Mainscreen = () => {
 
       Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
         if (receiptData.friends) {
-          let user = '';
-          let originatorId = '';
+          let user = "";
+          let originatorId = "";
           let combinedFriends = {};
-          let title = '';
+          let title = "";
           let combinedItems = [];
           let settledPayments = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
-            if (currentTitle !== 'friends' && Array.isArray(itemsArray)) {
+            if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
               title = currentTitle;
               combinedItems = combinedItems.concat(itemsArray);
 
@@ -109,7 +112,7 @@ const Mainscreen = () => {
                   );
                 });
               }
-            } else if (currentTitle === 'friends') {
+            } else if (currentTitle === "friends") {
               Object.entries(itemsArray).forEach(([friendId, friendData]) => {
                 if (friendId === localUserData.uid) {
                   totalamount = friendData.payment;
@@ -119,7 +122,7 @@ const Mainscreen = () => {
             }
           });
           if (title.length > 12) {
-            title = title.slice(0, 12) + '\n' + title.slice(12);
+            title = title.slice(0, 12) + "\n" + title.slice(12);
           }
           receiptsArray.push({
             receiptId: receiptId,
@@ -136,13 +139,23 @@ const Mainscreen = () => {
 
       setTotalPayment(totalPay.toFixed(2));
       setTableData(receiptsArray);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-    console.log('receiptsArray: ', tableData);
+    console.log("receiptsArray: ", tableData);
   }, [localUserData]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#F4D35E" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   const handleCardPress = (item) => {
     if (item.receiptId) {
@@ -168,7 +181,7 @@ const Mainscreen = () => {
         setPaidReceipts(paidApproval);
         await updatePaidStatus(item.receiptId, friendId, false); // Pass both receiptId and friendId
       } catch (error) {
-        console.error('[DEBUG] Error updating paid status:', error);
+        console.error("[DEBUG] Error updating paid status:", error);
       }
     }
   };
@@ -177,7 +190,7 @@ const Mainscreen = () => {
     const translateX = dragX.interpolate({
       inputRange: [-150, 0],
       outputRange: [0, 150],
-      extrapolate: 'clamp',
+      extrapolate: "clamp",
     });
 
     return (
@@ -199,9 +212,9 @@ const Mainscreen = () => {
 
   const renderIcon = (paidStatus) => {
     return paidStatus ? (
-      <Feather name='check-circle' size={24} color='green' />
+      <Feather name="check-circle" size={24} color="green" />
     ) : (
-      <Feather name='clock' size={24} color='orange' />
+      <Feather name="clock" size={24} color="orange" />
     );
   };
 
@@ -215,14 +228,14 @@ const Mainscreen = () => {
         </View>
       </View>
 
-      <Link href='/profile' asChild>
+      <Link href="/profile" asChild>
         <TouchableOpacity
-          style={{ position: 'absolute', top: 45, right: 10, zIndex: 10 }}
+          style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
         >
           <Avatar
             size={50}
             rounded
-            source={{ uri: 'https://via.placeholder.com/150' }}
+            source={{ uri: "https://via.placeholder.com/150" }}
           />
         </TouchableOpacity>
       </Link>
@@ -235,13 +248,13 @@ const Mainscreen = () => {
           const singleTap = Gesture.Tap().onEnd(() => {
             updateReceiptsWithShared(item.receiptId);
             updateTitle(item.title);
-            console.log('On single tap');
+            console.log("On single tap");
           });
 
           const longPress = Gesture.LongPress().onEnd((event) => {
             setSelectedFriend(item); // Set the friend data for the modal
             setModalVisible(true); // Show the modal
-            console.log('On long press tap');
+            console.log("On long press tap");
             //}
           });
 
@@ -263,9 +276,9 @@ const Mainscreen = () => {
                   <Link
                     push
                     href={{
-                      pathname: '/writeReceipt',
+                      pathname: "/writeReceipt",
                       params: {
-                        previousScreen: 'update',
+                        previousScreen: "update",
                         uniqued: item.receiptId,
                         originatorId: item.originatorId,
                       },
@@ -302,7 +315,7 @@ const Mainscreen = () => {
                   </Link>
 
                   <Modal
-                    animationType='slide'
+                    animationType="slide"
                     transparent={true}
                     visible={modalVisible}
                     onRequestClose={() => {
@@ -329,7 +342,7 @@ const Mainscreen = () => {
                                     {friend.name}
                                   </Text>
                                   <Text style={styles.modalStatus}>
-                                    {friend.paid ? 'Paid' : 'Pending'}
+                                    {friend.paid ? "Paid" : "Pending"}
                                   </Text>
                                 </View>
                               </View>
@@ -362,21 +375,21 @@ const useStyle = () => {
   return StyleSheet.create({
     mainContainer: {
       flex: 1,
-      backgroundColor: '#FFF',
+      backgroundColor: "#FFF",
     },
     headerTop: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       padding: 40,
-      backgroundColor: '#A9DFBF',
-      position: 'sticky', // Set position to sticky
+      backgroundColor: "#A9DFBF",
+      position: "sticky", // Set position to sticky
       top: 0, // Align to top
       width: deviceWidth, // Ensure full width
     },
     totalContainer: {
-      alignItems: 'center',
-      backgroundColor: '#fff',
+      alignItems: "center",
+      backgroundColor: "#fff",
       height: 60,
       width: 140,
       borderRadius: 10,
@@ -384,30 +397,30 @@ const useStyle = () => {
       marginLeft: -30,
     },
     textRecords: {
-      flexDirection: 'row',
+      flexDirection: "row",
       marginTop: 16,
       fontSize: 17,
-      fontWeight: 'bold',
-      fontFamily: 'Gudea',
+      fontWeight: "bold",
+      fontFamily: "Gudea",
     },
     totalText: {
       fontSize: 18,
     },
     totalAmount: {
       fontSize: 20,
-      fontWeight: 'bold',
-      fontFamily: 'Gudea',
+      fontWeight: "bold",
+      fontFamily: "Gudea",
     },
     title: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     avatar: {
       marginRight: -40,
       marginTop: -20,
     },
     header: {
-      flexDirection: 'row',
+      flexDirection: "row",
       paddingVertical: 8,
     },
     scrollViewContent: {
@@ -419,113 +432,113 @@ const useStyle = () => {
       height: 110,
       marginLeft: 0,
       marginRight: 0,
-      position: 'relative',
-      backgroundColor: '#FFF',
+      position: "relative",
+      backgroundColor: "#FFF",
     },
     receiptCardHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginBottom: -24,
     },
     receiptUser: {
-      backgroundColor: '#A9DFBF',
+      backgroundColor: "#A9DFBF",
       padding: 4,
       borderRadius: 4,
-      color: 'gray',
-      fontWeight: 'bold',
-      fontFamily: 'Gudea',
+      color: "gray",
+      fontWeight: "bold",
+      fontFamily: "Gudea",
       paddingLeft: 10,
       paddingRight: 10,
     },
     receiptCardBody: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     receiptDetails: {
-      alignItems: 'center',
+      alignItems: "center",
     },
     txtSettle: {
-      fontWeight: 'bold',
+      fontWeight: "bold",
       padding: 6,
-      color: '#b9b0b0',
+      color: "#b9b0b0",
       marginTop: -30,
       marginRight: 105,
     },
     receiptTitle: {
-      fontWeight: 'bold',
+      fontWeight: "bold",
       fontSize: 18,
       marginLeft: 26,
       marginTop: 18,
     },
     receiptAmount: {
       fontSize: 15,
-      fontWeight: 'bold',
-      fontFamily: 'Gudea',
+      fontWeight: "bold",
+      fontFamily: "Gudea",
       paddingTop: 20,
       marginTop: -20,
       marginRight: -20,
     },
     horizontalLine: {
-      width: '100%',
+      width: "100%",
       height: 1,
-      backgroundColor: '#b9b0b0',
+      backgroundColor: "#b9b0b0",
       marginVertical: 5,
     },
     txtFriends: {
       marginBottom: 2,
       marginRight: 120,
-      color: '#b9b0b0',
-      fontFamily: 'Gudea',
-      fontWeight: 'bold',
+      color: "#b9b0b0",
+      fontFamily: "Gudea",
+      fontWeight: "bold",
     },
     friendIcons: {
-      flexDirection: 'row',
+      flexDirection: "row",
       marginTop: 1,
     },
     actionsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      alignItems: "center",
       height: 110,
       marginTop: 15,
       marginLeft: 1,
       borderRadius: 5,
     },
     paidButton: {
-      backgroundColor: '#00BEE5',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: "#00BEE5",
+      justifyContent: "center",
+      alignItems: "center",
       width: 80,
       height: 110,
       borderTopLeftRadius: 15,
       borderBottomLeftRadius: 15,
     },
     deleteButton: {
-      backgroundColor: '#EA4C4C',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: "#EA4C4C",
+      justifyContent: "center",
+      alignItems: "center",
       width: 80,
-      height: '100%',
+      height: "100%",
       borderBottomRightRadius: 15,
       borderTopRightRadius: 15,
       marginRight: 2,
     },
     actionText: {
-      color: '#FFF',
-      fontWeight: 'bold',
+      color: "#FFF",
+      fontWeight: "bold",
     },
     modalOverlay: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
     modalContent: {
       width: deviceWidth * 0.8,
       maxHeight: deviceHeight * 0.8,
-      backgroundColor: 'white',
+      backgroundColor: "white",
       borderRadius: 10,
       padding: 20,
     },
@@ -534,12 +547,12 @@ const useStyle = () => {
     },
     modalTitle: {
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       marginBottom: 20,
     },
     row: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 10,
     },
     modalText: {
@@ -547,19 +560,31 @@ const useStyle = () => {
       fontSize: 16,
     },
     modalStatus: {
-      marginLeft: 'auto',
+      marginLeft: "auto",
       fontSize: 16,
     },
     closeButton: {
       marginTop: 20,
-      backgroundColor: '#2196F3',
+      backgroundColor: "#2196F3",
       padding: 10,
       borderRadius: 5,
-      alignItems: 'center',
+      alignItems: "center",
     },
     closeButtonText: {
-      color: 'white',
+      color: "white",
       fontSize: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "#FFF",
+    },
+    loadingText: {
+      marginTop: 10,
+      fontSize: 16,
+      fontWeight: "bold",
+      color: "#000",
     },
   });
 };

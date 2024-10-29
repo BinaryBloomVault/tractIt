@@ -26,22 +26,10 @@ const Register = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const windowHeight = useWindowDimensions().height;
 
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
-  const safeTextRegex = /^[a-zA-Z0-9\s.,?!'()&*\"\-]*$/;
+  const testInputs = /^[^<>&/=]*$/;
 
-  const securityEmailText = (text) => {
-    const isValid = emailRegex.test(text);
-    return isValid;
-  };
-
-  const securityPassText = (text) => {
-    const isValid = passwordRegex.test(text);
-    return isValid;
-  };
-
-  const securityText = (text) => {
-    const isValid = safeTextRegex.test(text);
+  const securityTest = (text) => {
+    const isValid = testInputs.test(text);
     return isValid;
   };
 
@@ -51,11 +39,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      if (
-        !securityEmailText(email) ||
-        !securityPassText(pass) ||
-        !securityText(name)
-      ) {
+      if (!securityTest(email) || !securityTest(pass) || !securityTest(name)) {
         console.error("Invalid format!!");
         return;
       }

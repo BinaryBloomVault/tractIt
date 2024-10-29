@@ -21,21 +21,16 @@ const Index = () => {
     login: state.login,
   }));
 
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+  const testInputs = /^[^<>&/=]*$/;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hideShow, setHideShow] = useState(true);
   const [wrongPass, setWrongPass] = useState(false);
+  const [warnMessage, setWarnMessage] = useState("");
 
-  const securityEmailText = (text) => {
-    const isValid = emailRegex.test(text);
-    return isValid;
-  };
-
-  const securityPassText = (text) => {
-    const isValid = passwordRegex.test(text);
+  const securityTest = (text) => {
+    const isValid = testInputs.test(text);
     return isValid;
   };
 
@@ -45,14 +40,17 @@ const Index = () => {
 
   const handleCredentials = async () => {
     try {
-      // Validate both email and password
-      if (!securityEmailText(email) || !securityPassText(password)) {
-        console.error("Invalid email or password format");
+      //Validate both email and password
+      if (!securityTest(email) || !securityTest(password)) {
+        setWarnMessage("Invalid email or password format");
         return;
       }
 
       const success = await login(email, password);
-      if (!success) setWrongPass(true);
+      if (!success) {
+        setWarnMessage("Incorrect username/password");
+        setWrongPass(true);
+      }
     } catch (error) {
       console.error("Error logging in:", error);
     }
@@ -68,9 +66,7 @@ const Index = () => {
         />
         <Text style={styles.welcomeBack}>Welcome</Text>
 
-        {wrongPass && (
-          <Text style={styles.errorText}>Incorrect username/password</Text>
-        )}
+        {wrongPass && <Text style={styles.errorText}>{warnMessage}</Text>}
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
