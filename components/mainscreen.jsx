@@ -34,7 +34,6 @@ const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedFriend, setSelectedFriend] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const styles = useStyle();
@@ -78,7 +77,6 @@ const Mainscreen = () => {
           let combinedFriends = {};
           let title = "";
           let combinedItems = [];
-          let settledPayments = {};
 
           Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
             if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
@@ -100,12 +98,6 @@ const Mainscreen = () => {
                       if (friendData.originator === true) {
                         user = friendData.name;
                         originatorId = friendId;
-                      }
-                      if (friendData.paid === true) {
-                        settledPayments = {
-                          friendName: friendData.name,
-                          paidStatus: friendData.paid,
-                        };
                       }
                       combinedFriends[friendId] = friendData;
                     },
@@ -129,7 +121,6 @@ const Mainscreen = () => {
             title: title,
             name: user,
             price: totalamount.toFixed(2),
-            friendPaidStatus: settledPayments,
             friends: combinedFriends,
             items: combinedItems,
             originatorId: originatorId,
@@ -252,7 +243,6 @@ const Mainscreen = () => {
           });
 
           const longPress = Gesture.LongPress().onEnd((event) => {
-            setSelectedFriend(item); // Set the friend data for the modal
             setModalVisible(true); // Show the modal
             console.log("On long press tap");
             //}
@@ -332,22 +322,20 @@ const Mainscreen = () => {
                           </Text>
 
                           {/* Loop through all friends and display their name and paid status */}
-                          {Object.values(selectedFriend?.friends || {}).map(
-                            (friend, index) => (
-                              <View key={index} style={styles.modalHeader}>
-                                {/* Align renderIcon, name, and status in a row */}
-                                <View style={styles.row}>
-                                  {renderIcon(friend.paid)}
-                                  <Text style={styles.modalText}>
-                                    {friend.name}
-                                  </Text>
-                                  <Text style={styles.modalStatus}>
-                                    {friend.paid ? "Paid" : "Pending"}
-                                  </Text>
-                                </View>
+                          {Object.values(item?.friends || {}).map((friend) => (
+                            <View style={styles.modalHeader}>
+                              {/* Align renderIcon, name, and status in a row */}
+                              <View style={styles.row}>
+                                {renderIcon(friend.paid)}
+                                <Text style={styles.modalText}>
+                                  {friend.name}
+                                </Text>
+                                <Text style={styles.modalStatus}>
+                                  {friend.paid ? "Paid" : "Pending"}
+                                </Text>
                               </View>
-                            ),
-                          )}
+                            </View>
+                          ))}
 
                           <Pressable
                             style={styles.closeButton}
