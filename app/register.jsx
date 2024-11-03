@@ -23,6 +23,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [hideShow, setHideShow] = useState(true);
+  const [textFormat, setTextFormat] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const windowHeight = useWindowDimensions().height;
 
@@ -39,7 +40,12 @@ const Register = () => {
 
   const handleRegister = async () => {
     try {
-      if (!securityTest(email) || !securityTest(pass) || !securityTest(name)) {
+      if (
+        !securityTest(email) ||
+        !securityTest(password) ||
+        !securityTest(name)
+      ) {
+        setTextFormat(true);
         console.error("Invalid format!!");
         return;
       }
@@ -109,6 +115,9 @@ const Register = () => {
           </Link>
         </View>
       </View>
+      {textFormat && (
+        <Text style={styles.textFormats}>Warning! Invalid text format.</Text>
+      )}
     </View>
   );
 };
@@ -187,6 +196,13 @@ const styles = StyleSheet.create({
     marginTop: 21,
     flexDirection: "row",
     columnGap: 8,
+  },
+  textFormats: {
+    color: "#CA0404",
+    fontWeight: "bold",
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

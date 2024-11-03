@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   useWindowDimensions,
+  Animated,
 } from "react-native";
 import TabButton from "./button/tabRoundButton";
 import AddButton from "./button/addButton";
@@ -30,7 +31,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
   const setSelectedItemIndex = useAuthStore(
-    (state) => state.setSelectedItemIndex
+    (state) => state.setSelectedItemIndex,
   );
   const selectedFriends = useAuthStore((state) => state.selectedFriends);
   const setSelectedFriends = useAuthStore((state) => state.setSelectedFriends);
@@ -57,6 +58,86 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
 
   // Use useRef to store temporary data
   const tempPagesRef = useRef(receipts);
+  const [loading, setLoading] = useState(false);
+
+  const ThreeDotLoader = () => {
+    const dot1 = useRef(new Animated.Value(0)).current;
+    const dot2 = useRef(new Animated.Value(0)).current;
+    const dot3 = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+      const animateDots = () => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(dot1, {
+              toValue: -10,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot2, {
+              toValue: -10,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot3, {
+              toValue: -10,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot1, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot2, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot3, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }),
+          ]),
+        ).start();
+      };
+
+      animateDots();
+    }, [dot1, dot2, dot3]);
+
+    return (
+      <View style={styles.loaderContainer}>
+        <Animated.View
+          style={[styles.dot, { transform: [{ translateY: dot1 }] }]}
+        />
+        <Animated.View
+          style={[styles.dot, { transform: [{ translateY: dot2 }] }]}
+        />
+        <Animated.View
+          style={[styles.dot, { transform: [{ translateY: dot3 }] }]}
+        />
+      </View>
+    );
+  };
+
+  const LoadingModal = ({ loading }) => {
+    return (
+      <Modal
+        transparent
+        animationType="fade"
+        visible={loading}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.loadingModal}>
+          <View style={styles.loadingContainer}>
+            <ThreeDotLoader />
+            <Text style={styles.loadingText}>Submitting...</Text>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   const showModal = () => {
     setModalVisible(true);
@@ -67,6 +148,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
   };
 
   const shareReceipts = async () => {
+    setLoading(true);
     try {
       if (previousScreen === "update") {
         await updateReceipt(title, receipts, uniqued);
@@ -78,6 +160,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
     } finally {
       clearReceipts();
       setTitle("");
+      setLoading(false);
       router.setParams({ previousScreen: "" });
       router.replace("(auth)/(tabs)/landingscreen");
     }
@@ -108,7 +191,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
               };
               return acc;
             },
-            {}
+            {},
           );
 
           tempPagesRef.current[receiptIndex] = {
@@ -133,11 +216,15 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
         position={"relative"}
         top={screenHeight * 0.15}
       />
-      <TabButton
-        onPressLeft={handleGoBack}
-        onPressRight={shareReceipts}
-        isEnabled={isFocused ? true : false}
-      />
+      <View style={styles.container}>
+        {loading ? null : (
+          <TabButton
+            onPressLeft={handleGoBack}
+            onPressRight={shareReceipts}
+            isEnabled={isFocused ? true : false}
+          />
+        )}
+      </View>
       <TotalPaymentModal
         modalVisible={modalVisible}
         hideModal={hideModal}
@@ -150,6 +237,8 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
         setSelectedItemIndex={setSelectedItemIndex}
         setSelectedFriends={setSelectedFriends}
       />
+      {/* Loading Modal */}
+      {loading && <LoadingModal loading={loading} />}
     </View>
   );
 };
@@ -216,7 +305,7 @@ const TotalPaymentModal = ({
 
   const handleSaveReceipts = useCallback(() => {
     const isValid = pages.every(
-      (page) => page.items && page.quantity && page.price && page.friends
+      (page) => page.items && page.quantity && page.price && page.friends,
     );
 
     if (!isValid) {
@@ -240,13 +329,13 @@ const TotalPaymentModal = ({
     (index, field, value) => {
       setPages((prevPages) => {
         const updatedPages = prevPages.map((page, i) =>
-          i === index ? { ...page, [field]: value } : page
+          i === index ? { ...page, [field]: value } : page,
         );
         setTempPagesRef(updatedPages);
         return updatedPages;
       });
     },
-    [setTempPagesRef]
+    [setTempPagesRef],
   );
 
   const friendsListSelected = (friends) => {
@@ -256,7 +345,7 @@ const TotalPaymentModal = ({
 
   const isButtonDisabled = useCallback(() => {
     return pages.some(
-      (page) => !page.items || !page.quantity || !page.price || !page.friends
+      (page) => !page.items || !page.quantity || !page.price || !page.friends,
     );
   }, [pages]);
 
@@ -354,7 +443,7 @@ const TotalPaymentModal = ({
                       <View style={styles.centeredView}>
                         <UserIcon
                           friends={Object.values(page.friends || {}).map(
-                            (friend) => friend.name
+                            (friend) => friend.name,
                           )}
                         />
                       </View>
@@ -496,6 +585,36 @@ const useStyle = () => {
       justifyContent: "center",
       alignItems: "center",
       flex: 1,
+    },
+    loaderContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: 50,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: "#00BEE5",
+    },
+    loadingModal: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    loadingContainer: {
+      backgroundColor: "rgba(0, 0, 0, 0)",
+      padding: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    loadingText: {
+      marginTop: 10,
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#00BEE5",
     },
   });
   return styles;
