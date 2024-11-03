@@ -21,6 +21,10 @@ const ReceiptCard = () => {
     updateReceiptById: state.updateReceiptById,
   }));
 
+  const { paidReceiptRow } = useAuthStore((state) => ({
+    paidReceiptRow: state.paidReceiptRow,
+  }));
+
   const userId = useAuthStore((state) => state.localUserData?.uid);
   const swipeableRefs = useRef({});
   const swipeableRow = useRef(null);
@@ -79,7 +83,7 @@ const ReceiptCard = () => {
     swipeableRow.current = ref;
   };
 
-  const renderRightActions = (progress, dragX, item) => {
+  const renderRightActions = (progress, dragX, item, index) => {
     const width = 80;
     const translateX = progress.interpolate({
       inputRange: [0, 1],
@@ -102,7 +106,7 @@ const ReceiptCard = () => {
         {isUserInFriends && (
           <RectButton
             style={styles.paidButton}
-            onPress={() => console.log("Paid pressed!")}
+            onPress={() => paidReceiptRow(index)}
           >
             <Text style={styles.paidButtonText}>Paid</Text>
           </RectButton>
@@ -155,7 +159,7 @@ const ReceiptCard = () => {
                 handleSwipeableOpen(swipeableRefs.current[index])
               }
               renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, item)
+                renderRightActions(progress, dragX, item, index)
               }
               friction={2}
               rightThreshold={40}
