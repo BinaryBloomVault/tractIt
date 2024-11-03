@@ -24,6 +24,7 @@ import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 import ModalIcon from "./icons/modalIcon";
 import { Feather } from "@expo/vector-icons";
+import { runOnJS } from "react-native-reanimated";
 
 const handleSwipeableOpen = (direction, items) => {
   if (direction === "right") {
@@ -55,7 +56,7 @@ const Mainscreen = () => {
 
     if (receiptId) {
       const matchingItem = tableData.find(
-        (item) => item.receiptId === receiptId,
+        (item) => item.receiptId === receiptId
       );
       if (matchingItem) {
         handleCardPress(matchingItem);
@@ -91,7 +92,7 @@ const Mainscreen = () => {
                     if (friendData.originator === true) {
                       user = friendData.name;
                     }
-                  },
+                  }
                 );
               } else {
                 itemsArray.forEach((item) => {
@@ -102,7 +103,7 @@ const Mainscreen = () => {
                         originatorId = friendId;
                       }
                       combinedFriends[friendId] = friendData;
-                    },
+                    }
                   );
                 });
               }
@@ -217,7 +218,6 @@ const Mainscreen = () => {
           <Text style={styles.textRecords}>Receipts Records</Text>
         </View>
       </View>
-
       <Link href="/profile" asChild>
         <TouchableOpacity
           style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
@@ -229,15 +229,14 @@ const Mainscreen = () => {
           />
         </TouchableOpacity>
       </Link>
-
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
         scrollEventThrottle={16} // Update frequently
       >
         {tableData.map((item, index) => {
           const singleTap = Gesture.Tap().onEnd(() => {
-            updateReceiptsWithShared(item.receiptId);
-            updateTitle(item.title);
+            runOnJS(updateReceiptsWithShared)(item.receiptId);
+            runOnJS(updateTitle)(item.title);
             console.log("On single tap");
           });
 
@@ -289,13 +288,13 @@ const Mainscreen = () => {
                           <Text style={styles.txtFriends}>Friends</Text>
                           <UserIcon
                             friends={Object.values(item.friends).map(
-                              (friend) => friend.name,
+                              (friend) => friend.name
                             )}
                             paidFriends={Object.entries(item.friends).map(
                               ([id, friend]) => ({
                                 name: friend.name,
                                 paid: friend.paid,
-                              }),
+                              })
                             )}
                           />
                         </View>
