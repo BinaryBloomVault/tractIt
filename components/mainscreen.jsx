@@ -22,6 +22,7 @@ import {
 } from "react-native-gesture-handler";
 import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
+import ModalIcon from "./icons/modalIcon";
 import { Feather } from "@expo/vector-icons";
 
 const handleSwipeableOpen = (direction, items) => {
@@ -34,6 +35,7 @@ const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedFriends, setSelectedFriends] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const styles = useStyle();
@@ -177,6 +179,11 @@ const Mainscreen = () => {
     }
   };
 
+  const handleLongPress = (friends) => {
+    setSelectedFriends(friends);
+    setModalVisible(true);
+  };
+
   const RightSwipeActions = ({ progress, dragX, item }) => {
     const translateX = dragX.interpolate({
       inputRange: [-150, 0],
@@ -198,14 +205,6 @@ const Mainscreen = () => {
           <Text style={styles.actionText}>Delete</Text>
         </RectButton>
       </Animated.View>
-    );
-  };
-
-  const renderIcon = (paidStatus) => {
-    return paidStatus ? (
-      <Feather name="check-circle" size={24} color="green" />
-    ) : (
-      <Feather name="clock" size={24} color="orange" />
     );
   };
 
@@ -243,8 +242,8 @@ const Mainscreen = () => {
           });
 
           const longPress = Gesture.LongPress().onEnd((event) => {
-            setModalVisible(true); // Show the modal
             console.log("On long press tap");
+            handleLongPress(Object.values(item.friends));
             //}
           });
 
@@ -303,56 +302,19 @@ const Mainscreen = () => {
                       </View>
                     </Pressable>
                   </Link>
-
-                  <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                      setModalVisible(!modalVisible);
-                    }}
-                  >
-                    <View style={styles.modalOverlay}>
-                      <View style={styles.modalContent}>
-                        <ScrollView
-                          contentContainerStyle={styles.modalScrollContent}
-                        >
-                          <Text style={styles.modalTitle}>
-                            Settled Payments
-                          </Text>
-
-                          {/* Loop through all friends and display their name and paid status */}
-                          {Object.values(item?.friends || {}).map((friend) => (
-                            <View style={styles.modalHeader}>
-                              {/* Align renderIcon, name, and status in a row */}
-                              <View style={styles.row}>
-                                {renderIcon(friend.paid)}
-                                <Text style={styles.modalText}>
-                                  {friend.name}
-                                </Text>
-                                <Text style={styles.modalStatus}>
-                                  {friend.paid ? "Paid" : "Pending"}
-                                </Text>
-                              </View>
-                            </View>
-                          ))}
-
-                          <Pressable
-                            style={styles.closeButton}
-                            onPress={() => setModalVisible(!modalVisible)}
-                          >
-                            <Text style={styles.closeButtonText}>Close</Text>
-                          </Pressable>
-                        </ScrollView>
-                      </View>
-                    </View>
-                  </Modal>
                 </Card>
               </GestureDetector>
             </Swipeable>
           );
         })}
       </ScrollView>
+      {modalVisible && (
+        <ModalIcon
+          modalVisible={modalVisible}
+          friends={selectedFriends}
+          setModalVisible={setModalVisible}
+        />
+      )}
     </View>
   );
 };
@@ -516,51 +478,6 @@ const useStyle = () => {
     actionText: {
       color: "#FFF",
       fontWeight: "bold",
-    },
-    modalOverlay: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-    },
-    modalContent: {
-      width: deviceWidth * 0.8,
-      maxHeight: deviceHeight * 0.8,
-      backgroundColor: "white",
-      borderRadius: 10,
-      padding: 20,
-    },
-    modalScrollContent: {
-      paddingBottom: 20,
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: "bold",
-      marginBottom: 20,
-    },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 10,
-    },
-    modalText: {
-      marginLeft: 10,
-      fontSize: 16,
-    },
-    modalStatus: {
-      marginLeft: "auto",
-      fontSize: 16,
-    },
-    closeButton: {
-      marginTop: 20,
-      backgroundColor: "#2196F3",
-      padding: 10,
-      borderRadius: 5,
-      alignItems: "center",
-    },
-    closeButtonText: {
-      color: "white",
-      fontSize: 16,
     },
     loadingContainer: {
       flex: 1,
