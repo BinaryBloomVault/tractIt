@@ -851,74 +851,65 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const userData = JSON.parse(userDataString);
-
       const userRef = doc(firestore, "users", userData.uid);
-      const userFriendRequests = userData.friendRequest || [];
 
-      // Update current user's friend requests
-      const updatedFriendRequests = userFriendRequests.map((request) =>
-        request.id === friendId ? { ...request, confirmed: true } : request
+      const existingFriendRequests = userData.friendRequest || [];
+      const friendRequestToUpdate = existingFriendRequests.find(
+        (request) => request.id === friendId
       );
 
-      try {
-        await updateDoc(userRef, { friendRequests: updatedFriendRequests });
-      } catch (error) {
-        console.error(
-          "Error updating user friend requests in Firestore:",
-          error
-        );
-        throw new Error("Failed to update user friend requests in Firestore");
+      if (!friendRequestToUpdate) {
+        console.log("Friend request not found.");
+        return false;
       }
 
-      // Update local state
-      const updatedUser = {
-        ...userData,
-        friendRequests: updatedFriendRequests,
+      const updatedFriendRequest = {
+        ...friendRequestToUpdate,
+        confirmed: true,
       };
 
-      // Update local storage
-      try {
-        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-      } catch (error) {
-        throw new Error("Failed to update local storage");
-      }
+      await updateDoc(userRef, {
+        friendRequests: existingFriendRequests.map((request) =>
+          request.id === friendId ? updatedFriendRequest : request
+        ),
+      });
 
-      // Update Zustand state
-      try {
-        set({
-          localUserData: updatedUser,
-          friendRequests: updatedUser.friendRequests,
-        });
-      } catch (error) {
-        throw new Error("Failed to update Zustand state");
-      }
+      const updatedUserData = {
+        ...userData,
+        friendRequest: existingFriendRequests.map((request) =>
+          request.id === friendId ? updatedFriendRequest : request
+        ),
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+      set({
+        localUserData: updatedUserData,
+        friendRequests: updatedUserData.friendRequest,
+      });
+
+      console.log(`Confirmed friend request for user ${friendId}.`);
 
       // Fetch friend's document
       const friendRef = doc(firestore, "users", friendId);
       const friendDoc = await getDoc(friendRef);
-      if (!friendDoc.exists()) {
-        console.error(`Friend document with ID ${friendId} does not exist.`);
-        throw new Error("Friend document does not exist");
-      }
-      const friendData = friendDoc.data();
+      if (friendDoc.exists()) {
+        const friendData = friendDoc.data();
+        const friendRequests = friendData.friendRequests || [];
 
-      const friendFriendRequests = friendData.friendRequests || [];
-      const updatedFriendRequestsForFriend = friendFriendRequests.map(
-        (request) =>
+        const updatedFriendRequestsForFriend = friendRequests.map((request) =>
           request.id === userData.uid
             ? { ...request, confirmed: true }
             : request
-      );
+        );
 
-      try {
         await updateDoc(friendRef, {
           friendRequests: updatedFriendRequestsForFriend,
         });
-      } catch (error) {
-        throw new Error(
-          "Failed to update friend's friend requests in Firestore"
-        );
+      } else {
+        console.error(`Friend document with ID ${friendId} does not exist.`);
+        throw new Error("Friend document does not exist");
       }
+
       return true;
     } catch (error) {
       console.error("Error confirming friend request:", error);
