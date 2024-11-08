@@ -9,8 +9,6 @@ import {
   useWindowDimensions,
   TouchableOpacity,
   Animated,
-  Modal,
-  ActivityIndicator,
 } from "react-native";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
@@ -23,7 +21,6 @@ import {
 import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 import ModalIcon from "./icons/modalIcon";
-import { Feather } from "@expo/vector-icons";
 import { runOnJS } from "react-native-reanimated";
 
 const handleSwipeableOpen = (direction, items) => {
@@ -37,7 +34,6 @@ const Mainscreen = () => {
   const [totalPayment, setTotalPayment] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedFriends, setSelectedFriends] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const styles = useStyle();
   const { localUserData } = useAuthStore((state) => ({
@@ -56,7 +52,7 @@ const Mainscreen = () => {
 
     if (receiptId) {
       const matchingItem = tableData.find(
-        (item) => item.receiptId === receiptId
+        (item) => item.receiptId === receiptId,
       );
       if (matchingItem) {
         handleCardPress(matchingItem);
@@ -65,91 +61,63 @@ const Mainscreen = () => {
   }, [receiptId]);
 
   const fetchData = () => {
-    setLoading(true);
-    if (localUserData && localUserData.sharedReceipts) {
-      const sharedReceipts = localUserData.sharedReceipts;
-      // console.log("sharedReceipts: ", sharedReceipts);
-      const receiptsArray = [];
-      let totalamount = 0;
-      let totalPay = 0;
+    if (!localUserData || !localUserData.sharedReceipts) return;
 
-      Object.entries(sharedReceipts).forEach(([receiptId, receiptData]) => {
-        if (receiptData.friends) {
-          let user = "";
-          let originatorId = "";
-          let combinedFriends = {};
-          let title = "";
-          let combinedItems = [];
+    const sharedReceipts = localUserData.sharedReceipts;
+    let totalPay = 0;
 
-          Object.entries(receiptData).forEach(([currentTitle, itemsArray]) => {
-            if (currentTitle !== "friends" && Array.isArray(itemsArray)) {
-              title = currentTitle;
-              combinedItems = combinedItems.concat(itemsArray);
+    const receiptsArray = Object.entries(sharedReceipts).reduce(
+      (acc, [receiptId, receiptData]) => {
+        if (!receiptData.friends) return acc;
 
-              if (combinedItems.length === 0) {
-                Object.entries(receiptData.friends).forEach(
-                  ([friendId, friendData]) => {
-                    if (friendData.originator === true) {
-                      user = friendData.name;
-                    }
-                  }
-                );
-              } else {
-                itemsArray.forEach((item) => {
-                  Object.entries(receiptData.friends).forEach(
-                    ([friendId, friendData]) => {
-                      if (friendData.originator === true) {
-                        user = friendData.name;
-                        originatorId = friendId;
-                      }
-                      combinedFriends[friendId] = friendData;
-                    }
-                  );
-                });
+        let originatorName = "";
+        let originatorId = "";
+        const combinedFriends = { ...receiptData.friends };
+        const combinedItems = [];
+        let title = "";
+
+        Object.entries(receiptData).forEach(([key, value]) => {
+          if (key === "friends") {
+            Object.entries(value).forEach(([friendId, friendData]) => {
+              if (friendData.originator) {
+                originatorName = friendData.name;
+                originatorId = friendId;
               }
-            } else if (currentTitle === "friends") {
-              Object.entries(itemsArray).forEach(([friendId, friendData]) => {
-                if (friendId === localUserData.uid) {
-                  totalamount = friendData.payment;
-                }
+              if (friendId === localUserData.uid) {
                 totalPay += friendData.payment;
-              });
-            }
-          });
-          if (title.length > 12) {
-            title = title.slice(0, 12) + "\n" + title.slice(12);
+              }
+            });
+          } else if (Array.isArray(value)) {
+            title =
+              key.length > 12 ? key.slice(0, 12) + "\n" + key.slice(12) : key;
+            combinedItems.push(...value);
           }
-          receiptsArray.push({
-            receiptId: receiptId,
-            title: title,
-            name: user,
-            price: totalamount.toFixed(2),
-            friends: combinedFriends,
-            items: combinedItems,
-            originatorId: originatorId,
-          });
-        }
-      });
+        });
 
-      setTotalPayment(totalPay.toFixed(2));
-      setTableData(receiptsArray);
-      setLoading(false);
-    }
+        acc.push({
+          receiptId,
+          title,
+          name: originatorName,
+          price:
+            combinedFriends[localUserData.uid]?.payment.toFixed(2) || "0.00",
+          friends: combinedFriends,
+          items: combinedItems,
+          originatorId,
+        });
+
+        return acc;
+      },
+      [],
+    );
+
+    setTableData(receiptsArray);
+    setTotalPayment(totalPay.toFixed(2));
   };
 
   useEffect(() => {
     fetchData();
     console.log("receiptsArray: ", tableData);
   }, [localUserData]);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#F4D35E" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
 
   const handleCardPress = (item) => {
     if (item.receiptId) {
@@ -242,7 +210,7 @@ const Mainscreen = () => {
 
           const longPress = Gesture.LongPress().onEnd((event) => {
             console.log("On long press tap");
-            handleLongPress(Object.values(item.friends));
+            runOnJS(handleLongPress)(Object.values(item.friends));
             //}
           });
 
@@ -288,13 +256,13 @@ const Mainscreen = () => {
                           <Text style={styles.txtFriends}>Friends</Text>
                           <UserIcon
                             friends={Object.values(item.friends).map(
-                              (friend) => friend.name
+                              (friend) => friend.name,
                             )}
                             paidFriends={Object.entries(item.friends).map(
                               ([id, friend]) => ({
                                 name: friend.name,
                                 paid: friend.paid,
-                              })
+                              }),
                             )}
                           />
                         </View>
@@ -382,7 +350,7 @@ const useStyle = () => {
       marginLeft: 0,
       marginRight: 0,
       position: "relative",
-      backgroundColor: "#FFF",
+      backgroundColor: "#fff",
     },
     receiptCardHeader: {
       flexDirection: "row",
@@ -477,18 +445,6 @@ const useStyle = () => {
     actionText: {
       color: "#FFF",
       fontWeight: "bold",
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "#FFF",
-    },
-    loadingText: {
-      marginTop: 10,
-      fontSize: 16,
-      fontWeight: "bold",
-      color: "#000",
     },
   });
 };
