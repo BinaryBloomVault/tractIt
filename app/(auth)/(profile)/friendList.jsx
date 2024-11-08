@@ -61,7 +61,7 @@ const FriendList = () => {
   const deleteGroup = useAuthStore((state) => state.deleteGroup);
 
   const setSelectedItemIndex = useAuthStore(
-    (state) => state.setSelectedItemIndex
+    (state) => state.setSelectedItemIndex,
   );
 
   const { previousScreen, index } = useLocalSearchParams();
@@ -121,7 +121,7 @@ const FriendList = () => {
           const data = userDoc.data();
           const friendRequests = data.friendRequests || [];
           confirmedFriends = friendRequests.filter(
-            (request) => request.confirmed
+            (request) => request.confirmed,
           );
 
           confirmedFriends.unshift({
@@ -145,7 +145,7 @@ const FriendList = () => {
         } else {
           const friendRequests = userData.friendRequest || [];
           confirmedFriends = friendRequests.filter(
-            (request) => request.confirmed
+            (request) => request.confirmed,
           );
           confirmedFriends.unshift({
             id: userData.uid,
@@ -159,13 +159,13 @@ const FriendList = () => {
         console.error("Error loading friend requests:", error.message);
       }
     },
-    [loadUserData]
+    [loadUserData],
   );
 
   const onDelete = (friend) => {
     // Remove from confirmedFriends state
     setConfirmedFriends((prevConfirmedFriends) =>
-      prevConfirmedFriends.filter((f) => f.id !== friend.id)
+      prevConfirmedFriends.filter((f) => f.id !== friend.id),
     );
 
     // Call deleteFriend action from Zustand store
@@ -199,7 +199,7 @@ const FriendList = () => {
 
   useEffect(() => {
     const formattedSelectedFriends = Object.entries(
-      zustandSelectedFriends || {}
+      zustandSelectedFriends || {},
     ).reduce((acc, [id, friendData]) => {
       if (typeof friendData === "string") {
         acc[id] = {
@@ -462,7 +462,7 @@ const FriendList = () => {
 
   const handleSaveGroup = () => {
     const groupMembers = Object.keys(selectedModalFriends).map(
-      (id) => selectedModalFriends[id]
+      (id) => selectedModalFriends[id],
     );
     addGroup(groupTitle, groupMembers);
     closeTitleModal();
@@ -501,23 +501,23 @@ const FriendList = () => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <AddButton
-        title="Add Friend"
-        width={113}
-        bottom={-22}
-        left={131}
-        fontSize={15}
-        height={35}
-        bcolor={"#00BEE5"}
-        onPress={() => router.push("/addFriends")}
-      />
-
       <View style={styles.friendListParent(40)}>
         <Text style={styles.friendList}>Friend List</Text>
       </View>
       <Card
-        containerStyle={styles.containerCard(deviceHeight < 813 ? 230 : 280)}
+        containerStyle={styles.containerCardGroup(
+          deviceHeight < 813 ? 235 : 250,
+        )}
       >
+        <AddButton
+          title="Add Friend"
+          width={100}
+          left={128}
+          fontSize={12}
+          height={30}
+          bcolor={"#00BEE5"}
+          onPress={() => router.push("/addFriends")}
+        />
         <ScrollView>
           {confirmedFriends.map((friend, index) => (
             <FriendItem key={friend.id} friend={friend} index={index} />
@@ -529,7 +529,7 @@ const FriendList = () => {
       </View>
       <Card
         containerStyle={styles.containerCardGroup(
-          deviceHeight < 813 ? 170 : 250
+          deviceHeight < 813 ? 170 : 250,
         )}
       >
         <AddButton
@@ -560,7 +560,7 @@ const FriendList = () => {
               <Card containerStyle={styles.modalCard}>
                 <ScrollView>
                   {confirmedFriends.map((friend) =>
-                    renderModalFriendItem(friend)
+                    renderModalFriendItem(friend),
                   )}
                 </ScrollView>
                 <View style={styles.buttonContainer}>
