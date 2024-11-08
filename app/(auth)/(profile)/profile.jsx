@@ -9,8 +9,8 @@ import {
   Text,
 } from "react-native";
 import { Avatar, Button, Icon, Card } from "@rneui/themed";
-import { Link } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 
 const Profile = () => {
   const { authUser, logout, localUserData } = useAuthStore((state) => ({
@@ -20,44 +20,29 @@ const Profile = () => {
   }));
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [updatePhotoURL, setUpdatePhotoUrl] = useState("");
+  const [updatePhotoURL, setUpdatePhotoUrl] = useState(null); // State to store updated photo URL
   const [userName, setUserName] = useState("");
-  const isNotUpdate = "";
 
-  const defaultAvatarUrl = "https://robohash.org/example1000.png";
+  const defaultAvatarUrl = require("../../../assets/images/profiles/p1.png");
 
-  const avatarSelection = [
-    "https://robohash.org/example1.png",
-    "https://robohash.org/example2.png",
-    "https://robohash.org/example3.png",
-    "https://robohash.org/example4.png",
-    "https://robohash.org/example5.png",
-    "https://robohash.org/example6.png",
-    "https://robohash.org/example7.png",
-    "https://robohash.org/example8.png",
-    "https://robohash.org/example9.png",
-    "https://robohash.org/example10.png",
-    "https://robohash.org/example11.png",
-    "https://robohash.org/example12.png",
-    "https://robohash.org/example13.png",
-    "https://robohash.org/example14.png",
-    "https://robohash.org/example15.png",
-    "https://robohash.org/example16.png",
-    "https://robohash.org/example18.png",
-    "https://robohash.org/example19.png",
-    "https://robohash.org/example20.png",
-    "https://robohash.org/example21.png",
-    "https://robohash.org/example22.png",
-    "https://robohash.org/example23.png",
-    "https://robohash.org/example24.png",
-    "https://robohash.org/example25.png",
+  // Array of new profile images (local images)
+  const newProfile = [
+    require("../../../assets/images/profiles/p1.png"),
+    require("../../../assets/images/profiles/p2.png"),
+    require("../../../assets/images/profiles/p3.png"),
+    require("../../../assets/images/profiles/p4.png"),
   ];
 
-  const handleAvatarSelect = (url) => {
-    setUpdatePhotoUrl(url);
-    setIsModalVisible(false);
+  // Initialize navigation
+  const navigation = useNavigation();
+
+  // Function to handle avatar selection
+  const handleAvatarSelect = (image) => {
+    setUpdatePhotoUrl(image); // Update avatar with the selected image
+    setIsModalVisible(false); // Close the modal after selecting an avatar
   };
 
+  // Use effect to set the user name from local data
   useEffect(() => {
     if (localUserData) {
       setUserName(localUserData.name || "No Name");
@@ -79,21 +64,17 @@ const Profile = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.profileCard}>
         <View style={styles.profileContainer}>
+          {/* Avatar displaying the selected image or default image */}
           <Avatar
             size={100}
             rounded
-            source={{
-              uri:
-                updatePhotoURL !== isNotUpdate
-                  ? updatePhotoURL
-                  : defaultAvatarUrl,
-            }}
+            source={updatePhotoURL ? updatePhotoURL : defaultAvatarUrl} // Use local image sources
             containerStyle={styles.avatar}
           />
           <Button
             type="clear"
             title="Edit Photo"
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => setIsModalVisible(true)} // Open modal to select new avatar
           />
           <Text style={styles.profileName}>{userName}</Text>
           <Text style={styles.profileUsername}>
@@ -103,19 +84,20 @@ const Profile = () => {
       </Card>
 
       <View style={styles.infoContainer}>
-        <Link href="/userDetails" asChild>
+        {/* Use navigation for routing */}
+        <TouchableOpacity onPress={() => navigation.navigate("UserDetails")}>
           <CustomListItem icon="account-circle" title="User Details" />
-        </Link>
-        <Link href="/billing-details" asChild>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("BillingDetails")}>
           <CustomListItem icon="credit-card" title="Billing Details" />
-        </Link>
-        <Link href="/password" asChild>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("PasswordChange")}>
           <CustomListItem icon="lock" title="Change Password" />
-        </Link>
-        <Link href="/friendList" asChild>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("FriendList")}>
           <CustomListItem icon="group" title="Friends List" />
-        </Link>
-        <Link href="/coupon" asChild>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Coupon")}>
           <CustomListItem icon="tag" title="Coupon">
             <Button
               title="Apply"
@@ -123,7 +105,7 @@ const Profile = () => {
               buttonStyle={styles.couponButton}
             />
           </CustomListItem>
-        </Link>
+        </TouchableOpacity>
       </View>
 
       <Button
@@ -141,12 +123,12 @@ const Profile = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <ScrollView contentContainerStyle={styles.avatarScrollContainer}>
-              {avatarSelection.map((url, index) => (
+              {newProfile.map((image, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => handleAvatarSelect(url)}
+                  onPress={() => handleAvatarSelect(image)} // Update photo on select
                 >
-                  <Image source={{ uri: url }} style={styles.avatarOption} />
+                  <Image source={image} style={styles.avatarOption} />
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -200,13 +182,6 @@ const styles = StyleSheet.create({
   },
   couponButton: {
     marginRight: 10,
-  },
-  addFriendButton: {
-    height: 50,
-    marginHorizontal: 20,
-    backgroundColor: "#007BFF",
-    borderRadius: 3,
-    marginBottom: 8,
   },
   logoutButton: {
     height: 50,
