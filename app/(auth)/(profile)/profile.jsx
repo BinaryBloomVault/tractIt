@@ -13,27 +13,35 @@ import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
 
 const Profile = () => {
-  const { authUser, logout, localUserData } = useAuthStore((state) => ({
-    authUser: state.authUser,
-    logout: state.logout,
-    localUserData: state.localUserData,
-  }));
+  const { authUser, logout, localUserData, selectedAvatar, setAvatar } =
+    useAuthStore((state) => ({
+      authUser: state.authUser,
+      logout: state.logout,
+      localUserData: state.localUserData,
+      selectedAvatar: state.selectedAvatar,
+      setAvatar: state.setAvatar,
+    }));
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [updatePhotoURL, setUpdatePhotoUrl] = useState(null); // State to store updated photo URL
   const [userName, setUserName] = useState("");
 
-  const defaultAvatarUrl = require("../../../assets/images/profiles/p1.png");
+  const defaultAvatarUrl = require("../../../assets/images/profiles/default.png");
 
   const newProfile = [
-    require("../../../assets/images/profiles/p1.png"),
-    require("../../../assets/images/profiles/p2.png"),
-    require("../../../assets/images/profiles/p3.png"),
-    require("../../../assets/images/profiles/p4.png"),
+    require("../../../assets/images/profiles/p1-min.png"),
+    require("../../../assets/images/profiles/p2-min.png"),
+    require("../../../assets/images/profiles/p8-min.png"),
+    require("../../../assets/images/profiles/p9-min.png"),
+    require("../../../assets/images/profiles/p10-min.png"),
+    require("../../../assets/images/profiles/p3-min.png"),
+    require("../../../assets/images/profiles/p4-min.png"),
+    require("../../../assets/images/profiles/p5-min.png"),
+    require("../../../assets/images/profiles/p6-min.png"),
+    require("../../../assets/images/profiles/p7-min.png"),
   ];
 
   const handleAvatarSelect = (image) => {
-    setUpdatePhotoUrl(image);
+    setAvatar(image);
     setIsModalVisible(false);
   };
 
@@ -62,7 +70,7 @@ const Profile = () => {
           <Avatar
             size={100}
             rounded
-            source={updatePhotoURL ? updatePhotoURL : defaultAvatarUrl} // Use local image sources
+            source={selectedAvatar ? selectedAvatar : defaultAvatarUrl} // Use local image sources
             containerStyle={styles.avatar}
           />
           <Button

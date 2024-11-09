@@ -40,7 +40,8 @@ const Mainscreen = () => {
     localUserData: state.localUserData,
   }));
 
-  const { updateReceiptsWithShared, updateTitle } = useAuthStore();
+  const { updateReceiptsWithShared, updateTitle, selectedAvatar } =
+    useAuthStore();
   const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } =
     useAuthStore();
 
@@ -190,11 +191,7 @@ const Mainscreen = () => {
         <TouchableOpacity
           style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
         >
-          <Avatar
-            size={50}
-            rounded
-            source={{ uri: "https://via.placeholder.com/150" }}
-          />
+          <Avatar size={50} rounded source={selectedAvatar} />
         </TouchableOpacity>
       </Link>
       <ScrollView
