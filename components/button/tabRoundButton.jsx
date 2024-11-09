@@ -9,7 +9,7 @@ const TabRoundButton = ({ onPressRight, onPressLeft, isEnabled }) => {
       style={{
         flex: 1,
         justifyContent: "flex-end",
-        paddingBottom: Dimensions.get("window").height * 0.05,
+        paddingBottom: Dimensions.get("window").height * 0.01,
       }}
     >
       <View

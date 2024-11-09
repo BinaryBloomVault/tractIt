@@ -4,13 +4,13 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
-  TouchableOpacity,
   Image,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import { Avatar, Button, Icon, Card } from "@rneui/themed";
 import { useAuthStore } from "../../../zustand/zustand";
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import { Link } from "expo-router";
 
 const Profile = () => {
   const { authUser, logout, localUserData } = useAuthStore((state) => ({
@@ -25,7 +25,6 @@ const Profile = () => {
 
   const defaultAvatarUrl = require("../../../assets/images/profiles/p1.png");
 
-  // Array of new profile images (local images)
   const newProfile = [
     require("../../../assets/images/profiles/p1.png"),
     require("../../../assets/images/profiles/p2.png"),
@@ -33,16 +32,11 @@ const Profile = () => {
     require("../../../assets/images/profiles/p4.png"),
   ];
 
-  // Initialize navigation
-  const navigation = useNavigation();
-
-  // Function to handle avatar selection
   const handleAvatarSelect = (image) => {
-    setUpdatePhotoUrl(image); // Update avatar with the selected image
-    setIsModalVisible(false); // Close the modal after selecting an avatar
+    setUpdatePhotoUrl(image);
+    setIsModalVisible(false);
   };
 
-  // Use effect to set the user name from local data
   useEffect(() => {
     if (localUserData) {
       setUserName(localUserData.name || "No Name");
@@ -84,20 +78,19 @@ const Profile = () => {
       </Card>
 
       <View style={styles.infoContainer}>
-        {/* Use navigation for routing */}
-        <TouchableOpacity onPress={() => navigation.navigate("UserDetails")}>
+        <Link href="/userDetails" asChild>
           <CustomListItem icon="account-circle" title="User Details" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("BillingDetails")}>
+        </Link>
+        <Link href="/billing-details" asChild>
           <CustomListItem icon="credit-card" title="Billing Details" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("PasswordChange")}>
+        </Link>
+        <Link href="/password" asChild>
           <CustomListItem icon="lock" title="Change Password" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("FriendList")}>
+        </Link>
+        <Link href="/friendList" asChild>
           <CustomListItem icon="group" title="Friends List" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("Coupon")}>
+        </Link>
+        <Link href="/coupon" asChild>
           <CustomListItem icon="tag" title="Coupon">
             <Button
               title="Apply"
@@ -105,7 +98,7 @@ const Profile = () => {
               buttonStyle={styles.couponButton}
             />
           </CustomListItem>
-        </TouchableOpacity>
+        </Link>
       </View>
 
       <Button
