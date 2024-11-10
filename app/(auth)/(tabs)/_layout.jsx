@@ -1,7 +1,9 @@
-import React from "react";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import {
+  MaterialCommunityIcons,
+  FontAwesome,
+  Ionicons,
+} from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { useAuthStore } from "../../../zustand/zustand";
 import { TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
@@ -9,7 +11,15 @@ import { TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
 export default function TabLayout() {
   const router = useRouter();
   const userId = useAuthStore((state) => state.localUserData?.uid);
+  const sharedReceipts = useAuthStore((state) => state.sharedReceipts);
   const screenWidth = Dimensions.get("window").width;
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  useEffect(() => {
+    if (sharedReceipts && Object.keys(sharedReceipts).length > 0) {
+      setDataLoaded(true);
+    }
+  }, [sharedReceipts]);
 
   return (
     <Tabs>
@@ -25,6 +35,7 @@ export default function TabLayout() {
             />
           ),
           headerShown: false,
+          tabBarStyle: dataLoaded ? {} : { display: "none" },
         }}
       />
       <Tabs.Screen

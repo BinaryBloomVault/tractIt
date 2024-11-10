@@ -4,15 +4,15 @@
     "slug": "tractIt",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/friends.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/friends.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#A9DFBF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": ["assets/fonts/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.binarybloom.tractit"
@@ -29,7 +29,18 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-font",
+        {
+          "SpaceMono": ["./assets/fonts/SpaceMono-Regular.ttf"],
+          "Gudea-Bold": ["./assets/fonts/Gudea-Bold.ttf"],
+          "Gudea-Regular": ["./assets/fonts/Gudea-Regular.ttf"],
+          "Cabin-Regular": ["./assets/fonts/Cabin-Regular.ttf"]
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
