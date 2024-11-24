@@ -31,7 +31,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const selectedItemIndex = useAuthStore((state) => state.selectedItemIndex);
   const setSelectedItemIndex = useAuthStore(
-    (state) => state.setSelectedItemIndex,
+    (state) => state.setSelectedItemIndex
   );
   const selectedFriends = useAuthStore((state) => state.selectedFriends);
   const setSelectedFriends = useAuthStore((state) => state.setSelectedFriends);
@@ -99,7 +99,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
               duration: 300,
               useNativeDriver: true,
             }),
-          ]),
+          ])
         ).start();
       };
 
@@ -148,7 +148,6 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
   };
 
   const shareReceipts = async () => {
-    setLoading(true);
     try {
       if (previousScreen === "update") {
         await updateReceipt(title, receipts, uniqued);
@@ -160,7 +159,6 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
     } finally {
       clearReceipts();
       setTitle("");
-      setLoading(false);
       router.setParams({ previousScreen: "" });
       router.replace("(auth)/(tabs)/landingscreen");
     }
@@ -191,7 +189,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
               };
               return acc;
             },
-            {},
+            {}
           );
 
           tempPagesRef.current[receiptIndex] = {
@@ -305,7 +303,7 @@ const TotalPaymentModal = ({
 
   const handleSaveReceipts = useCallback(() => {
     const isValid = pages.every(
-      (page) => page.items && page.quantity && page.price && page.friends,
+      (page) => page.items && page.quantity && page.price && page.friends
     );
 
     if (!isValid) {
@@ -329,13 +327,13 @@ const TotalPaymentModal = ({
     (index, field, value) => {
       setPages((prevPages) => {
         const updatedPages = prevPages.map((page, i) =>
-          i === index ? { ...page, [field]: value } : page,
+          i === index ? { ...page, [field]: value } : page
         );
         setTempPagesRef(updatedPages);
         return updatedPages;
       });
     },
-    [setTempPagesRef],
+    [setTempPagesRef]
   );
 
   const friendsListSelected = (friends) => {
@@ -345,7 +343,7 @@ const TotalPaymentModal = ({
 
   const isButtonDisabled = useCallback(() => {
     return pages.some(
-      (page) => !page.items || !page.quantity || !page.price || !page.friends,
+      (page) => !page.items || !page.quantity || !page.price || !page.friends
     );
   }, [pages]);
 
@@ -443,7 +441,7 @@ const TotalPaymentModal = ({
                       <View style={styles.centeredView}>
                         <UserIcon
                           friends={Object.values(page.friends || {}).map(
-                            (friend) => friend.name,
+                            (friend) => friend.name
                           )}
                         />
                       </View>
