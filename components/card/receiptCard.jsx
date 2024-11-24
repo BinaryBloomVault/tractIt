@@ -40,15 +40,6 @@ const ReceiptCard = () => {
     return receipts.map((item) => {
       const userPaid = Object.entries(item.friends || {}).some(
         ([friendId, friend]) => {
-          console.log("Friend:", friend);
-          console.log(
-            "Comparing:",
-            friendId,
-            "with",
-            userId,
-            "and paid:",
-            friend.paid
-          );
           return friendId === userId && friend.paid;
         }
       );

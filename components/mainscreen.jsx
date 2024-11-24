@@ -55,7 +55,7 @@ const Mainscreen = () => {
 
     if (receiptId) {
       const matchingItem = tableData.find(
-        (item) => item.receiptId === receiptId,
+        (item) => item.receiptId === receiptId
       );
       if (matchingItem) {
         handleCardPress(matchingItem);
@@ -70,7 +70,7 @@ const Mainscreen = () => {
       firestore,
       "users",
       localUserData.uid,
-      "sharedReceipts",
+      "sharedReceipts"
     );
 
     const unsubscribe = onSnapshot(userRefs, (snapshot) => {
@@ -118,9 +118,11 @@ const Mainscreen = () => {
             items: combinedItems,
             originatorId,
             paidStatus,
+            timestamp: receiptData.timestamp || 0,
           };
         })
-        .filter(Boolean); // Remove any null values
+        .filter(Boolean)
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       setTableData(receiptsArray);
       setTotalPayment(totalPay.toFixed(2));
@@ -291,13 +293,13 @@ const Mainscreen = () => {
                           <Text style={styles.txtFriends}>Friends</Text>
                           <UserIcon
                             friends={Object.values(item.friends).map(
-                              (friend) => friend.name,
+                              (friend) => friend.name
                             )}
                             paidFriends={Object.entries(item.friends).map(
                               ([id, friend]) => ({
                                 name: friend.name,
                                 paid: friend.paid,
-                              }),
+                              })
                             )}
                           />
                         </View>
