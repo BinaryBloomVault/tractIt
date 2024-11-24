@@ -1,8 +1,18 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
-import { useAuthStore } from "../../zustand/zustand"; //
+import { useAuthStore } from "../../zustand/zustand";
 import UserIcon from "../../components/icons/usersIcon";
-const ItemRow = ({ item, color, font, size, height, index, disabled }) => {
+
+const ItemRow = ({
+  item,
+  defaultColor,
+  paidColor,
+  font,
+  size,
+  height,
+  index,
+  disabled,
+}) => {
   const setModalVisible = useAuthStore((state) => state.setModalVisible);
   const setSelectedItemIndex = useAuthStore(
     (state) => state.setSelectedItemIndex
@@ -12,36 +22,42 @@ const ItemRow = ({ item, color, font, size, height, index, disabled }) => {
     setSelectedItemIndex(index);
     setModalVisible(true);
   };
+
   const friendNames = item.friends
-    ? Object.values(item.friends || {}).map((friend) => friend.name)
+    ? Array.from(
+        new Set(Object.values(item.friends || {}).map((friend) => friend.name))
+      )
     : [];
+
   const isFriendsArray = item.friends === "Friends";
+
+  const getItemColor = () => (item.paid ? paidColor : defaultColor);
 
   return (
     <View style={styles.itemsParent}>
       <TouchableOpacity
-        style={styles.items(color)}
+        style={styles.items(getItemColor())}
         onPress={disabled ? null : () => handlePress("Items")}
         activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.items}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.items2, styles.priceSpaceBlock(color)]}
+        style={[styles.items2, styles.priceSpaceBlock(getItemColor())]}
         onPress={disabled ? null : () => handlePress("Quantity")}
         activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.quantity}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.price, styles.priceSpaceBlock(color)]}
+        style={[styles.price, styles.priceSpaceBlock(getItemColor())]}
         onPress={disabled ? null : () => handlePress("Price")}
         activeOpacity={disabled ? 1 : 0.2}
       >
         <Text style={styles.itemText(font, size)}>{item.price}</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.friends, styles.priceSpaceBlock(color)]}
+        style={[styles.friends, styles.priceSpaceBlock(getItemColor())]}
         onPress={disabled ? null : () => handlePress("Friends")}
         activeOpacity={disabled ? 1 : 0.2}
       >

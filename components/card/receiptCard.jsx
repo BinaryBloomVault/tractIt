@@ -37,11 +37,29 @@ const ReceiptCard = () => {
   }, [receipts]);
 
   const formattedReceipts = useMemo(() => {
-    return receipts.map((item) => ({
-      ...item,
-      title: item.items,
-    }));
-  }, [receipts]);
+    return receipts.map((item) => {
+      const userPaid = Object.entries(item.friends || {}).some(
+        ([friendId, friend]) => {
+          console.log("Friend:", friend);
+          console.log(
+            "Comparing:",
+            friendId,
+            "with",
+            userId,
+            "and paid:",
+            friend.paid
+          );
+          return friendId === userId && friend.paid;
+        }
+      );
+
+      return {
+        ...item,
+        title: item.items,
+        paid: userPaid,
+      };
+    });
+  }, [receipts, userId]);
 
   const totals = useMemo(() => {
     return formattedReceipts.reduce(
@@ -132,7 +150,7 @@ const ReceiptCard = () => {
             price: "Price",
             friends: "Friends",
           }}
-          color="#F2E3A9"
+          defaultColor="#F2E3A9"
           font="Gudea-Regular"
           size={20}
           disabled={true}
@@ -169,7 +187,8 @@ const ReceiptCard = () => {
                 <ItemRow
                   item={item}
                   index={index}
-                  color="#A9DFBF"
+                  defaultColor="#f2f2f2"
+                  paidColor="#A9DFBF"
                   font="Cabin-Regular"
                   size={15}
                   disabled={originatorId !== userId}
@@ -194,7 +213,7 @@ const ReceiptCard = () => {
             price: totals.totalPrice,
             friends: combinedFriends,
           }}
-          color="#00BEE5"
+          defaultColor="#00BEE5"
           font="Gudea-Regular"
           size={15}
           disabled={true}

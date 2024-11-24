@@ -5,13 +5,13 @@ import { useAuthStore } from "../../../zustand/zustand";
 
 const Landingscreen = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
-  const sharedReceipts = useAuthStore((state) => state.sharedReceipts);
+  const localUserData = useAuthStore((state) => state.localUserData);
 
   useEffect(() => {
-    if (sharedReceipts && Object.keys(sharedReceipts).length > 0) {
+    if (localUserData) {
       setDataLoaded(true);
     }
-  }, [sharedReceipts]);
+  }, [localUserData]);
 
   if (!dataLoaded) {
     return (
