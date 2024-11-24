@@ -48,6 +48,7 @@ export const useAuthStore = create((set, get) => ({
   selectedFriends: {},
   title: "",
   groups: [],
+
   clearGroups: () => set({ groups: [] }),
 
   setTitle: (newTitle) => set({ title: newTitle }),
@@ -543,8 +544,6 @@ export const useAuthStore = create((set, get) => ({
         throw new Error("updatedReceiptsArray is not an array");
       }
 
-      const batch = writeBatch(firestore);
-
       const receiptRef = doc(
         firestore,
         "users",
@@ -553,100 +552,96 @@ export const useAuthStore = create((set, get) => ({
         uniqued
       );
 
-      try {
-        const receiptDoc = await getDoc(receiptRef);
+      const receiptDoc = await getDoc(receiptRef);
 
-        if (!receiptDoc.exists()) {
-          throw new Error("Receipt not found");
-        }
-
-        const existingReceiptData = receiptDoc.data();
-        if (!existingReceiptData) {
-          throw new Error("Receipt document data is missing or invalid.");
-        }
-
-        const existingFriends = existingReceiptData.friends || {};
-
-        const friends = {};
-        updatedReceiptsArray.forEach((updatedReceipt) => {
-          if (updatedReceipt && updatedReceipt.friends) {
-            const numFriends = Object.keys(updatedReceipt.friends).length;
-            const individualPayment = updatedReceipt.price / numFriends;
-
-            Object.keys(updatedReceipt.friends).forEach((friendId) => {
-              const friendData = updatedReceipt.friends[friendId];
-
-              if (friends[friendId]) {
-                friends[friendId].payment += individualPayment;
-              } else {
-                friends[friendId] = {
-                  name: friendData.name,
-                  payment: individualPayment,
-                  originator: existingFriends[friendId]?.originator || false,
-                  paid: friendData.paid,
-                };
-              }
-            });
-          } else {
-            console.warn(
-              "Updated receipt or friends is undefined:",
-              updatedReceipt
-            );
-          }
-        });
-
-        if (!friends[userUid]) {
-          friends[userUid] = {
-            name: userData.name,
-            payment: 0,
-            paid: true, //directly mark as paid once this is the originator of the receipts
-            originator: true,
-          };
-        }
-
-        const newReceiptData = {
-          friends: friends,
-          [title]: updatedReceiptsArray,
-        };
-
-        batch.set(receiptRef, newReceiptData, { merge: true });
-
-        const updatedSharedReceipts = {
-          ...userData.sharedReceipts,
-          [uniqued]: newReceiptData,
-        };
-        const updatedUser = {
-          ...userData,
-          sharedReceipts: updatedSharedReceipts,
-        };
-
-        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-
-        set({
-          authUser: updatedUser,
-          localUserData: updatedUser,
-          receipts: [],
-          sharedReceipts: updatedSharedReceipts,
-        });
-
-        const friendUpdates = Object.keys(friends).map(async (friendId) => {
-          if (friendId !== userUid) {
-            const friendReceiptRef = doc(
-              firestore,
-              "users",
-              friendId,
-              "sharedReceipts",
-              uniqued
-            );
-            batch.set(friendReceiptRef, newReceiptData, { merge: true });
-          }
-        });
-
-        await Promise.all(friendUpdates);
-        await batch.commit();
-      } catch (error) {
-        throw error;
+      if (!receiptDoc.exists()) {
+        throw new Error("Receipt not found");
       }
+
+      const existingReceiptData = receiptDoc.data();
+      const existingFriends = existingReceiptData.friends || {};
+
+      const friends = {};
+      updatedReceiptsArray.forEach((updatedReceipt) => {
+        if (updatedReceipt && updatedReceipt.friends) {
+          const numFriends = Object.keys(updatedReceipt.friends).length;
+          const individualPayment = updatedReceipt.price / numFriends;
+
+          Object.keys(updatedReceipt.friends).forEach((friendId) => {
+            const friendData = updatedReceipt.friends[friendId];
+
+            if (friends[friendId]) {
+              friends[friendId].payment += individualPayment;
+            } else {
+              friends[friendId] = {
+                name: friendData.name,
+                payment: individualPayment,
+                originator: existingFriends[friendId]?.originator || false,
+                paid: friendData.paid,
+              };
+            }
+          });
+        }
+      });
+
+      if (!friends[userUid]) {
+        friends[userUid] = {
+          name: userData.name,
+          payment: 0,
+          paid: true, ///directly mark as paid once this is the originator of the receipts
+          originator: true,
+        };
+      }
+
+      const newReceiptData = {
+        friends: friends,
+        [title]: updatedReceiptsArray,
+      };
+
+      const updatedSharedReceipts = {
+        ...userData.sharedReceipts,
+        [uniqued]: newReceiptData,
+      };
+
+      const updatedUser = {
+        ...userData,
+        sharedReceipts: updatedSharedReceipts,
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+
+      set({
+        authUser: updatedUser,
+        localUserData: updatedUser,
+        receipts: [],
+        sharedReceipts: updatedSharedReceipts,
+      });
+
+      (async () => {
+        try {
+          const batch = writeBatch(firestore);
+
+          batch.set(receiptRef, newReceiptData, { merge: true });
+
+          const friendUpdates = Object.keys(friends).map((friendId) => {
+            if (friendId !== userUid) {
+              const friendReceiptRef = doc(
+                firestore,
+                "users",
+                friendId,
+                "sharedReceipts",
+                uniqued
+              );
+              batch.set(friendReceiptRef, newReceiptData, { merge: true });
+            }
+          });
+
+          await Promise.all(friendUpdates);
+          await batch.commit();
+        } catch (error) {
+          console.error("Error updating Firestore in background:", error);
+        }
+      })();
     } catch (error) {
       console.error("Error updating receipt:", error);
     }
@@ -771,87 +766,127 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  addFriendRequest: async (friendId, friendName) => {
+  addSharedReceipt: async (title, receiptDataArray) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
-      if (userDataString) {
-        const userData = JSON.parse(userDataString);
-        const userRef = doc(firestore, "users", userData.uid);
+      if (!userDataString) return;
 
-        // Check if the friend request already exists
-        const existingRequests = userData.friendRequests || [];
-        const duplicateRequest = existingRequests.find(
-          (request) => request.id === friendId
-        );
-        if (duplicateRequest) {
-          console.log("Friend request already exists");
-          return;
-        }
+      const userData = JSON.parse(userDataString);
+      const friends = {};
 
-        // Add the friend request to the current user's friendRequests
-        const friendRequest = {
-          id: friendId,
-          name: friendName,
-          confirmed: false,
-        };
-        const updatedFriendRequests = [...existingRequests, friendRequest];
+      receiptDataArray.forEach((receipt) => {
+        const numFriends = Object.keys(receipt.friends).length;
+        const individualPayment = receipt.price / numFriends;
 
-        await updateDoc(userRef, {
-          friendRequests: updatedFriendRequests,
+        Object.keys(receipt.friends).forEach((friendId) => {
+          const friendData = receipt.friends[friendId];
+
+          if (friends[friendId]) {
+            friends[friendId].payment += individualPayment;
+          } else {
+            friends[friendId] = {
+              name: friendData.name,
+              payment: individualPayment,
+              paid: false,
+              originator: friendId === userData.uid,
+            };
+          }
         });
 
-        const updatedUser = {
-          ...userData,
-          friendRequests: updatedFriendRequests,
-        };
-
-        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-        set({
-          localUserData: updatedUser,
-          friendRequests: updatedUser.friendRequests,
-        });
-
-        // Add the friend request to the other user's friendRequests
-        const recipientRef = doc(firestore, "users", friendId);
-        const recipientDoc = await getDoc(recipientRef);
-
-        if (recipientDoc.exists()) {
-          const recipientData = recipientDoc.data();
-
-          const newFriendRequestForRecipient = {
-            id: userData.uid,
+        if (!receipt.friends[userData.uid]) {
+          friends[userData.uid] = {
             name: userData.name,
-            confirmed: false,
+            payment: 0,
+            paid: false,
+            originator: true,
           };
-          const updatedFriendRequestsForRecipient = [
-            ...(recipientData.friendRequests || []),
-            newFriendRequestForRecipient,
-          ];
-
-          await updateDoc(recipientRef, {
-            friendRequests: updatedFriendRequestsForRecipient,
-          });
-
-          // Add notification for the other user
-          const newNotification = {
-            message: `${userData.name} wants to add you`,
-            type: "friend",
-            userId: userData.uid,
-          };
-          const updatedNotifications = [
-            ...(recipientData.notifications || []),
-            newNotification,
-          ];
-
-          await updateDoc(recipientRef, {
-            notifications: updatedNotifications,
-          });
-        } else {
-          console.error("Recipient user does not exist.");
         }
-      }
+      });
+
+      const fullHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        `${title}-${Date.now()}`
+      );
+      const newReceiptId = fullHash.substring(0, 20);
+
+      const receiptData = {
+        friends: friends,
+        [title]: receiptDataArray,
+        timestamp: Date.now(),
+      };
+
+      const sharedReceipts = userData.sharedReceipts || {};
+      const updatedSharedReceipts = {
+        ...sharedReceipts,
+        [newReceiptId]: receiptData,
+      };
+      const updatedUser = {
+        ...userData,
+        sharedReceipts: updatedSharedReceipts,
+      };
+
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+
+      set({
+        authUser: updatedUser,
+        localUserData: updatedUser,
+        receipts: [],
+        sharedReceipts: updatedSharedReceipts,
+      });
+
+      (async () => {
+        try {
+          const receiptRef = doc(
+            firestore,
+            "users",
+            userData.uid,
+            "sharedReceipts",
+            newReceiptId
+          );
+
+          await setDoc(receiptRef, receiptData);
+
+          for (const [friendId, friendData] of Object.entries(friends)) {
+            if (friendId !== userData.uid) {
+              const friendReceiptRef = doc(
+                firestore,
+                "users",
+                friendId,
+                "sharedReceipts",
+                newReceiptId
+              );
+              const friendRef = doc(firestore, "users", friendId);
+
+              await setDoc(friendReceiptRef, receiptData);
+
+              const friendDoc = await getDoc(friendRef);
+              if (friendDoc.exists()) {
+                const friendUserData = friendDoc.data();
+                const newNotification = {
+                  message: `${userData.name} included you in a receipt`,
+                  type: "friend",
+                  userId: userData.uid,
+                  newReceiptId: newReceiptId,
+                };
+                const updatedNotifications = [
+                  ...(friendUserData.notifications || []),
+                  newNotification,
+                ];
+
+                await updateDoc(friendRef, {
+                  notifications: updatedNotifications,
+                });
+              } else {
+                console.error("Friend user does not exist.");
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error updating Firestore in the background:", error);
+        }
+      })();
     } catch (error) {
-      console.error("Error adding friend request:", error);
+      console.error("Error adding shared receipt:", error);
     }
   },
 

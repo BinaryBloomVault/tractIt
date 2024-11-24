@@ -11,15 +11,15 @@ import { TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
 export default function TabLayout() {
   const router = useRouter();
   const userId = useAuthStore((state) => state.localUserData?.uid);
-  const sharedReceipts = useAuthStore((state) => state.sharedReceipts);
+  const localUserData = useAuthStore((state) => state.localUserData);
   const screenWidth = Dimensions.get("window").width;
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (sharedReceipts && Object.keys(sharedReceipts).length > 0) {
+    if (localUserData && Object.keys(localUserData).length >= 0) {
       setDataLoaded(true);
     }
-  }, [sharedReceipts]);
+  }, [localUserData]);
 
   return (
     <Tabs>
