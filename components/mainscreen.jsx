@@ -13,6 +13,8 @@ import {
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../zustand/zustand";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import { onSnapshot, collection, query, where } from "firebase/firestore";
+import { firestore } from "../config/firebaseConfig";
 import {
   Gesture,
   GestureDetector,
@@ -64,60 +66,73 @@ const Mainscreen = () => {
   const fetchData = () => {
     if (!localUserData || !localUserData.sharedReceipts) return;
 
-    const sharedReceipts = localUserData.sharedReceipts;
-    let totalPay = 0;
-
-    const receiptsArray = Object.entries(sharedReceipts).reduce(
-      (acc, [receiptId, receiptData]) => {
-        if (!receiptData.friends) return acc;
-
-        let originatorName = "";
-        let originatorId = "";
-        const combinedFriends = { ...receiptData.friends };
-        const combinedItems = [];
-        let title = "";
-
-        Object.entries(receiptData).forEach(([key, value]) => {
-          if (key === "friends") {
-            Object.entries(value).forEach(([friendId, friendData]) => {
-              if (friendData.originator) {
-                originatorName = friendData.name;
-                originatorId = friendId;
-              }
-              if (friendId === localUserData.uid) {
-                totalPay += friendData.payment;
-              }
-            });
-          } else if (Array.isArray(value)) {
-            title =
-              key.length > 12 ? key.slice(0, 12) + "\n" + key.slice(12) : key;
-            combinedItems.push(...value);
-          }
-        });
-
-        acc.push({
-          receiptId,
-          title,
-          name: originatorName,
-          price:
-            combinedFriends[localUserData.uid]?.payment.toFixed(2) || "0.00",
-          friends: combinedFriends,
-          items: combinedItems,
-          originatorId,
-        });
-
-        return acc;
-      },
-      [],
+    const userRefs = collection(
+      firestore,
+      "users",
+      localUserData.uid,
+      "sharedReceipts",
     );
 
-    setTableData(receiptsArray);
-    setTotalPayment(totalPay.toFixed(2));
+    const unsubscribe = onSnapshot(userRefs, (snapshot) => {
+      let totalPay = 0;
+
+      const receiptsArray = snapshot.docs
+        .map((doc) => {
+          const receiptId = doc.id;
+          const receiptData = doc.data();
+          if (!receiptData.friends) return null;
+
+          let originatorName = "";
+          let originatorId = "";
+          const combinedFriends = { ...receiptData.friends };
+          const combinedItems = [];
+          let title = "";
+          let paidStatus = false;
+
+          Object.entries(receiptData).forEach(([key, value]) => {
+            if (key === "friends") {
+              Object.entries(value).forEach(([friendId, friendData]) => {
+                if (friendData.originator) {
+                  originatorName = friendData.name;
+                  originatorId = friendId;
+                }
+                if (friendId === localUserData.uid) {
+                  totalPay += friendData.payment;
+                  paidStatus = friendData.paid;
+                }
+              });
+            } else if (Array.isArray(value)) {
+              title =
+                key.length > 12 ? key.slice(0, 12) + "\n" + key.slice(12) : key;
+              combinedItems.push(...value);
+            }
+          });
+
+          return {
+            receiptId,
+            title,
+            name: originatorName,
+            price:
+              combinedFriends[localUserData.uid]?.payment.toFixed(2) || "0.00",
+            friends: combinedFriends,
+            items: combinedItems,
+            originatorId,
+            paidStatus,
+          };
+        })
+        .filter(Boolean); // Remove any null values
+
+      setTableData(receiptsArray);
+      setTotalPayment(totalPay.toFixed(2));
+    });
+
+    // Clean up the listener on component unmount
+    return () => unsubscribe();
   };
 
   useEffect(() => {
-    fetchData();
-    console.log("receiptsArray: ", tableData);
+    const unsubscribe = fetchData();
+    return () => unsubscribe(); // Cleanup listener on unmount
   }, [localUserData]);
 
   const handleCardPress = (item) => {
@@ -225,7 +240,12 @@ const Mainscreen = () => {
               <GestureDetector
                 gesture={Gesture.Exclusive(singleTap, longPress)}
               >
-                <Card containerStyle={styles.receiptCard}>
+                <Card
+                  containerStyle={{
+                    ...styles.receiptCard,
+                    backgroundColor: item.paidStatus ? "#B7F4D8" : "#fff",
+                  }}
+                >
                   <Link
                     push
                     href={{
@@ -240,12 +260,30 @@ const Mainscreen = () => {
                   >
                     <Pressable>
                       <View style={styles.receiptCardHeader}>
-                        <Text style={styles.receiptUser}>{item.name}</Text>
+                        <Text
+                          style={[
+                            styles.receiptUser,
+                            {
+                              backgroundColor: item.paidStatus
+                                ? "#fff"
+                                : "#A9DFBF",
+                            },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
                         <Text style={styles.txtSettle}>Settle Up</Text>
                       </View>
                       <View style={styles.receiptCardBody}>
                         <View style={styles.receiptDetails}>
-                          <Text style={styles.receiptTitle}>{item.title}</Text>
+                          <Text
+                            style={[
+                              styles.receiptTitle,
+                              { color: item.paidStatus ? "#2c2c2c" : "#000" },
+                            ]}
+                          >
+                            {item.title}
+                          </Text>
                         </View>
                         <View style={styles.receiptDetails}>
                           <Text style={styles.receiptAmount}>{item.price}</Text>
@@ -347,7 +385,7 @@ const useStyle = () => {
       marginLeft: 0,
       marginRight: 0,
       position: "relative",
-      backgroundColor: "#fff",
+      borderColor: "#C8F7C5",
     },
     receiptCardHeader: {
       flexDirection: "row",
