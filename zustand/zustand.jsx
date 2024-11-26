@@ -647,6 +647,90 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  addFriendRequest: async (friendId, friendName) => {
+    try {
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const userRef = doc(firestore, "users", userData.uid);
+
+        // Check if the friend request already exists
+        const existingRequests = userData.friendRequests || [];
+        const duplicateRequest = existingRequests.find(
+          (request) => request.id === friendId
+        );
+        if (duplicateRequest) {
+          console.log("Friend request already exists");
+          return;
+        }
+
+        // Add the friend request to the current user's friendRequests
+        const friendRequest = {
+          id: friendId,
+          name: friendName,
+          confirmed: false,
+        };
+        const updatedFriendRequests = [...existingRequests, friendRequest];
+
+        await updateDoc(userRef, {
+          friendRequests: updatedFriendRequests,
+        });
+
+        const updatedUser = {
+          ...userData,
+          friendRequests: updatedFriendRequests,
+        };
+
+        mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+        set({
+          localUserData: updatedUser,
+          friendRequests: updatedUser.friendRequests,
+        });
+
+        // Add the friend request to the other user's friendRequests
+        const recipientRef = doc(firestore, "users", friendId);
+        const recipientDoc = await getDoc(recipientRef);
+
+        if (recipientDoc.exists()) {
+          const recipientData = recipientDoc.data();
+
+          const newFriendRequestForRecipient = {
+            id: userData.uid,
+            name: userData.name,
+            confirmed: false,
+          };
+          const updatedFriendRequestsForRecipient = [
+            ...(recipientData.friendRequests || []),
+            newFriendRequestForRecipient,
+          ];
+
+          await updateDoc(recipientRef, {
+            friendRequests: updatedFriendRequestsForRecipient,
+          });
+
+          // Add notification for the other user
+          const newNotification = {
+            message: `${userData.name} wants to add you`,
+            type: "friend",
+            userId: userData.uid,
+          };
+          const updatedNotifications = [
+            ...(recipientData.notifications || []),
+            newNotification,
+          ];
+
+          await updateDoc(recipientRef, {
+            notifications: updatedNotifications,
+          });
+        } else {
+          console.error("Recipient user does not exist.");
+        }
+      }
+    } catch (error) {
+      console.error("Error adding friend request:", error);
+    }
+  },
+
   addSharedReceipt: async (title, receiptDataArray) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
