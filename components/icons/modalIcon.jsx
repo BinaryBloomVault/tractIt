@@ -13,28 +13,7 @@ import { Feather } from "@expo/vector-icons";
 
 const ModalIcon = ({ modalVisible, friends, setModalVisible }) => {
   const styles = useStyle();
-  const slideAnim = useRef(
-    new Animated.Value(useWindowDimensions().height),
-  ).current;
-
-  useEffect(() => {
-    if (modalVisible) {
-      // Slide from bottom to center
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      // Slide back down when closed
-      Animated.timing(slideAnim, {
-        toValue: useWindowDimensions().height,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [modalVisible]);
-
+  
   const renderIcon = (paidStatus) => {
     return paidStatus ? (
       <Feather name="check-circle" size={24} color="green" />
@@ -43,21 +22,24 @@ const ModalIcon = ({ modalVisible, friends, setModalVisible }) => {
     );
   };
 
+  // Determine if the number of friends exceeds 3 to adjust scrolling behavior
+  const isScrollable = friends.length > 3;
+
   return (
     <Modal
       transparent={true}
+      animationType="slide"
       visible={modalVisible}
       onRequestClose={() => setModalVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <Animated.View
-          style={[
-            styles.modalContent,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <ScrollView contentContainerStyle={styles.modalScrollContent}>
-            <Text style={styles.modalTitle}>Settled Payments</Text>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Settled Payments</Text>
+          
+          <ScrollView 
+            contentContainerStyle={styles.scrollViewContent}
+            style={[styles.scrollView, isScrollable && { maxHeight: 200 }]}
+          >
             {friends.map((friend) => (
               <View key={friend.name} style={styles.modalHeader}>
                 <View style={styles.row}>
@@ -69,14 +51,15 @@ const ModalIcon = ({ modalVisible, friends, setModalVisible }) => {
                 </View>
               </View>
             ))}
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </Pressable>
           </ScrollView>
-        </Animated.View>
+          
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+          </Pressable>
+        </View>
       </View>
     </Modal>
   );
@@ -85,23 +68,27 @@ const ModalIcon = ({ modalVisible, friends, setModalVisible }) => {
 const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
   return StyleSheet.create({
-    modalOverlay: {
+    modalContainer: {
       flex: 1,
-      justifyContent: "center",
+      justifyContent: "flex-end",
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
-    modalContent: {
-      width: deviceWidth * 0.8,
-      maxHeight: deviceHeight * 0.8,
+    modalView: {
       backgroundColor: "white",
-      borderRadius: 10,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      shadowColor: "#000",
       padding: 20,
-      // Add initial bottom offset
-      transform: [{ translateY: deviceHeight }],
-    },
-    modalScrollContent: {
-      paddingBottom: 20,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      top: 20,
+      height: deviceHeight / 2.5,
+      width: deviceWidth,
     },
     modalTitle: {
       fontSize: 20,
@@ -122,7 +109,8 @@ const useStyle = () => {
       fontSize: 16,
     },
     closeButton: {
-      marginTop: 20,
+      marginTop: 5,
+      marginBottom: 5,
       backgroundColor: "#2196F3",
       padding: 10,
       borderRadius: 5,
@@ -131,6 +119,12 @@ const useStyle = () => {
     closeButtonText: {
       color: "white",
       fontSize: 16,
+    },
+    scrollViewContent: {
+      paddingBottom: 20,
+    },
+    scrollView: {
+      flex: 1,
     },
   });
 };

@@ -7,12 +7,14 @@ import {
   Image,
   Text,
   TouchableOpacity,
+  useWindowDimensions
 } from "react-native";
 import { Avatar, Button, Icon, Card } from "@rneui/themed";
 import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
 
 const Profile = () => {
+  const styles = useStyle();
   const { authUser, logout, localUserData, selectedAvatar, setAvatar } =
     useAuthStore((state) => ({
       authUser: state.authUser,
@@ -122,7 +124,7 @@ const Profile = () => {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={styles.modalView}>
             <ScrollView contentContainerStyle={styles.avatarScrollContainer}>
               {newProfile.map((image, index) => (
                 <TouchableOpacity
@@ -141,96 +143,108 @@ const Profile = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#F5F5F5",
-    paddingVertical: 5,
-  },
-  profileCard: {
-    marginBottom: 16,
-    marginLeft: 20,
-    marginRight: 20,
-    borderRadius: 8,
-    elevation: 0,
-    shadowColor: "transparent",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    borderWidth: 0,
-  },
-  profileContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  avatar: {
-    marginBottom: 10,
-  },
-  profileName: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  profileUsername: {
-    fontSize: 16,
-    color: "gray",
-  },
-  infoContainer: {
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  couponButton: {
-    marginRight: 10,
-  },
-  logoutButton: {
-    height: 50,
-    marginHorizontal: 20,
-    backgroundColor: "#FF3B30",
-    borderRadius: 3,
-    marginBottom: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    width: 300,
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 20,
-    alignItems: "center",
-  },
-  avatarScrollContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  avatarOption: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    margin: 10,
-  },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  iconContainer: {
-    marginRight: 16,
-  },
-  listItemContent: {
-    flex: 1,
-  },
-  listItemTitle: {
-    fontSize: 16,
-  },
-});
-
+const useStyle = () => { 
+  const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
+  return StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      backgroundColor: "#F5F5F5",
+      paddingVertical: 5,
+    },
+    profileCard: {
+      marginBottom: 16,
+      marginLeft: 20,
+      marginRight: 20,
+      borderRadius: 8,
+      elevation: 0,
+      shadowColor: "transparent",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0,
+      shadowRadius: 0,
+      borderWidth: 0,
+    },
+    profileContainer: {
+      alignItems: "center",
+      marginVertical: 20,
+    },
+    avatar: {
+      marginBottom: 10,
+    },
+    profileName: {
+      fontSize: 22,
+      fontWeight: "bold",
+    },
+    profileUsername: {
+      fontSize: 16,
+      color: "gray",
+    },
+    infoContainer: {
+      backgroundColor: "#FFFFFF",
+      marginHorizontal: 20,
+      borderRadius: 8,
+      overflow: "hidden",
+      marginBottom: 8,
+    },
+    couponButton: {
+      marginRight: 10,
+    },
+    logoutButton: {
+      height: 50,
+      marginHorizontal: 20,
+      backgroundColor: "#FF3B30",
+      borderRadius: 3,
+      marginBottom: 8,
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: "flex-end",
+      alignItems: "center",
+    },
+    modalView: {
+      backgroundColor: "white",
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      shadowColor: "#000",
+      padding: 20,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      top: 20,
+      height: deviceHeight / 2.5,
+      width: deviceWidth,
+    },
+    avatarScrollContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+    },
+    avatarOption: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      margin: 10,
+    },
+    listItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "#ccc",
+    },
+    iconContainer: {
+      marginRight: 16,
+    },
+    listItemContent: {
+      flex: 1,
+    },
+    listItemTitle: {
+      fontSize: 16,
+    },
+  })
+  
+}
 export default Profile;
