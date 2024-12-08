@@ -364,18 +364,32 @@ const TotalPaymentModal = ({
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
-            <View style={styles.exitButton}>
-              <Pressable
-                onPress={handleSaveReceipts}
-                disabled={isButtonDisabled()}
-              >
-                <AntDesign
-                  name="check"
-                  size={28}
-                  color={isButtonDisabled() ? "grey" : "black"}
-                />
-              </Pressable>
+            <View style={styles.modalButtons}>
+              <View style={styles.modalClose}>
+                <Pressable
+                  onPress={hideModal}
+                >
+                  <AntDesign
+                    name="close"
+                    size={28}
+                    color={isButtonDisabled() ? "grey" : "black"}
+                  />
+                </Pressable>
+              </View>
+              <View style={styles.exitButton}>
+                <Pressable
+                  onPress={handleSaveReceipts}
+                  disabled={isButtonDisabled()}
+                >
+                  <AntDesign
+                    name="check"
+                    size={28}
+                    color={isButtonDisabled() ? "grey" : "black"}
+                  />
+                </Pressable>
+              </View>
             </View>
+    
             <View style={{ marginTop: 16 }}>
               <ScrollView
                 horizontal
@@ -493,11 +507,19 @@ const useStyle = () => {
       height: screenHeight / 2,
       width: screenWidth,
     },
-    exitButton: {
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginTop: 16,
       marginRight: 24,
+    },
+    modalClose: {
+      paddingLeft: 20,
+      alignItems: "flex-start",
+    },
+    exitButton: {
       alignItems: "flex-end",
-      justifyContent: "flex-end",
     },
     button: {
       borderRadius: 20,
