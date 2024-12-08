@@ -560,57 +560,38 @@ export const useAuthStore = create((set, get) => ({
       if (!receiptDoc.exists()) {
         throw new Error("Receipt not found");
       }
+      let totalPayment = 0;
 
       const existingReceiptData = receiptDoc.data();
       const existingFriends = existingReceiptData.friends || {};
-      console.log("updatedReceiptsArray", updatedReceiptsArray);
-      console.log("existingFriends", existingFriends);
-
-      const friends = {};
+      const friends = { ...existingFriends };
 
       updatedReceiptsArray.forEach((updatedReceipt) => {
         if (updatedReceipt && updatedReceipt.friends) {
-          const totalPayment = parseFloat(updatedReceipt.price);
+          const totalPaymentForReceipt = parseFloat(updatedReceipt.price);
           const totalFriends = Object.keys(updatedReceipt.friends).length;
-          console.log("updatedReceiptsArray", updatedReceipt.friends);
 
           const unpaidFriends = Object.entries(updatedReceipt.friends).filter(
             ([, friendData]) => !friendData.paid
           );
           const perFriendPayment = unpaidFriends.length
-            ? totalPayment / totalFriends
+            ? totalPaymentForReceipt / totalFriends
             : 0;
 
           Object.entries(updatedReceipt.friends).forEach(
             ([friendId, friendData]) => {
               const isPaid = friendData.paid;
-
-              if (!friends[friendId]) {
-                friends[friendId] = {
-                  name: friendData.name,
-                  originator: existingFriends[friendId]?.originator || false,
-                  paid: isPaid,
-                  payment: isPaid ? 0 : perFriendPayment,
-                };
+              if (friendId === userUid) {
+                totalPayment += isPaid ? 0 : perFriendPayment;
               }
-              // else {
-              //   friends[friendId].payment += isPaid ? 0 : perFriendPayment;
-              // }
             }
           );
         }
       });
-
-      if (!friends[userUid]) {
-        friends[userUid] = {
-          name: userData.name,
-          payment: 0,
-          paid: true, ///directly mark as paid once this is the originator
-          originator: true,
-        };
+      console.log("totalPayment", totalPayment);
+      if (friends[userUid]) {
+        friends[userUid].payment = totalPayment;
       }
-
-      console.log("Updated friends:", friends);
 
       const newReceiptData = {
         friends: friends,
@@ -781,7 +762,7 @@ export const useAuthStore = create((set, get) => ({
           friends[userData.uid] = {
             name: userData.name,
             payment: 0,
-            paid: false,
+            paid: true,
             originator: true,
           };
         }
