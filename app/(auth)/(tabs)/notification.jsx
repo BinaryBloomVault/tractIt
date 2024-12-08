@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,46 +6,78 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-} from 'react-native';
-import { Avatar, Card } from '@rneui/themed';
-import { useAuthStore } from '../../../zustand/zustand';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+} from "react-native";
+import { Card } from "@rneui/themed";
+import { useAuthStore } from "../../../zustand/zustand";
+import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+import { doc, onSnapshot } from "firebase/firestore";
+import { firestore } from "../../../config/firebaseConfig";
 
 const Notification = () => {
+  const [notifications, setNotifications] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const notifications = useAuthStore((state) => state.notifications);
+
   const confirmFriendRequest = useAuthStore(
-    (state) => state.confirmFriendRequest,
+    (state) => state.confirmFriendRequest
   );
   const cancelFriendRequest = useAuthStore(
-    (state) => state.cancelFriendRequest,
+    (state) => state.cancelFriendRequest
   );
-  const cancelPaidRequest = useAuthStore((state) => state.cancelPaidRequest);
+  const { localUserData } = useAuthStore((state) => ({
+    localUserData: state.localUserData,
+  }));
 
   const deleteNotification = useAuthStore((state) => state.deleteNotification);
-  const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus); // Updated to use state management for paid status
+  const updatePaidStatus = useAuthStore((state) => state.updatePaidStatus);
   const rejectedPaidStatus = useAuthStore((state) => state.rejectedPaidStatus);
   const paidStatus = useAuthStore((state) => state.getPaidReceipts);
+
   const router = useRouter();
+
+  useEffect(() => {
+    if (!localUserData) return;
+
+    const notificationDocRef = doc(firestore, "users", localUserData.uid);
+
+    const unsubscribe = onSnapshot(
+      notificationDocRef,
+      (doc) => {
+        if (doc.exists()) {
+          const notificationData = doc.data();
+          const notifications = notificationData.notifications || [];
+          console.log("Notifications fetched from document:", notifications);
+          setNotifications(notifications);
+        } else {
+          console.log("Notification document does not exist");
+          setNotifications([]);
+        }
+      },
+      (error) => {
+        console.error("Error fetching notifications:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const handleConfirm = async () => {
     if (selectedNotification) {
       const { userId, type, receiptId, friendId } = selectedNotification;
-      if (type === 'paid') {
+      if (type === "paid") {
         if (paidStatus) {
           await updatePaidStatus(receiptId, friendId, true);
           await deleteNotification(userId);
         } else {
           await deleteNotification(userId);
         }
-      } else if (type === 'friend') {
+      } else if (type === "friend") {
         const success = await confirmFriendRequest(userId);
         if (success) {
           await deleteNotification(userId);
         } else {
-          console.error('Failed to cancel friend request');
+          console.error("Failed to cancel friend request");
         }
       }
     }
@@ -57,13 +89,13 @@ const Notification = () => {
   const handleCancel = async () => {
     if (selectedNotification) {
       const { userId, type, receiptId, friendId } = selectedNotification;
-      if (type === 'paid') {
+      if (type === "paid") {
         await rejectedPaidStatus(receiptId, friendId);
         await deleteNotification(userId);
       } else {
         const success = await cancelFriendRequest(userId);
         if (success) await deleteNotification(userId);
-        else console.error('Failed to cancel friend request');
+        else console.error("Failed to cancel friend request");
       }
     }
     setModalVisible(false);
@@ -71,14 +103,14 @@ const Notification = () => {
   };
 
   const handleNotificationPress = async (item) => {
-    if (item.message.includes('included you in a receipt')) {
+    if (item.message.includes("included you in a receipt")) {
       router.push({
-        pathname: '(auth)/(tabs)/writeReceipt',
+        pathname: "(auth)/(tabs)/writeReceipt",
         params: {
           uniqued: item.newReceiptId,
           receiptId: item.newReceiptId,
           originatorId: item.userId,
-          previousScreen: 'update',
+          previousScreen: "update",
         },
       });
       if (item.userId) {
@@ -94,7 +126,7 @@ const Notification = () => {
     <Pressable onPress={() => handleNotificationPress(item)}>
       <Card containerStyle={styles.notificationItem}>
         <View style={styles.notificationContent}>
-          <Feather name='info' size={30} color='green' />
+          <Feather name="info" size={30} color="green" />
           <Text style={styles.notificationText}>{item.message}</Text>
         </View>
       </Card>
@@ -107,13 +139,11 @@ const Notification = () => {
       <FlatList
         data={notifications}
         renderItem={renderNotificationItem}
-        keyExtractor={(item, index) =>
-          item.id ? item.id.toString() : index.toString()
-        }
+        keyExtractor={(item) => item.id}
       />
       {selectedNotification && (
         <Modal
-          animationType='slide'
+          animationType="slide"
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -150,13 +180,13 @@ const Notification = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     paddingTop: 60,
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
   },
   notificationItem: {
@@ -168,8 +198,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   notificationContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   notificationText: {
     flex: 1,
@@ -178,17 +208,17 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalView: {
     margin: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 25,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -198,31 +228,31 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   button: {
     borderRadius: 20,
     padding: 10,
     elevation: 2,
     width: 100,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonConfirm: {
-    backgroundColor: '#00BFFF',
+    backgroundColor: "#00BFFF",
   },
   buttonCancel: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: "#FF3B30",
   },
   textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   modalText: {
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 
