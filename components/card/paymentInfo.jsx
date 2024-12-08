@@ -12,25 +12,32 @@ const PaymentInfo = () => {
   }));
 
   const [payment, setPayment] = useState(0);
-
+  console.log("receiptreceipt", receipts);
   useEffect(() => {
     if (localUserData) {
       let totalPayment = 0;
 
       receipts.forEach((receipt) => {
-        const numFriends = Object.keys(receipt.friends).length;
-        const individualPayment = receipt.price / numFriends;
+        const totalPaymentForReceipt = parseFloat(receipt.price) || 0;
+        const totalFriends = Object.keys(receipt.friends).length;
 
-        Object.keys(receipt.friends).forEach((friendId) => {
+        const unpaidFriends = Object.entries(receipt.friends).filter(
+          ([, friendData]) => !friendData.paid
+        );
+        const perFriendPayment = unpaidFriends.length
+          ? totalPaymentForReceipt / totalFriends
+          : 0;
+
+        Object.entries(receipt.friends).forEach(([friendId, friendData]) => {
           if (friendId === localUserData.uid) {
-            totalPayment += individualPayment;
+            totalPayment += friendData.paid ? 0 : perFriendPayment;
           }
         });
       });
 
       setPayment(totalPayment);
     }
-  }, [receipts]);
+  }, [receipts, localUserData]);
 
   let cardStyle = styles.smallCard;
   if (payment.toFixed(2) > 1000) {

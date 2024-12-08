@@ -107,7 +107,6 @@ export const useAuthStore = create((set, get) => ({
         const updatedUserData = { ...userData, receipts: updatedReceipts };
         mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
       }
-
       return { receipts: updatedReceipts };
     });
   },
@@ -148,20 +147,24 @@ export const useAuthStore = create((set, get) => ({
       const userId = state.localUserData?.uid;
       if (!userId || index < 0 || index >= state.receipts.length) return state;
 
-      const updatedReceipts = state.receipts.map((receipt, idx) =>
-        idx === index && receipt.friends?.[userId]
-          ? {
-              ...receipt,
-              friends: {
-                ...receipt.friends,
-                [userId]: {
-                  ...receipt.friends[userId],
-                  paid: true,
-                },
-              },
-            }
-          : receipt
-      );
+      const updatedReceipts = state.receipts.map((receipt, idx) => {
+        if (idx === index && receipt.friends?.[userId]) {
+          const friend = receipt.friends[userId];
+          const updatedFriend = {
+            ...friend,
+            paid: true,
+          };
+
+          return {
+            ...receipt,
+            friends: {
+              ...receipt.friends,
+              [userId]: updatedFriend,
+            },
+          };
+        }
+        return receipt;
+      });
 
       return { receipts: updatedReceipts };
     });
@@ -560,27 +563,41 @@ export const useAuthStore = create((set, get) => ({
 
       const existingReceiptData = receiptDoc.data();
       const existingFriends = existingReceiptData.friends || {};
+      console.log("updatedReceiptsArray", updatedReceiptsArray);
+      console.log("existingFriends", existingFriends);
 
       const friends = {};
+
       updatedReceiptsArray.forEach((updatedReceipt) => {
         if (updatedReceipt && updatedReceipt.friends) {
-          const numFriends = Object.keys(updatedReceipt.friends).length;
-          const individualPayment = updatedReceipt.price / numFriends;
+          const totalPayment = parseFloat(updatedReceipt.price);
+          const totalFriends = Object.keys(updatedReceipt.friends).length;
+          console.log("updatedReceiptsArray", updatedReceipt.friends);
 
-          Object.keys(updatedReceipt.friends).forEach((friendId) => {
-            const friendData = updatedReceipt.friends[friendId];
+          const unpaidFriends = Object.entries(updatedReceipt.friends).filter(
+            ([, friendData]) => !friendData.paid
+          );
+          const perFriendPayment = unpaidFriends.length
+            ? totalPayment / totalFriends
+            : 0;
 
-            if (friends[friendId]) {
-              friends[friendId].payment += individualPayment;
-            } else {
-              friends[friendId] = {
-                name: friendData.name,
-                payment: individualPayment,
-                originator: existingFriends[friendId]?.originator || false,
-                paid: friendData.paid,
-              };
+          Object.entries(updatedReceipt.friends).forEach(
+            ([friendId, friendData]) => {
+              const isPaid = friendData.paid;
+
+              if (!friends[friendId]) {
+                friends[friendId] = {
+                  name: friendData.name,
+                  originator: existingFriends[friendId]?.originator || false,
+                  paid: isPaid,
+                  payment: isPaid ? 0 : perFriendPayment,
+                };
+              }
+              // else {
+              //   friends[friendId].payment += isPaid ? 0 : perFriendPayment;
+              // }
             }
-          });
+          );
         }
       });
 
@@ -588,10 +605,12 @@ export const useAuthStore = create((set, get) => ({
         friends[userUid] = {
           name: userData.name,
           payment: 0,
-          paid: true, ///directly mark as paid once this is the originator of the receipts
+          paid: true, ///directly mark as paid once this is the originator
           originator: true,
         };
       }
+
+      console.log("Updated friends:", friends);
 
       const newReceiptData = {
         friends: friends,

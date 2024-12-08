@@ -24,6 +24,9 @@ const ReceiptCard = () => {
   const { paidReceiptRow } = useAuthStore((state) => ({
     paidReceiptRow: state.paidReceiptRow,
   }));
+  const { sharedReceipts } = useAuthStore((state) => ({
+    sharedReceipts: state.sharedReceipts,
+  }));
 
   const userId = useAuthStore((state) => state.localUserData?.uid);
   const swipeableRefs = useRef({});
@@ -73,8 +76,31 @@ const ReceiptCard = () => {
 
       return !isMatch;
     });
-    console.log(updatedReceipts);
     updateReceiptById(updatedReceipts);
+  };
+
+  const onRemove = (item, index) => {
+    const updatedReceipts = receipts.map((receipt, i) => {
+      if (i === index) {
+        const updatedFriends = Object.entries(receipt.friends || {})
+          .filter(([friendId]) => friendId !== userId)
+          .reduce((acc, [friendId, friendData]) => {
+            acc[friendId] = friendData;
+            return acc;
+          }, {});
+
+        return {
+          ...receipt,
+          friends: updatedFriends,
+        };
+      }
+      return receipt;
+    });
+
+    updateReceiptById(updatedReceipts);
+    if (swipeableRefs.current[index] && swipeableRefs.current[index].close) {
+      swipeableRefs.current[index].close();
+    }
   };
 
   useEffect(() => {
@@ -102,8 +128,12 @@ const ReceiptCard = () => {
 
     const isUserInFriends =
       item.friends && Object.keys(item.friends).includes(userId);
+    const isUserOriginator = originatorId === userId;
+    const isPaid = item.friends?.[userId]?.paid;
 
-    const containerWidth = isUserInFriends ? 160 : 80;
+    const shouldShowPaidButton = isUserInFriends && !isPaid;
+
+    const containerWidth = shouldShowPaidButton ? 160 : 80;
 
     return (
       <Animated.View
@@ -112,7 +142,7 @@ const ReceiptCard = () => {
           { width: containerWidth, transform: [{ translateX }] },
         ]}
       >
-        {isUserInFriends && (
+        {shouldShowPaidButton && (
           <RectButton
             style={styles.paidButton}
             onPress={() => paidReceiptRow(index)}
@@ -121,12 +151,29 @@ const ReceiptCard = () => {
           </RectButton>
         )}
 
-        <RectButton
-          style={[styles.deleteButton]}
-          onPress={() => onDelete(item)}
-        >
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </RectButton>
+        {isUserOriginator ? (
+          <RectButton
+            style={[
+              styles.deleteButton,
+              isUserOriginator ? {} : styles.removeButton,
+            ]}
+            onPress={() => onDelete(item)}
+          >
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </RectButton>
+        ) : (
+          isUserInFriends && (
+            <RectButton
+              style={[
+                styles.deleteButton,
+                isUserOriginator ? {} : styles.removeButton,
+              ]}
+              onPress={() => onRemove(item, index)}
+            >
+              <Text style={styles.deleteButtonText}>Remove</Text>
+            </RectButton>
+          )
+        )}
       </Animated.View>
     );
   };
@@ -156,37 +203,55 @@ const ReceiptCard = () => {
       <View style={styles.flatListContainer}>
         <FlatList
           data={formattedReceipts}
-          renderItem={({ item, index }) => (
-            <Swipeable
-              ref={(ref) => {
-                swipeableRefs.current[index] = ref;
-                if (ref) {
-                  handleSwipeableOpen(ref);
+          renderItem={({ item, index }) => {
+            const isUserOriginator = originatorId === userId;
+            const isUserInFriends = item.friends && item.friends[userId];
+
+            if (!isUserInFriends && !isUserOriginator) {
+              return (
+                <TouchableOpacity style={styles.middle}>
+                  <ItemRow
+                    item={item}
+                    index={index}
+                    defaultColor="#f2f2f2"
+                    paidColor="#A9DFBF"
+                    font="Cabin-Regular"
+                    size={15}
+                    disabled={true}
+                  />
+                </TouchableOpacity>
+              );
+            }
+
+            return (
+              <Swipeable
+                ref={(ref) => {
+                  swipeableRefs.current[index] = ref;
+                }}
+                onSwipeableWillOpen={() =>
+                  handleSwipeableOpen(swipeableRefs.current[index])
                 }
-              }}
-              onSwipeableWillOpen={() =>
-                handleSwipeableOpen(swipeableRefs.current[index])
-              }
-              renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, item, index)
-              }
-              friction={2}
-              rightThreshold={40}
-              overshootRight={false}
-            >
-              <TouchableOpacity style={styles.middle}>
-                <ItemRow
-                  item={item}
-                  index={index}
-                  defaultColor="#f2f2f2"
-                  paidColor="#A9DFBF"
-                  font="Cabin-Regular"
-                  size={15}
-                  disabled={originatorId !== userId}
-                />
-              </TouchableOpacity>
-            </Swipeable>
-          )}
+                renderRightActions={(progress, dragX) =>
+                  renderRightActions(progress, dragX, item, index)
+                }
+                friction={2}
+                rightThreshold={40}
+                overshootRight={false}
+              >
+                <TouchableOpacity style={styles.middle}>
+                  <ItemRow
+                    item={item}
+                    index={index}
+                    defaultColor="#f2f2f2"
+                    paidColor="#A9DFBF"
+                    font="Cabin-Regular"
+                    size={15}
+                    disabled={originatorId !== userId}
+                  />
+                </TouchableOpacity>
+              </Swipeable>
+            );
+          }}
           keyExtractor={(item, index) => index.toString()}
         />
       </View>
@@ -275,6 +340,9 @@ const useStyle = () => {
       color: "white",
       fontWeight: "bold",
       fontSize: 16,
+    },
+    removeButton: {
+      backgroundColor: "#FFA500",
     },
   });
   return styles;
