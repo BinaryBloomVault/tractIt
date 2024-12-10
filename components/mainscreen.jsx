@@ -24,6 +24,7 @@ import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 import ModalIcon from "./icons/modalIcon";
 import { runOnJS } from "react-native-reanimated";
+import { AntDesign } from "@expo/vector-icons";
 
 const handleSwipeableOpen = (direction, items) => {
   if (direction === "right") {
@@ -243,10 +244,7 @@ const Mainscreen = () => {
                 gesture={Gesture.Exclusive(singleTap, longPress)}
               >
                 <Card
-                  containerStyle={{
-                    ...styles.receiptCard,
-                    backgroundColor: item.paidStatus ? "#B7F4D8" : "#fff",
-                  }}
+                  containerStyle={styles.receiptCard}
                 >
                   <Link
                     push
@@ -263,14 +261,7 @@ const Mainscreen = () => {
                     <Pressable>
                       <View style={styles.receiptCardHeader}>
                         <Text
-                          style={[
-                            styles.receiptUser,
-                            {
-                              backgroundColor: item.paidStatus
-                                ? "#fff"
-                                : "#A9DFBF",
-                            },
-                          ]}
+                          style={styles.receiptUser}
                         >
                           {item.name}
                         </Text>
@@ -304,6 +295,29 @@ const Mainscreen = () => {
                           />
                         </View>
                       </View>
+                      <View style={styles.horizontalLineBreak} />
+                      <View style={styles.statusAction}>
+                        <Text
+                          style={[
+                            styles.statusColor,
+                            {
+                              backgroundColor: item.paidStatus ? "#0F7B13" : "#DCB900",
+                            },
+                          ]}
+                        >
+                          {item.paidStatus ? "Paid" : "Pending"}
+                        </Text>
+
+                        <AntDesign
+                          style={[
+                            styles.iconStyle,
+                            { backgroundColor: item.paidStatus ? "#0F7B13" : "#DCB900" }
+                          ]}
+                          name={item.paidStatus ? "checkcircle" : "clockcircleo"}
+                          size={20}
+                          color="#fff"
+                        />
+                      </View>            
                     </Pressable>
                   </Link>
                 </Card>
@@ -383,7 +397,7 @@ const useStyle = () => {
     },
     receiptCard: {
       borderRadius: 15,
-      height: 110,
+      height: 150,
       marginLeft: 0,
       marginRight: 0,
       position: "relative",
@@ -440,6 +454,37 @@ const useStyle = () => {
       backgroundColor: "#b9b0b0",
       marginVertical: 5,
     },
+    horizontalLineBreak: {
+      width: "100%",
+      height: 1,
+      backgroundColor: "#D5DDE0",
+      marginVertical: 5,
+      marginTop: 10,
+      marginBottom: 5,
+    },
+    statusAction: {
+      flexDirection: "row",
+      alignItems: "center", // Align items vertically in the center
+      justifyContent:"center",
+    },
+    statusColor: {
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      color: "#fff",
+      fontWeight: "bold",
+      textAlign: "center",
+      fontFamily: "Gudea",
+      fontSize: 15,
+      borderTopLeftRadius: 10,
+      borderBottomLeftRadius: 10,
+    },
+    iconStyle: {
+      paddingVertical: 6,    // Match the vertical padding with Text
+      paddingHorizontal: 10, // Match the horizontal padding with Text
+      marginTop: 0.1,
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+    },    
     txtFriends: {
       marginBottom: 2,
       marginRight: 120,
