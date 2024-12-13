@@ -26,12 +26,6 @@ import ModalIcon from "./icons/modalIcon";
 import { runOnJS } from "react-native-reanimated";
 import { AntDesign } from "@expo/vector-icons";
 
-const handleSwipeableOpen = (direction, items) => {
-  if (direction === "right") {
-    // Alert.alert('Swipe from right');
-  }
-};
-
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
   const [totalPayment, setTotalPayment] = useState(0);
@@ -172,6 +166,11 @@ const Mainscreen = () => {
     setModalVisible(true);
   };
 
+  const handleSwipeableOpen = (direction) => {
+    if (direction === "right") {
+    }
+  };
+
   const RightSwipeActions = ({ progress, dragX, item }) => {
     const translateX = dragX.interpolate({
       inputRange: [-150, 0],
@@ -231,6 +230,7 @@ const Mainscreen = () => {
 
           return (
             <Swipeable
+              key={item.receiptId}
               renderRightActions={(progress, dragX) => (
                 <RightSwipeActions
                   progress={progress}
@@ -238,14 +238,16 @@ const Mainscreen = () => {
                   item={item}
                 />
               )}
-              onSwipeableOpen={handleSwipeableOpen(item)} // Pass direction and item
+              onSwipeableOpen={()=>handleSwipeableOpen("right")} // Pass direction and item
             >
               <GestureDetector
                 gesture={Gesture.Exclusive(singleTap, longPress)}
               >
-                <Card
-                  containerStyle={styles.receiptCard}
-                >
+                  <Card
+                    containerStyle={[
+                      styles.receiptCard
+                    ]}
+                  >
                   <Link
                     push
                     href={{
@@ -351,9 +353,9 @@ const useStyle = () => {
       alignItems: "center",
       padding: 40,
       backgroundColor: "#A9DFBF",
-      position: "sticky", // Set position to sticky
-      top: 0, // Align to top
-      width: deviceWidth, // Ensure full width
+      position: "sticky",
+      top: 0,
+      width: deviceWidth,
     },
     totalContainer: {
       alignItems: "center",
@@ -464,7 +466,7 @@ const useStyle = () => {
     },
     statusAction: {
       flexDirection: "row",
-      alignItems: "center", // Align items vertically in the center
+      alignItems: "center",
       justifyContent:"center",
     },
     statusColor: {
@@ -479,8 +481,8 @@ const useStyle = () => {
       borderBottomLeftRadius: 10,
     },
     iconStyle: {
-      paddingVertical: 6,    // Match the vertical padding with Text
-      paddingHorizontal: 10, // Match the horizontal padding with Text
+      paddingVertical: 6,
+      paddingHorizontal: 10,
       marginTop: 0.1,
       borderTopRightRadius: 10,
       borderBottomRightRadius: 10,
@@ -501,7 +503,7 @@ const useStyle = () => {
       justifyContent: "flex-end",
       alignItems: "center",
       height: 110,
-      marginTop: 15,
+      marginTop: 35,
       marginLeft: 1,
       borderRadius: 5,
     },
@@ -510,7 +512,7 @@ const useStyle = () => {
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: 110,
+      height: 150,
       borderTopLeftRadius: 15,
       borderBottomLeftRadius: 15,
     },
@@ -519,7 +521,7 @@ const useStyle = () => {
       justifyContent: "center",
       alignItems: "center",
       width: 80,
-      height: "100%",
+      height: 150,
       borderBottomRightRadius: 15,
       borderTopRightRadius: 15,
       marginRight: 2,
