@@ -303,7 +303,7 @@ const Mainscreen = () => {
                           style={[
                             styles.statusColor,
                             {
-                              backgroundColor: item.paidStatus ? "#0F7B13" : "#DCB900",
+                              backgroundColor: item.paidStatus ? "#0F7B13" : "#FF9500",
                             },
                           ]}
                         >
@@ -313,7 +313,7 @@ const Mainscreen = () => {
                         <AntDesign
                           style={[
                             styles.iconStyle,
-                            { backgroundColor: item.paidStatus ? "#0F7B13" : "#DCB900" }
+                            { backgroundColor: item.paidStatus ? "#0F7B13" : "#FF9500" }
                           ]}
                           name={item.paidStatus ? "checkcircle" : "clockcircleo"}
                           size={20}
