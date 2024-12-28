@@ -28,7 +28,7 @@ const Profile = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
 
-  const defaultAvatarUrl = require("../../../assets/images/profiles/p1-min.png");
+  const defaultAvatarUrl = require("../../../assets/images/profiles/default.png");
 
   const handleAvatarSelect = (index) => {
     setAvatar(index);
@@ -122,7 +122,7 @@ const Profile = () => {
               {newProfile.map((image, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => handleAvatarSelect(image)} // Update photo on select
+                  onPress={() => handleAvatarSelect(index)}
                 >
                   <Image source={image} style={styles.avatarOption} />
                 </TouchableOpacity>
@@ -216,8 +216,8 @@ const useStyle = () => {
       justifyContent: "center",
     },
     avatarOption: {
-      width: 100,
-      height: 100,
+      width: 50,
+      height: 50,
       borderRadius: 50,
       margin: 10,
     },
