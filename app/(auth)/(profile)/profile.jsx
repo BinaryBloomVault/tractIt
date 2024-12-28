@@ -7,11 +7,12 @@ import {
   Image,
   Text,
   TouchableOpacity,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import { Avatar, Button, Icon, Card } from "@rneui/themed";
 import { useAuthStore } from "../../../zustand/zustand";
 import { Link } from "expo-router";
+import newProfile from "../../../constants/profile";
 
 const Profile = () => {
   const styles = useStyle();
@@ -27,23 +28,10 @@ const Profile = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
 
-  const defaultAvatarUrl = require("../../../assets/images/profiles/default.png");
+  const defaultAvatarUrl = require("../../../assets/images/profiles/p1-min.png");
 
-  const newProfile = [
-    require("../../../assets/images/profiles/p1-min.png"),
-    require("../../../assets/images/profiles/p2-min.png"),
-    require("../../../assets/images/profiles/p8-min.png"),
-    require("../../../assets/images/profiles/p9-min.png"),
-    require("../../../assets/images/profiles/p10-min.png"),
-    require("../../../assets/images/profiles/p3-min.png"),
-    require("../../../assets/images/profiles/p4-min.png"),
-    require("../../../assets/images/profiles/p5-min.png"),
-    require("../../../assets/images/profiles/p6-min.png"),
-    require("../../../assets/images/profiles/p7-min.png"),
-  ];
-
-  const handleAvatarSelect = (image) => {
-    setAvatar(image);
+  const handleAvatarSelect = (index) => {
+    setAvatar(index);
     setIsModalVisible(false);
   };
 
@@ -68,11 +56,16 @@ const Profile = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Card containerStyle={styles.profileCard}>
         <View style={styles.profileContainer}>
-          {/* Avatar displaying the selected image or default image */}
           <Avatar
             size={100}
             rounded
-            source={selectedAvatar ? selectedAvatar : defaultAvatarUrl} // Use local image sources
+            source={
+              selectedAvatar !== null &&
+              selectedAvatar >= 0 &&
+              selectedAvatar < newProfile.length
+                ? newProfile[selectedAvatar]
+                : defaultAvatarUrl
+            }
             containerStyle={styles.avatar}
           />
           <Button
@@ -143,7 +136,7 @@ const Profile = () => {
   );
 };
 
-const useStyle = () => { 
+const useStyle = () => {
   const { height: deviceHeight, width: deviceWidth } = useWindowDimensions();
   return StyleSheet.create({
     container: {
@@ -244,7 +237,7 @@ const useStyle = () => {
     listItemTitle: {
       fontSize: 16,
     },
-  })
-  
-}
+  });
+};
+
 export default Profile;

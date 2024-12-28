@@ -25,6 +25,7 @@ import UserIcon from "./icons/usersIcon";
 import ModalIcon from "./icons/modalIcon";
 import { runOnJS } from "react-native-reanimated";
 import { AntDesign } from "@expo/vector-icons";
+import newProfile from "../constants/profile";
 
 const Mainscreen = () => {
   const [tableData, setTableData] = useState([]);
@@ -208,7 +209,17 @@ const Mainscreen = () => {
         <TouchableOpacity
           style={{ position: "absolute", top: 45, right: 10, zIndex: 10 }}
         >
-          <Avatar size={50} rounded source={selectedAvatar} />
+          <Avatar
+            size={50}
+            rounded
+            source={
+              selectedAvatar !== null &&
+              selectedAvatar >= 0 &&
+              selectedAvatar < newProfile.length
+                ? newProfile[selectedAvatar]
+                : null
+            }
+          />
         </TouchableOpacity>
       </Link>
       <ScrollView
@@ -238,16 +249,12 @@ const Mainscreen = () => {
                   item={item}
                 />
               )}
-              onSwipeableOpen={()=>handleSwipeableOpen("right")} // Pass direction and item
+              onSwipeableOpen={() => handleSwipeableOpen("right")} // Pass direction and item
             >
               <GestureDetector
                 gesture={Gesture.Exclusive(singleTap, longPress)}
               >
-                  <Card
-                    containerStyle={[
-                      styles.receiptCard
-                    ]}
-                  >
+                <Card containerStyle={[styles.receiptCard]}>
                   <Link
                     push
                     href={{
@@ -262,11 +269,7 @@ const Mainscreen = () => {
                   >
                     <Pressable>
                       <View style={styles.receiptCardHeader}>
-                        <Text
-                          style={styles.receiptUser}
-                        >
-                          {item.name}
-                        </Text>
+                        <Text style={styles.receiptUser}>{item.name}</Text>
                         <Text style={styles.txtSettle}>Settle Up</Text>
                       </View>
                       <View style={styles.receiptCardBody}>
@@ -303,7 +306,9 @@ const Mainscreen = () => {
                           style={[
                             styles.statusColor,
                             {
-                              backgroundColor: item.paidStatus ? "#0F7B13" : "#FF9500",
+                              backgroundColor: item.paidStatus
+                                ? "#0F7B13"
+                                : "#FF9500",
                             },
                           ]}
                         >
@@ -313,13 +318,19 @@ const Mainscreen = () => {
                         <AntDesign
                           style={[
                             styles.iconStyle,
-                            { backgroundColor: item.paidStatus ? "#0F7B13" : "#FF9500" }
+                            {
+                              backgroundColor: item.paidStatus
+                                ? "#0F7B13"
+                                : "#FF9500",
+                            },
                           ]}
-                          name={item.paidStatus ? "checkcircle" : "clockcircleo"}
+                          name={
+                            item.paidStatus ? "checkcircle" : "clockcircleo"
+                          }
                           size={20}
                           color="#fff"
                         />
-                      </View>            
+                      </View>
                     </Pressable>
                   </Link>
                 </Card>
@@ -467,7 +478,7 @@ const useStyle = () => {
     statusAction: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent:"center",
+      justifyContent: "center",
     },
     statusColor: {
       paddingVertical: 6,
@@ -486,7 +497,7 @@ const useStyle = () => {
       marginTop: 0.1,
       borderTopRightRadius: 10,
       borderBottomRightRadius: 10,
-    },    
+    },
     txtFriends: {
       marginBottom: 2,
       marginRight: 120,

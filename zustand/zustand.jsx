@@ -48,6 +48,7 @@ export const useAuthStore = create((set, get) => ({
   selectedFriends: {},
   title: "",
   groups: [],
+  selectedAvatar: null,
 
   clearGroups: () => set({ groups: [] }),
 
@@ -56,13 +57,38 @@ export const useAuthStore = create((set, get) => ({
   setModalVisible: (visible) => set({ modalVisible: visible }),
   setSelectedItemIndex: (index) => set({ selectedItemIndex: index }),
 
-  // New state to hold the selected avatar
-  selectedAvatar: mmkvStorage.getItem("selectedAvatar") || null,
+  setAvatar: async (avatar) => {
+    try {
+      if (typeof avatar !== "number") {
+        console.error("Avatar parameter must be a number.");
+        return;
+      }
 
-  // New method to set the selected avatar
-  setAvatar: (avatar) => {
-    set({ selectedAvatar: avatar });
-    mmkvStorage.setItem("selectedAvatar", JSON.stringify(avatar));
+      const userDataString = mmkvStorage.getItem("user_data");
+      if (!userDataString) {
+        console.error("User data not found in storage");
+        return;
+      }
+
+      const userData = JSON.parse(userDataString);
+      const userUid = userData.uid;
+
+      if (!userUid) {
+        console.error("User UID not found");
+        return;
+      }
+
+      const profile = avatar;
+
+      const updatedUserData = { ...userData, profile };
+      mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
+      set({ selectedAvatar: profile, localUserData: updatedUserData });
+
+      const userRef = doc(firestore, "users", userUid);
+      await updateDoc(userRef, { profile });
+    } catch (error) {
+      console.error("Error setting avatar:", error);
+    }
   },
 
   addReceipts: (receipt) => {
@@ -239,6 +265,7 @@ export const useAuthStore = create((set, get) => ({
       let notifications = [];
       let friendRequest = [];
       let groups = [];
+      let profile = null;
       let userName = "";
 
       if (userDoc.exists()) {
@@ -246,6 +273,7 @@ export const useAuthStore = create((set, get) => ({
         userName = userData.name || "";
         notifications = userData.notifications || [];
         friendRequest = userData.friendRequests || [];
+        profile = userData.profile || null;
 
         const sharedReceiptsCollectionRef = collection(
           userRef,
@@ -278,6 +306,7 @@ export const useAuthStore = create((set, get) => ({
         sharedReceipts: sharedReceipts,
         notifications: notifications,
         groups: groups,
+        selectedAvatar: profile,
       };
 
       mmkvStorage.setItem("auth_token", token);
@@ -290,6 +319,7 @@ export const useAuthStore = create((set, get) => ({
         notifications: notifications,
         groups: groups,
         isOffline: false,
+        selectedAvatar: profile,
       });
     } catch (error) {
       console.error("Error logging in:", error);
@@ -312,6 +342,7 @@ export const useAuthStore = create((set, get) => ({
         searchResults: null,
         notifications: null,
         groups: [],
+        selectedAvatar: null,
       });
     } catch (error) {
       console.error("Error logging out:", error);
