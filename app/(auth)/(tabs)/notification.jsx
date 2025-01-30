@@ -47,10 +47,8 @@ const Notification = () => {
         if (doc.exists()) {
           const notificationData = doc.data();
           const notifications = notificationData.notifications || [];
-          console.log("Notifications fetched from document:", notifications);
           setNotifications(notifications);
         } else {
-          console.log("Notification document does not exist");
           setNotifications([]);
         }
       },
@@ -76,10 +74,7 @@ const Notification = () => {
         const success = await confirmFriendRequest(userId);
         if (success) {
           await deleteNotification(userId);
-        } else {
-          console.error("Failed to cancel friend request");
         }
-      }
     }
 
     setModalVisible(false);
@@ -95,7 +90,6 @@ const Notification = () => {
       } else {
         const success = await cancelFriendRequest(userId);
         if (success) await deleteNotification(userId);
-        else console.error("Failed to cancel friend request");
       }
     }
     setModalVisible(false);

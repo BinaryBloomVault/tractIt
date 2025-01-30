@@ -46,12 +46,11 @@ const Register = () => {
         !securityTest(name)
       ) {
         setTextFormat(true);
-        console.error("Invalid format!!");
         return;
       }
       await register(email, password, name);
     } catch (error) {
-      console.error("Error registering:", error);
+      return;
     }
   };
 

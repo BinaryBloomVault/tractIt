@@ -31,7 +31,7 @@ const EmailUpdate = () => {
     try {
       await updateEmail(authUser.email, newEmail, password);
     } catch (error) {
-      console.error("Error updating email:", error);
+      return;
     }
   };
 

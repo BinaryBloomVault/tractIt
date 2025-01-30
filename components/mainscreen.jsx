@@ -157,7 +157,7 @@ const Mainscreen = () => {
         setPaidReceipts(paidApproval);
         await updatePaidStatus(item.receiptId, friendId, false); // Pass both receiptId and friendId
       } catch (error) {
-        console.error("[DEBUG] Error updating paid status:", error);
+        return;
       }
     }
   };
@@ -230,13 +230,10 @@ const Mainscreen = () => {
           const singleTap = Gesture.Tap().onEnd(() => {
             runOnJS(updateReceiptsWithShared)(item.receiptId);
             runOnJS(updateTitle)(item.title);
-            console.log("On single tap");
           });
 
           const longPress = Gesture.LongPress().onEnd((event) => {
-            console.log("On long press tap");
             runOnJS(handleLongPress)(Object.values(item.friends));
-            //}
           });
 
           return (

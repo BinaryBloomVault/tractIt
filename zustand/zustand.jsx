@@ -60,13 +60,11 @@ export const useAuthStore = create((set, get) => ({
   setAvatar: async (avatar) => {
     try {
       if (typeof avatar !== "number") {
-        console.error("Avatar parameter must be a number.");
         return;
       }
 
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) {
-        console.error("User data not found in storage");
         return;
       }
 
@@ -74,7 +72,6 @@ export const useAuthStore = create((set, get) => ({
       const userUid = userData.uid;
 
       if (!userUid) {
-        console.error("User UID not found");
         return;
       }
 
@@ -87,7 +84,7 @@ export const useAuthStore = create((set, get) => ({
       const userRef = doc(firestore, "users", userUid);
       await updateDoc(userRef, { profile });
     } catch (error) {
-      console.error("Error setting avatar:", error);
+      return;
     }
   },
 
@@ -140,7 +137,6 @@ export const useAuthStore = create((set, get) => ({
   deleteReceiptsWithShared: async (receiptId) => {
     try {
       const { sharedReceipts, localUserData } = get();
-      console.log("[DEBUG] get receiptId: ", receiptId);
 
       const updatedSharedReceipts = { ...sharedReceipts };
       delete updatedSharedReceipts[receiptId];
@@ -161,9 +157,8 @@ export const useAuthStore = create((set, get) => ({
       const userRefs = doc(firestore, "users", localUserData.uid);
       const receiptRef = doc(userRefs, "sharedReceipts", receiptId);
       await deleteDoc(receiptRef);
-      console.log("[DEBUG] Success removed!");
     } catch (error) {
-      console.error("Error deleting receipt:", error);
+      return;
     }
   },
 
@@ -322,7 +317,6 @@ export const useAuthStore = create((set, get) => ({
         selectedAvatar: profile,
       });
     } catch (error) {
-      console.error("Error logging in:", error);
       set({ isOffline: true });
     }
   },
@@ -345,7 +339,6 @@ export const useAuthStore = create((set, get) => ({
         selectedAvatar: null,
       });
     } catch (error) {
-      console.error("Error logging out:", error);
       set({ isOffline: true });
     }
   },
@@ -380,7 +373,6 @@ export const useAuthStore = create((set, get) => ({
         isOffline: false,
       });
     } catch (error) {
-      console.error("Error registering:", error);
       set({ isOffline: true });
     }
   },
@@ -403,7 +395,6 @@ export const useAuthStore = create((set, get) => ({
       }
       return token;
     } catch (error) {
-      console.error("Error getting auth token:", error);
       set({ isOffline: true });
       return null;
     }
@@ -434,7 +425,7 @@ export const useAuthStore = create((set, get) => ({
         return { groups: updatedGroups };
       });
     } catch (error) {
-      console.error("Error deleting group:", error);
+      return;
     }
   },
 
@@ -494,7 +485,7 @@ export const useAuthStore = create((set, get) => ({
         }
       }
     } catch (error) {
-      console.error("Error deleting friend:", error);
+      return;
     }
   },
 
@@ -520,7 +511,7 @@ export const useAuthStore = create((set, get) => ({
       const groupRef = doc(userRef, "groups", updatedGroup.id);
       await updateDoc(groupRef, { members: updatedGroup.members });
     } catch (error) {
-      console.error("Error saving edited group:", error);
+      return;
     }
   },
 
@@ -556,7 +547,7 @@ export const useAuthStore = create((set, get) => ({
         sharedReceipts: { ...userData.sharedReceipts, [title]: newReceiptList },
       });
     } catch (error) {
-      console.error("Error removing receipt:", error);
+      return;
     }
   },
 
@@ -619,7 +610,6 @@ export const useAuthStore = create((set, get) => ({
           );
         }
       });
-      console.log("totalPayment", totalPayment);
       if (friends[userUid]) {
         friends[userUid].payment = totalPayment;
       }
@@ -670,11 +660,11 @@ export const useAuthStore = create((set, get) => ({
           await Promise.all(friendUpdates);
           await batch.commit();
         } catch (error) {
-          console.error("Error updating Firestore in background:", error);
+          return;
         }
       })();
     } catch (error) {
-      console.error("Error updating receipt:", error);
+      return;
     }
   },
 
@@ -690,10 +680,8 @@ export const useAuthStore = create((set, get) => ({
         const duplicateRequest = existingRequests.find(
           (request) => request.id === friendId
         );
-        if (duplicateRequest) {
-          console.log("Friend request already exists");
+        if (duplicateRequest)
           return;
-        }
 
         // Add the friend request to the current user's friendRequests
         const friendRequest = {
@@ -753,12 +741,10 @@ export const useAuthStore = create((set, get) => ({
           await updateDoc(recipientRef, {
             notifications: updatedNotifications,
           });
-        } else {
-          console.error("Recipient user does not exist.");
         }
       }
     } catch (error) {
-      console.error("Error adding friend request:", error);
+      return;
     }
   },
 
@@ -878,22 +864,19 @@ export const useAuthStore = create((set, get) => ({
                 await updateDoc(friendRef, {
                   notifications: updatedNotifications,
                 });
-              } else {
-                console.error("Friend user does not exist.");
-              }
+              } 
             }
           }
         } catch (error) {
-          console.error("Error updating Firestore in the background:", error);
+         return;
         }
       })();
     } catch (error) {
-      console.error("Error adding shared receipt:", error);
+     return;
     }
   },
 
   confirmFriendRequest: async (friendId) => {
-    console.log("Confirming friend request with ID:", friendId);
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (!userDataString) {
@@ -909,7 +892,6 @@ export const useAuthStore = create((set, get) => ({
       );
 
       if (!friendRequestToUpdate) {
-        console.log("Friend request not found.");
         return false;
       }
 
@@ -937,8 +919,6 @@ export const useAuthStore = create((set, get) => ({
         friendRequests: updatedUserData.friendRequest,
       });
 
-      console.log(`Confirmed friend request for user ${friendId}.`);
-
       // Fetch friend's document
       const friendRef = doc(firestore, "users", friendId);
       const friendDoc = await getDoc(friendRef);
@@ -955,15 +935,11 @@ export const useAuthStore = create((set, get) => ({
         await updateDoc(friendRef, {
           friendRequests: updatedFriendRequestsForFriend,
         });
-      } else {
-        console.error(`Friend document with ID ${friendId} does not exist.`);
-        throw new Error("Friend document does not exist");
       }
 
       return true;
     } catch (error) {
-      console.error("Error confirming friend request:", error);
-      throw new Error("Failed to confirm friend request");
+      return false;
     }
   },
 
@@ -1094,7 +1070,7 @@ export const useAuthStore = create((set, get) => ({
         }
       }
     } catch (error) {
-      console.error("Error updating paid status:", error);
+      return;
     }
   },
 
@@ -1141,7 +1117,6 @@ export const useAuthStore = create((set, get) => ({
                 ...(originatorUserData.notifications || []),
                 newNotification,
               ];
-              //console.error("notification ",newNotification)
               // Update notifications in Firestore
               await updateDoc(friendReceiptRef, {
                 notifications: updatedNotifications,
@@ -1151,7 +1126,7 @@ export const useAuthStore = create((set, get) => ({
         }
       }
     } catch (error) {
-      console.error("Error updating rejected paid status:", error);
+      return;
     }
   },
 
@@ -1237,7 +1212,6 @@ export const useAuthStore = create((set, get) => ({
       }
       return true;
     } catch (error) {
-      console.error("Error cancelling paid request:", error);
       return false;
     }
   },
@@ -1248,18 +1222,10 @@ export const useAuthStore = create((set, get) => ({
       const userData = JSON.parse(userDataString);
       const userRef = doc(firestore, "users", userData.uid);
 
-      console.log("Current notifications:", userData.notifications);
-      console.log("Current notificationId:", notificationId);
-
       const updatedNotifications = (userData.notifications || []).filter(
         (notification) => {
           return !(notification.userId === notificationId);
         }
-      );
-
-      console.log(
-        "Updated notifications after deletion:",
-        updatedNotifications
       );
 
       await updateDoc(userRef, {
@@ -1273,8 +1239,6 @@ export const useAuthStore = create((set, get) => ({
 
       mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
       set({ localUserData: updatedUser, notifications: updatedNotifications });
-    } else {
-      console.error("User data not found in storage");
     }
   },
 
@@ -1289,7 +1253,6 @@ export const useAuthStore = create((set, get) => ({
       );
       const querySnapshot = await getDocs(q);
       const friends = [];
-      console.log("Searching for friends with name:", userData);
 
       querySnapshot.forEach((doc) => {
         if (doc.id !== userData?.uid) {
@@ -1298,7 +1261,7 @@ export const useAuthStore = create((set, get) => ({
       });
       set({ searchResults: friends });
     } catch (error) {
-      console.error("Error fetching friends:", error);
+      return;
     }
   },
   // Load groups from MMKV and Firestore
@@ -1327,7 +1290,6 @@ export const useAuthStore = create((set, get) => ({
           value === undefined ? null : value
         )
       );
-      console.log("Adding group:", groupMembers);
 
       const updatedGroups = [...get().groups, cleanGroup];
       set({ groups: updatedGroups });
@@ -1346,7 +1308,7 @@ export const useAuthStore = create((set, get) => ({
         await setDoc(doc(groupsCollectionRef, newGroup.id), cleanGroup);
       }
     } catch (error) {
-      console.error("Error saving group to Firestore:", error);
+      return;
     }
   },
 
@@ -1371,7 +1333,7 @@ export const useAuthStore = create((set, get) => ({
         await setDoc(doc(groupsCollectionRef, groupId), { deleted: true });
       }
     } catch (error) {
-      console.error("Error removing group from Firestore:", error);
+      return;
     }
   },
 
@@ -1398,7 +1360,7 @@ export const useAuthStore = create((set, get) => ({
         });
       }
     } catch (error) {
-      console.error("Error updating group in Firestore:", error);
+      return;
     }
   },
 }));

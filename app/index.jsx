@@ -52,7 +52,7 @@ const Index = () => {
         setWrongPass(true);
       }
     } catch (error) {
-      console.error("Error logging in:", error);
+      return;
     }
   };
 

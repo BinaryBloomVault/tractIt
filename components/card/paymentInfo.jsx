@@ -12,7 +12,6 @@ const PaymentInfo = () => {
   }));
 
   const [payment, setPayment] = useState(0);
-  console.log("receiptreceipt", receipts);
   useEffect(() => {
     if (localUserData) {
       let totalPayment = 0;

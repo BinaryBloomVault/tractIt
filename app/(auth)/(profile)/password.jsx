@@ -68,7 +68,6 @@ const Password = () => {
         throw new Error("User is not authenticated!");
       }
     } catch (error) {
-      console.error("Error updating password:", error);
       setValidate(true);
       setVerification("Old password is incorrect.");
       setIsUpdating(false);

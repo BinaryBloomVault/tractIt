@@ -155,7 +155,7 @@ const TotalPayment = ({ title, setTitle, isFocused }) => {
         await addSharedReceipt(title, receipts);
       }
     } catch (error) {
-      console.error("Error sharing receipts:", error);
+      return;
     } finally {
       clearReceipts();
       setTitle("");

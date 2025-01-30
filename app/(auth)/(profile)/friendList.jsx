@@ -156,7 +156,7 @@ const FriendList = () => {
 
         setConfirmedFriends(confirmedFriends);
       } catch (error) {
-        console.error("Error loading friend requests:", error.message);
+       return;
       }
     },
     [loadUserData],
@@ -176,7 +176,7 @@ const FriendList = () => {
     try {
       await deleteGroup(group.id);
     } catch (error) {
-      console.error("Error deleting group:", error);
+     return;
     }
   };
 
@@ -236,7 +236,6 @@ const FriendList = () => {
       if (Object.keys(updatedSelectedFriends).length === 0) {
         setSelectedGroup(null);
       }
-      console.log("updatedSelectedFriends", updatedSelectedFriends);
       return updatedSelectedFriends;
     });
   };
@@ -485,8 +484,7 @@ const FriendList = () => {
         // Close modal
         closeEditGroupModal();
       } catch (error) {
-        console.error("Error saving edited group:", error);
-        // Handle error (e.g., show a message to the user)
+       return
       }
     }
   };
