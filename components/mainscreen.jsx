@@ -251,7 +251,12 @@ const Mainscreen = () => {
               <GestureDetector
                 gesture={Gesture.Exclusive(singleTap, longPress)}
               >
-                <Card containerStyle={[styles.receiptCard]}>
+                <Card
+                  containerStyle={{
+                    ...styles.receiptCard,
+                    backgroundColor: item.paidStatus ? "#B7F4D8" : "#fff",
+                  }}
+                >
                   <Link
                     push
                     href={{
@@ -267,6 +272,18 @@ const Mainscreen = () => {
                     <Pressable>
                       <View style={styles.receiptCardHeader}>
                         <Text style={styles.receiptUser}>{item.name}</Text>
+                        <Text
+                          style={[
+                            styles.receiptUser,
+                            {
+                              backgroundColor: item.paidStatus
+                                ? "#fff"
+                                : "#A9DFBF",
+                            },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
                         <Text style={styles.txtSettle}>Settle Up</Text>
                       </View>
                       <View style={styles.receiptCardBody}>
@@ -305,7 +322,7 @@ const Mainscreen = () => {
                             {
                               backgroundColor: item.paidStatus
                                 ? "#0F7B13"
-                                : "#FF9500",
+                                : "#DCB900",
                             },
                           ]}
                         >
@@ -318,7 +335,7 @@ const Mainscreen = () => {
                             {
                               backgroundColor: item.paidStatus
                                 ? "#0F7B13"
-                                : "#FF9500",
+                                : "#DCB900",
                             },
                           ]}
                           name={
@@ -407,7 +424,7 @@ const useStyle = () => {
     },
     receiptCard: {
       borderRadius: 15,
-      height: 150,
+      height: 110,
       marginLeft: 0,
       marginRight: 0,
       position: "relative",
