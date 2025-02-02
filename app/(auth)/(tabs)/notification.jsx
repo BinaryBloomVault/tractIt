@@ -62,19 +62,20 @@ const Notification = () => {
 
   const handleConfirm = async () => {
     if (selectedNotification) {
-      const { userId, type, receiptId, friendId } = selectedNotification;
+      const { userId, type, newReceiptId, friendId } = selectedNotification;
       if (type === "paid") {
         if (paidStatus) {
-          await updatePaidStatus(receiptId, friendId, true);
-          await deleteNotification(userId);
+          await updatePaidStatus(newReceiptId, friendId, true);
+          await deleteNotification(newReceiptId);
         } else {
-          await deleteNotification(userId);
+          await deleteNotification(newReceiptId);
         }
       } else if (type === "friend") {
         const success = await confirmFriendRequest(userId);
         if (success) {
-          await deleteNotification(userId);
+          await deleteNotification(newReceiptId);
         }
+      } // <-- Added missing closing curly bracket here
     }
 
     setModalVisible(false);
@@ -83,13 +84,13 @@ const Notification = () => {
 
   const handleCancel = async () => {
     if (selectedNotification) {
-      const { userId, type, receiptId, friendId } = selectedNotification;
+      const { userId, type, newReceiptId, friendId } = selectedNotification;
       if (type === "paid") {
-        await rejectedPaidStatus(receiptId, friendId);
-        await deleteNotification(userId);
+        await rejectedPaidStatus(newReceiptId, friendId);
+        await deleteNotification(newReceiptId);
       } else {
         const success = await cancelFriendRequest(userId);
-        if (success) await deleteNotification(userId);
+        if (success) await deleteNotification(newReceiptId);
       }
     }
     setModalVisible(false);
@@ -108,7 +109,7 @@ const Notification = () => {
         },
       });
       if (item.userId) {
-        await deleteNotification(item.userId);
+        await deleteNotification(item.newReceiptId);
       }
     } else {
       setSelectedNotification(item);

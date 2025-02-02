@@ -24,7 +24,6 @@ import { Link, useRouter, useGlobalSearchParams } from "expo-router";
 import UserIcon from "./icons/usersIcon";
 import ModalIcon from "./icons/modalIcon";
 import { runOnJS } from "react-native-reanimated";
-import { AntDesign } from "@expo/vector-icons";
 import newProfile from "../constants/profile";
 
 const Mainscreen = () => {

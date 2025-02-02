@@ -680,8 +680,7 @@ export const useAuthStore = create((set, get) => ({
         const duplicateRequest = existingRequests.find(
           (request) => request.id === friendId
         );
-        if (duplicateRequest)
-          return;
+        if (duplicateRequest) return;
 
         // Add the friend request to the current user's friendRequests
         const friendRequest = {
@@ -864,15 +863,15 @@ export const useAuthStore = create((set, get) => ({
                 await updateDoc(friendRef, {
                   notifications: updatedNotifications,
                 });
-              } 
+              }
             }
           }
         } catch (error) {
-         return;
+          return;
         }
       })();
     } catch (error) {
-     return;
+      return;
     }
   },
 
@@ -1002,6 +1001,7 @@ export const useAuthStore = create((set, get) => ({
         if (receiptDoc.exists()) {
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
+
           if (paidRequest) {
             // Update the 'paid' status for the specific friend
             friendData.paid = true;
@@ -1044,6 +1044,8 @@ export const useAuthStore = create((set, get) => ({
           const originatorId = Object.keys(receiptData.friends).find(
             (id) => receiptData.friends[id].originator === true
           );
+          const originatorData = receiptData.friends[originatorId];
+
           if (originatorId && originatorId !== friendId) {
             const originatorRef = doc(firestore, "users", originatorId);
             const originatorDoc = await getDoc(originatorRef);
@@ -1053,7 +1055,7 @@ export const useAuthStore = create((set, get) => ({
               const newNotification = {
                 message: `${friendData.name} has paid their portion of the receipt.`,
                 type: "paid",
-                receiptId: receiptId,
+                newReceiptId: receiptId,
                 friendId: friendId,
               };
 
@@ -1066,6 +1068,26 @@ export const useAuthStore = create((set, get) => ({
                 notifications: updatedNotifications,
               });
             }
+          }
+
+          const currentUserRef = doc(firestore, "users", userData.uid);
+          const currentUserDoc = await getDoc(currentUserRef);
+          if (currentUserDoc.exists()) {
+            const currentUserData = currentUserDoc.data();
+            const newNotificationForCurrent = {
+              message: `You have paid your portion of the receipt. Please wait for confirmation of ${originatorData.name}`,
+              newReceiptId: 123,
+              type: "pending",
+            };
+
+            const updatedCurrentNotifications = [
+              ...(currentUserData.notifications || []),
+              newNotificationForCurrent,
+            ];
+
+            await updateDoc(currentUserRef, {
+              notifications: updatedCurrentNotifications,
+            });
           }
         }
       }
@@ -1109,7 +1131,7 @@ export const useAuthStore = create((set, get) => ({
               const newNotification = {
                 message: "Your paid request rejected by the originator.",
                 type: "paid",
-                receiptId: receiptId,
+                newReceiptId: receiptId,
                 friendId: friendId,
               };
 
@@ -1216,15 +1238,16 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  deleteNotification: async (notificationId) => {
+  deleteNotification: async (receiptId) => {
     const userDataString = mmkvStorage.getItem("user_data");
     if (userDataString) {
       const userData = JSON.parse(userDataString);
       const userRef = doc(firestore, "users", userData.uid);
 
+      console.log("receiptId", receiptId);
       const updatedNotifications = (userData.notifications || []).filter(
         (notification) => {
-          return !(notification.userId === notificationId);
+          return !(notification.newReceiptId === receiptId);
         }
       );
 
