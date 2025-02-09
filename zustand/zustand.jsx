@@ -48,7 +48,7 @@ export const useAuthStore = create((set, get) => ({
   selectedFriends: {},
   title: "",
   groups: [],
-  selectedAvatar: null,
+  avatar: null,
 
   clearGroups: () => set({ groups: [] }),
 
@@ -79,7 +79,7 @@ export const useAuthStore = create((set, get) => ({
 
       const updatedUserData = { ...userData, profile };
       mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
-      set({ selectedAvatar: profile, localUserData: updatedUserData });
+      set({ avatar: profile, localUserData: updatedUserData });
 
       const userRef = doc(firestore, "users", userUid);
       await updateDoc(userRef, { profile });
@@ -258,7 +258,7 @@ export const useAuthStore = create((set, get) => ({
 
       let sharedReceipts = {};
       let notifications = [];
-      let friendRequest = [];
+      let friendRequests = [];
       let groups = [];
       let profile = null;
       let userName = "";
@@ -267,9 +267,8 @@ export const useAuthStore = create((set, get) => ({
         const userData = userDoc.data();
         userName = userData.name || "";
         notifications = userData.notifications || [];
-        friendRequest = userData.friendRequests || [];
+        friendRequests = userData.friendRequests || [];
         profile = userData.profile || null;
-
         const sharedReceiptsCollectionRef = collection(
           userRef,
           "sharedReceipts"
@@ -297,11 +296,11 @@ export const useAuthStore = create((set, get) => ({
         name: userName || user.displayName || "",
         email: user.email || "",
         uid: user.uid,
-        friendRequest: friendRequest,
+        friendRequests: friendRequests,
         sharedReceipts: sharedReceipts,
         notifications: notifications,
         groups: groups,
-        selectedAvatar: profile,
+        avatar: profile,
       };
 
       mmkvStorage.setItem("auth_token", token);
@@ -314,7 +313,8 @@ export const useAuthStore = create((set, get) => ({
         notifications: notifications,
         groups: groups,
         isOffline: false,
-        selectedAvatar: profile,
+        avatar: profile,
+        friendRequests: friendRequests,
       });
     } catch (error) {
       set({ isOffline: true });
@@ -336,7 +336,7 @@ export const useAuthStore = create((set, get) => ({
         searchResults: null,
         notifications: null,
         groups: [],
-        selectedAvatar: null,
+        avatar: null,
       });
     } catch (error) {
       set({ isOffline: true });
@@ -437,7 +437,7 @@ export const useAuthStore = create((set, get) => ({
         const currentUserId = localUserData.uid;
 
         const updatedFriendRequests = (
-          localUserData.friendRequest || []
+          localUserData.friendRequests || []
         ).filter((f) => f.id !== friendId);
 
         const updatedGroups = groups.map((group) => {
@@ -449,7 +449,7 @@ export const useAuthStore = create((set, get) => ({
 
         const updatedUserData = {
           ...localUserData,
-          friendRequest: updatedFriendRequests,
+          friendRequests: updatedFriendRequests,
           groups: updatedGroups,
         };
 
@@ -668,7 +668,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  addFriendRequest: async (friendId, friendName) => {
+  addFriendRequest: async (friendId, friendName, avatar) => {
     try {
       const userDataString = mmkvStorage.getItem("user_data");
       if (userDataString) {
@@ -683,12 +683,13 @@ export const useAuthStore = create((set, get) => ({
         if (duplicateRequest) return;
 
         // Add the friend request to the current user's friendRequests
-        const friendRequest = {
+        const friendRequests = {
           id: friendId,
           name: friendName,
+          avatar: avatar,
           confirmed: false,
         };
-        const updatedFriendRequests = [...existingRequests, friendRequest];
+        const updatedFriendRequests = [...existingRequests, friendRequests];
 
         await updateDoc(userRef, {
           friendRequests: updatedFriendRequests,
@@ -715,6 +716,7 @@ export const useAuthStore = create((set, get) => ({
           const newFriendRequestForRecipient = {
             id: userData.uid,
             name: userData.name,
+            avatar: avatar,
             confirmed: false,
           };
           const updatedFriendRequestsForRecipient = [
@@ -851,7 +853,7 @@ export const useAuthStore = create((set, get) => ({
                 const friendUserData = friendDoc.data();
                 const newNotification = {
                   message: `${userData.name} included you in a receipt`,
-                  type: "friend",
+                  type: "receipt",
                   userId: userData.uid,
                   newReceiptId: newReceiptId,
                 };
@@ -885,7 +887,7 @@ export const useAuthStore = create((set, get) => ({
       const userData = JSON.parse(userDataString);
       const userRef = doc(firestore, "users", userData.uid);
 
-      const existingFriendRequests = userData.friendRequest || [];
+      const existingFriendRequests = userData.friendRequests || [];
       const friendRequestToUpdate = existingFriendRequests.find(
         (request) => request.id === friendId
       );
@@ -907,7 +909,7 @@ export const useAuthStore = create((set, get) => ({
 
       const updatedUserData = {
         ...userData,
-        friendRequest: existingFriendRequests.map((request) =>
+        friendRequests: existingFriendRequests.map((request) =>
           request.id === friendId ? updatedFriendRequest : request
         ),
       };
@@ -915,7 +917,7 @@ export const useAuthStore = create((set, get) => ({
       mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
       set({
         localUserData: updatedUserData,
-        friendRequests: updatedUserData.friendRequest,
+        friendRequests: updatedUserData.friendRequests,
       });
 
       // Fetch friend's document
@@ -935,7 +937,6 @@ export const useAuthStore = create((set, get) => ({
           friendRequests: updatedFriendRequestsForFriend,
         });
       }
-
       return true;
     } catch (error) {
       return false;
@@ -978,7 +979,6 @@ export const useAuthStore = create((set, get) => ({
             (request) => request.id !== userData.uid
           ),
         };
-
         await updateDoc(friendRef, updatedFriendData);
       }
     }
@@ -1001,6 +1001,27 @@ export const useAuthStore = create((set, get) => ({
         if (receiptDoc.exists()) {
           const receiptData = receiptDoc.data();
           const friendData = receiptData.friends[friendId];
+          const originatorId = Object.keys(receiptData.friends).find(
+            (id) => receiptData.friends[id].originator === true
+          );
+          if (originatorId == userData.uid) {
+            const originatorReceiptRef = doc(
+              firestore,
+              "users",
+              originatorId,
+              "sharedReceipts",
+              receiptId
+            );
+            const originatorReceiptDoc = await getDoc(originatorReceiptRef);
+            if (originatorReceiptDoc.exists()) {
+              const originatorReceiptData = originatorReceiptDoc.data();
+              originatorReceiptData.friends[friendId].paid = true;
+              await updateDoc(originatorReceiptRef, {
+                [`friends.${friendId}`]:
+                  originatorReceiptData.friends[friendId],
+              });
+            }
+          }
 
           if (paidRequest) {
             // Update the 'paid' status for the specific friend
@@ -1035,15 +1056,36 @@ export const useAuthStore = create((set, get) => ({
               })
             );
 
+            if (userData.uid !== friendId) {
+              const currentUserRef = doc(firestore, "users", friendId);
+              const currentUserDoc = await getDoc(currentUserRef);
+              if (currentUserDoc.exists()) {
+                const currentUserData = currentUserDoc.data();
+                const updatedNotifications = (
+                  currentUserData.notifications || []
+                ).filter((notification) => {
+                  if (
+                    notification.type === "pending" &&
+                    notification.newReceiptId === receiptId
+                  ) {
+                    return false;
+                  }
+                  return true;
+                });
+
+                await updateDoc(currentUserRef, {
+                  notifications: updatedNotifications,
+                });
+              }
+            }
+
             const paidDone = false;
             const setPaidReceipts = get().setPaidReceipts;
             setPaidReceipts(paidDone);
           }
 
           // Notify the originator that the friend has paid
-          const originatorId = Object.keys(receiptData.friends).find(
-            (id) => receiptData.friends[id].originator === true
-          );
+
           const originatorData = receiptData.friends[originatorId];
 
           if (originatorId && originatorId !== friendId) {
@@ -1052,6 +1094,7 @@ export const useAuthStore = create((set, get) => ({
 
             if (originatorDoc.exists()) {
               const originatorUserData = originatorDoc.data();
+
               const newNotification = {
                 message: `${friendData.name} has paid their portion of the receipt.`,
                 type: "paid",
@@ -1069,25 +1112,43 @@ export const useAuthStore = create((set, get) => ({
               });
             }
           }
+          if (userData.uid !== originatorId) {
+            const currentUserRef = doc(firestore, "users", userData.uid);
+            const currentUserDoc = await getDoc(currentUserRef);
+            if (currentUserDoc.exists()) {
+              const currentUserData = currentUserDoc.data();
 
-          const currentUserRef = doc(firestore, "users", userData.uid);
-          const currentUserDoc = await getDoc(currentUserRef);
-          if (currentUserDoc.exists()) {
-            const currentUserData = currentUserDoc.data();
-            const newNotificationForCurrent = {
-              message: `You have paid your portion of the receipt. Please wait for confirmation of ${originatorData.name}`,
-              newReceiptId: 123,
-              type: "pending",
-            };
+              const randomNumericId = (
+                await Crypto.digestStringAsync(
+                  Crypto.CryptoDigestAlgorithm.SHA256,
+                  `${Date.now()}${Math.random()}`
+                )
+              ).replace(/\D/g, "");
 
-            const updatedCurrentNotifications = [
-              ...(currentUserData.notifications || []),
-              newNotificationForCurrent,
-            ];
+              const newNotificationForCurrent = {
+                message: `You have paid your portion of the receipt. Please wait for confirmation of ${originatorData.name}`,
+                randomNumericId: randomNumericId,
+                newReceiptId: receiptId,
+                type: "pending",
+                isPending: true,
+              };
 
-            await updateDoc(currentUserRef, {
-              notifications: updatedCurrentNotifications,
-            });
+              const updatedCurrentNotifications = [
+                ...(currentUserData.notifications || []),
+                newNotificationForCurrent,
+              ];
+
+              await updateDoc(currentUserRef, {
+                notifications: updatedCurrentNotifications,
+              });
+              const updatedUser = {
+                ...currentUserData,
+                notifications: updatedCurrentNotifications,
+              };
+
+              mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+              set({ localUserData: updatedUser });
+            }
           }
         }
       }
@@ -1238,31 +1299,35 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  deleteNotification: async (receiptId) => {
+  deleteNotification: async (idToDelete, currentNotifications) => {
     const userDataString = mmkvStorage.getItem("user_data");
-    if (userDataString) {
-      const userData = JSON.parse(userDataString);
-      const userRef = doc(firestore, "users", userData.uid);
+    if (!userDataString) return;
 
-      console.log("receiptId", receiptId);
-      const updatedNotifications = (userData.notifications || []).filter(
-        (notification) => {
-          return !(notification.newReceiptId === receiptId);
+    const userData = JSON.parse(userDataString);
+    const userRef = doc(firestore, "users", userData.uid);
+
+    const updatedNotifications = (currentNotifications || []).filter(
+      (notification) => {
+        switch (notification.type) {
+          case "friend":
+            return notification.userId !== idToDelete;
+          case "receipt":
+            return notification.newReceiptId !== idToDelete;
+          case "paid":
+            return notification.newReceiptId !== idToDelete;
+          case "pending":
+            return true;
+          default:
+            return true;
         }
-      );
+      }
+    );
 
-      await updateDoc(userRef, {
-        notifications: updatedNotifications,
-      });
+    await updateDoc(userRef, { notifications: updatedNotifications });
 
-      const updatedUser = {
-        ...userData,
-        notifications: updatedNotifications,
-      };
-
-      mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
-      set({ localUserData: updatedUser, notifications: updatedNotifications });
-    }
+    const updatedUser = { ...userData, notifications: updatedNotifications };
+    mmkvStorage.setItem("user_data", JSON.stringify(updatedUser));
+    set({ localUserData: updatedUser, notifications: updatedNotifications });
   },
 
   searchFriendsByName: async (name) => {
@@ -1278,6 +1343,7 @@ export const useAuthStore = create((set, get) => ({
       const friends = [];
 
       querySnapshot.forEach((doc) => {
+        console.log("doc", doc.data);
         if (doc.id !== userData?.uid) {
           friends.push({ id: doc.id, ...doc.data() });
         }

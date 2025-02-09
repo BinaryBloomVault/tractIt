@@ -63,21 +63,19 @@ const Notification = () => {
   const handleConfirm = async () => {
     if (selectedNotification) {
       const { userId, type, newReceiptId, friendId } = selectedNotification;
+
       if (type === "paid") {
         if (paidStatus) {
           await updatePaidStatus(newReceiptId, friendId, true);
-          await deleteNotification(newReceiptId);
-        } else {
-          await deleteNotification(newReceiptId);
         }
+        await deleteNotification(newReceiptId, notifications);
       } else if (type === "friend") {
         const success = await confirmFriendRequest(userId);
         if (success) {
-          await deleteNotification(newReceiptId);
+          await deleteNotification(userId, notifications);
         }
-      } // <-- Added missing closing curly bracket here
+      }
     }
-
     setModalVisible(false);
     setSelectedNotification(null);
   };
@@ -85,12 +83,15 @@ const Notification = () => {
   const handleCancel = async () => {
     if (selectedNotification) {
       const { userId, type, newReceiptId, friendId } = selectedNotification;
+
       if (type === "paid") {
         await rejectedPaidStatus(newReceiptId, friendId);
-        await deleteNotification(newReceiptId);
-      } else {
+        await deleteNotification(newReceiptId, notifications);
+      } else if (type === "friend") {
         const success = await cancelFriendRequest(userId);
-        if (success) await deleteNotification(newReceiptId);
+        if (success) {
+          await deleteNotification(newReceiptId, notifications);
+        }
       }
     }
     setModalVisible(false);
@@ -98,7 +99,7 @@ const Notification = () => {
   };
 
   const handleNotificationPress = async (item) => {
-    if (item.message.includes("included you in a receipt")) {
+    if (item.type == "receipt") {
       router.push({
         pathname: "(auth)/(tabs)/writeReceipt",
         params: {
@@ -108,9 +109,7 @@ const Notification = () => {
           previousScreen: "update",
         },
       });
-      if (item.userId) {
-        await deleteNotification(item.newReceiptId);
-      }
+      await deleteNotification(item.newReceiptId, notifications);
     } else {
       setSelectedNotification(item);
       setModalVisible(true);

@@ -37,8 +37,7 @@ const Mainscreen = () => {
     localUserData: state.localUserData,
   }));
 
-  const { updateReceiptsWithShared, updateTitle, selectedAvatar } =
-    useAuthStore();
+  const { updateReceiptsWithShared, updateTitle, avatar } = useAuthStore();
   const { deleteReceiptsWithShared, updatePaidStatus, setPaidReceipts } =
     useAuthStore();
 
@@ -59,8 +58,9 @@ const Mainscreen = () => {
   }, [receiptId]);
 
   const fetchData = () => {
-    if (!localUserData || !localUserData.sharedReceipts) return;
-
+    if (!localUserData || !localUserData.sharedReceipts) {
+      return () => {};
+    }
     const userRefs = collection(
       firestore,
       "users",
@@ -123,13 +123,16 @@ const Mainscreen = () => {
       setTotalPayment(totalPay.toFixed(2));
     });
 
-    // Clean up the listener on component unmount
     return () => unsubscribe();
   };
 
   useEffect(() => {
     const unsubscribe = fetchData();
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [localUserData]);
 
   const handleCardPress = (item) => {
@@ -212,10 +215,8 @@ const Mainscreen = () => {
             size={50}
             rounded
             source={
-              selectedAvatar !== null &&
-              selectedAvatar >= 0 &&
-              selectedAvatar < newProfile.length
-                ? newProfile[selectedAvatar]
+              avatar !== null && avatar >= 0 && avatar < newProfile.length
+                ? newProfile[avatar]
                 : null
             }
           />
@@ -231,10 +232,21 @@ const Mainscreen = () => {
             runOnJS(updateTitle)(item.title);
           });
 
+          const pendingExists = localUserData?.notifications?.some(
+            (notification) =>
+              notification.type === "pending" &&
+              notification.newReceiptId === item.receiptId
+          );
+
           const longPress = Gesture.LongPress().onEnd((event) => {
             runOnJS(handleLongPress)(Object.values(item.friends));
           });
 
+          const cardBackground = item.paidStatus
+            ? "#B7F4D8"
+            : pendingExists
+              ? "#FFF6B3"
+              : "#fff";
           return (
             <Swipeable
               key={item.receiptId}
@@ -253,7 +265,7 @@ const Mainscreen = () => {
                 <Card
                   containerStyle={{
                     ...styles.receiptCard,
-                    backgroundColor: item.paidStatus ? "#B7F4D8" : "#fff",
+                    backgroundColor: cardBackground,
                   }}
                 >
                   <Link
@@ -276,7 +288,9 @@ const Mainscreen = () => {
                             {
                               backgroundColor: item.paidStatus
                                 ? "#fff"
-                                : "#A9DFBF",
+                                : pendingExists
+                                  ? "#fff"
+                                  : "#B7F4D8",
                             },
                           ]}
                         >
