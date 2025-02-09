@@ -24,6 +24,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { mmkvStorage } from "../../../zustand/zustand";
 import { RectButton } from "react-native-gesture-handler";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import newProfile from "../../../constants/profile";
 
 const FriendList = () => {
   const [confirmedFriends, setConfirmedFriends] = useState([]);
@@ -61,11 +62,12 @@ const FriendList = () => {
   const deleteGroup = useAuthStore((state) => state.deleteGroup);
 
   const setSelectedItemIndex = useAuthStore(
-    (state) => state.setSelectedItemIndex,
+    (state) => state.setSelectedItemIndex
   );
 
   const { previousScreen, index } = useLocalSearchParams();
   const swipeableRow = useRef(null);
+  const defaultAvatarUrl = require("../../../assets/images/profiles/profile16.png");
 
   // Function to open edit modal
   const openEditGroupModal = (group) => {
@@ -117,20 +119,20 @@ const FriendList = () => {
           if (!userDoc.exists()) {
             throw new Error("User document does not exist");
           }
-
           const data = userDoc.data();
           const friendRequests = data.friendRequests || [];
           confirmedFriends = friendRequests.filter(
-            (request) => request.confirmed,
+            (request) => request.confirmed
           );
 
           confirmedFriends.unshift({
             id: userData.uid,
             name: userData.name,
+            avatar: userData.avatar,
             confirmed: true,
           });
 
-          const localFriendRequests = userData.friendRequest || [];
+          const localFriendRequests = userData.friendRequests || [];
           const hasChanges =
             JSON.stringify(localFriendRequests) !==
             JSON.stringify(friendRequests);
@@ -138,34 +140,35 @@ const FriendList = () => {
           if (hasChanges) {
             const updatedUserData = {
               ...userData,
-              friendRequest: friendRequests,
+              friendRequests: friendRequests,
             };
             mmkvStorage.setItem("user_data", JSON.stringify(updatedUserData));
           }
         } else {
-          const friendRequests = userData.friendRequest || [];
+          const friendRequests = userData.friendRequests || [];
           confirmedFriends = friendRequests.filter(
-            (request) => request.confirmed,
+            (request) => request.confirmed
           );
           confirmedFriends.unshift({
             id: userData.uid,
             name: userData.name,
+            avatar: userData.avatar,
             confirmed: true,
           });
         }
 
         setConfirmedFriends(confirmedFriends);
       } catch (error) {
-       return;
+        return;
       }
     },
-    [loadUserData],
+    [loadUserData]
   );
 
   const onDelete = (friend) => {
     // Remove from confirmedFriends state
     setConfirmedFriends((prevConfirmedFriends) =>
-      prevConfirmedFriends.filter((f) => f.id !== friend.id),
+      prevConfirmedFriends.filter((f) => f.id !== friend.id)
     );
 
     // Call deleteFriend action from Zustand store
@@ -176,7 +179,7 @@ const FriendList = () => {
     try {
       await deleteGroup(group.id);
     } catch (error) {
-     return;
+      return;
     }
   };
 
@@ -199,7 +202,7 @@ const FriendList = () => {
 
   useEffect(() => {
     const formattedSelectedFriends = Object.entries(
-      zustandSelectedFriends || {},
+      zustandSelectedFriends || {}
     ).reduce((acc, [id, friendData]) => {
       if (typeof friendData === "string") {
         acc[id] = {
@@ -308,14 +311,20 @@ const FriendList = () => {
       }
       swipeableRow.current = swipeableRef.current;
     };
-
+    console.log("friendfriend", friend);
     const FriendItemContent = (
       <TouchableOpacity
         style={styles.friendItem}
         onPress={() => toggleCheck(friend)}
       >
         <Avatar
-          source={{ uri: "https://via.placeholder.com/50" }}
+          source={
+            friend.avatar !== null &&
+            friend.avatar >= 0 &&
+            friend.avatar < newProfile.length
+              ? newProfile[friend.avatar]
+              : defaultAvatarUrl
+          }
           rounded
           size="medium"
         />
@@ -357,7 +366,13 @@ const FriendList = () => {
       onPress={() => toggleModalCheck(friend)}
     >
       <Avatar
-        source={{ uri: "https://via.placeholder.com/50" }}
+        source={
+          friend.avatar !== null &&
+          friend.avatar >= 0 &&
+          friend.avatar < newProfile.length
+            ? newProfile[friend.avatar]
+            : defaultAvatarUrl
+        }
         rounded
         size="medium"
       />
@@ -461,7 +476,7 @@ const FriendList = () => {
 
   const handleSaveGroup = () => {
     const groupMembers = Object.keys(selectedModalFriends).map(
-      (id) => selectedModalFriends[id],
+      (id) => selectedModalFriends[id]
     );
     addGroup(groupTitle, groupMembers);
     closeTitleModal();
@@ -484,7 +499,7 @@ const FriendList = () => {
         // Close modal
         closeEditGroupModal();
       } catch (error) {
-       return
+        return;
       }
     }
   };
@@ -504,7 +519,7 @@ const FriendList = () => {
       </View>
       <Card
         containerStyle={styles.containerCardGroup(
-          deviceHeight < 813 ? 235 : 250,
+          deviceHeight < 813 ? 235 : 250
         )}
       >
         <AddButton
@@ -527,7 +542,7 @@ const FriendList = () => {
       </View>
       <Card
         containerStyle={styles.containerCardGroup(
-          deviceHeight < 813 ? 170 : 250,
+          deviceHeight < 813 ? 170 : 250
         )}
       >
         <AddButton
@@ -558,7 +573,7 @@ const FriendList = () => {
               <Card containerStyle={styles.modalCard}>
                 <ScrollView>
                   {confirmedFriends.map((friend) =>
-                    renderModalFriendItem(friend),
+                    renderModalFriendItem(friend)
                   )}
                 </ScrollView>
                 <View style={styles.buttonContainer}>

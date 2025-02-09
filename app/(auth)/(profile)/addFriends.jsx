@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Card, Avatar } from "@rneui/themed";
 import { useAuthStore } from "../../../zustand/zustand";
+import newProfile from "../../../constants/profile";
 
 const AddFriendScreen = () => {
   const [search, setSearch] = useState("");
@@ -39,9 +40,12 @@ const AddFriendScreen = () => {
   const handleAddFriend = async () => {
     if (currentFriend) {
       setSelectedFriends((prev) => [...prev, currentFriend.id]);
-      console.log("item:", currentFriend.name);
 
-      await addFriendRequest(currentFriend.id, currentFriend.name);
+      await addFriendRequest(
+        currentFriend.id,
+        currentFriend.name,
+        currentFriend.profile
+      );
     }
     closeModal();
   };
@@ -62,16 +66,11 @@ const AddFriendScreen = () => {
 
   const renderFriendItem = ({ item }) => {
     const isSelected = selectedFriends.includes(item.id);
-
     return (
       <TouchableOpacity onPress={() => handleSelectFriend(item)}>
         <Card containerStyle={styles.friendItem}>
           <View style={styles.friendContent}>
-            <Avatar
-              source={{ uri: item.avatar || "https://via.placeholder.com/50" }}
-              rounded
-              size="medium"
-            />
+            <Avatar source={newProfile[item.profile]} rounded size="medium" />
             <Text style={styles.friendName}>{item.name}</Text>
             <Ionicons
               name={isSelected ? "checkmark-circle" : "ellipse-outline"}

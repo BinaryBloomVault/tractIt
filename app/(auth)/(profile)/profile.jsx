@@ -16,19 +16,20 @@ import newProfile from "../../../constants/profile";
 
 const Profile = () => {
   const styles = useStyle();
-  const { authUser, logout, localUserData, selectedAvatar, setAvatar } =
-    useAuthStore((state) => ({
+  const { authUser, logout, localUserData, avatar, setAvatar } = useAuthStore(
+    (state) => ({
       authUser: state.authUser,
       logout: state.logout,
       localUserData: state.localUserData,
-      selectedAvatar: state.selectedAvatar,
+      avatar: state.avatar,
       setAvatar: state.setAvatar,
-    }));
+    })
+  );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userName, setUserName] = useState("");
 
-  const defaultAvatarUrl = require("../../../assets/images/profiles/default.png");
+  const defaultAvatarUrl = require("../../../assets/images/profiles/profile16.png");
 
   const handleAvatarSelect = (index) => {
     setAvatar(index);
@@ -60,10 +61,8 @@ const Profile = () => {
             size={100}
             rounded
             source={
-              selectedAvatar !== null &&
-              selectedAvatar >= 0 &&
-              selectedAvatar < newProfile.length
-                ? newProfile[selectedAvatar]
+              avatar !== null && avatar >= 0 && avatar < newProfile.length
+                ? newProfile[avatar]
                 : defaultAvatarUrl
             }
             containerStyle={styles.avatar}
@@ -84,16 +83,16 @@ const Profile = () => {
         <Link href="/userDetails" asChild>
           <CustomListItem icon="account-circle" title="User Details" />
         </Link>
-        <Link href="/billing-details" asChild>
+        {/* <Link href="/billing-details" asChild>
           <CustomListItem icon="credit-card" title="Billing Details" />
-        </Link>
+        </Link> */}
         <Link href="/password" asChild>
           <CustomListItem icon="lock" title="Change Password" />
         </Link>
         <Link href="/friendList" asChild>
           <CustomListItem icon="group" title="Friends List" />
         </Link>
-        <Link href="/coupon" asChild>
+        {/* <Link href="/coupon" asChild>
           <CustomListItem icon="tag" title="Coupon">
             <Button
               title="Apply"
@@ -101,7 +100,7 @@ const Profile = () => {
               buttonStyle={styles.couponButton}
             />
           </CustomListItem>
-        </Link>
+        </Link> */}
       </View>
 
       <Button
