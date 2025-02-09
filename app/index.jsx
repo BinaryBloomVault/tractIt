@@ -119,15 +119,6 @@ const Index = () => {
           <Text style={[styles.reset, styles.resetTypo]}>Reset</Text>
         </View>
         <View style={styles.orParent}>
-          <Text style={styles.or}>or</Text>
-          <View style={styles.icons}>
-            <Image
-              style={styles.svgrepocomIconLayout}
-              resizeMode="cover"
-              source={require(`../assets/images/google.png`)}
-            />
-            <FontAwesome name="apple" size={44} color="black" />
-          </View>
           <View style={styles.signUpContainer}>
             <Text style={styles.forgotPassword}>Don’t have an account?</Text>
             <Link href="/register" asChild>
