@@ -4,11 +4,11 @@
     "slug": "tractIt",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/friends.png",
+    "icon": "./assets/images/friendsReload.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/friends.png",
+      "image": "./assets/images/friendsReload.png",
       "resizeMode": "contain",
       "backgroundColor": "#A9DFBF"
     },

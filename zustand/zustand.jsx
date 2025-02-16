@@ -345,6 +345,20 @@ export const useAuthStore = create((set, get) => ({
 
   register: async (email, password, name) => {
     try {
+      const usersRef = collection(firestore, "users");
+
+      const emailQuery = query(usersRef, where("email", "==", email));
+      const emailSnapshot = await getDocs(emailQuery);
+      if (!emailSnapshot.empty) {
+        throw new Error("Email already exists");
+      }
+
+      const nameQuery = query(usersRef, where("name", "==", name));
+      const nameSnapshot = await getDocs(nameQuery);
+      if (!nameSnapshot.empty) {
+        throw new Error("Username already exists");
+      }
+
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -353,12 +367,13 @@ export const useAuthStore = create((set, get) => ({
       const userRef = doc(firestore, "users", user.uid);
       const token = await user.getIdToken();
 
-      const userData = { name };
+      const userData = { name, email, profile: 15 };
       await setDoc(userRef, userData);
 
       const userDataPayload = {
         name: userData.name || "",
         email: user.email || "",
+        avatar: 15,
         uid: user.uid,
         friends: {},
         sharedReceipts: {},
@@ -371,9 +386,10 @@ export const useAuthStore = create((set, get) => ({
         authUser: user,
         localUserData: userDataPayload,
         isOffline: false,
+        avatar: 15,
       });
     } catch (error) {
-      set({ isOffline: true });
+      throw error;
     }
   },
 

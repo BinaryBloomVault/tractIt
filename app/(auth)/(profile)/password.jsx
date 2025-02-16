@@ -83,7 +83,6 @@ const Password = () => {
 
   return (
     <View style={styles.mainscreen}>
-      <Text style={styles.title}>Update Password</Text>
       <View style={styles.inputForm}>
         <TextInput
           style={[styles.inputFormChild, styles.inputShadowBox]}
@@ -99,7 +98,13 @@ const Password = () => {
           ]}
         >
           <TextInput
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              fontSize: 15,
+              fontFamily: "Gudea-Bold",
+              fontWeight: "700",
+              alignItems: "center",
+            }}
             placeholder="Old password"
             placeholderTextColor="#92a0a9"
             secureTextEntry={hideShowOld}
@@ -120,10 +125,15 @@ const Password = () => {
             styles.inputShadowBox,
             styles.passwordContainer,
           ]}
-
         >
           <TextInput
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              fontSize: 15,
+              fontFamily: "Gudea-Bold",
+              fontWeight: "700",
+              alignItems: "center",
+            }}
             placeholder="New password"
             placeholderTextColor="#92a0a9"
             secureTextEntry={hideShowNew}
@@ -162,12 +172,14 @@ const Password = () => {
 };
 
 const styles = StyleSheet.create({
-
   mainscreen: {
     width: "100%",
     alignItems: "center",
     backgroundColor: "#FFF",
     justifyContent: "center",
+  },
+  inputForm: {
+    marginTop: 50,
   },
   inputShadowBox: {
     fontSize: 15,
@@ -210,16 +222,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 19,
     paddingVertical: 14,
-    borderColor:"#F3F3F3",
-    borderWidth: 1
+    borderColor: "#F3F3F3",
+    borderWidth: 1,
   },
   inputFormItem: {
     alignItems: "center",
     paddingHorizontal: 19,
     paddingVertical: 14,
     marginTop: 8,
-    borderColor:"#F3F3F3",
-    borderWidth: 1
+    borderColor: "#F3F3F3",
+    borderWidth: 1,
   },
   passwordContainer: {
     flexDirection: "row",
